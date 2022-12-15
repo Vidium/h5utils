@@ -4,8 +4,8 @@
 
 # ====================================================
 # imports
-from .write import write_attribute, write_attributes
+from .write import write_attribute, write_attributes, write_object, write_objects
 
 # ====================================================
 # code
-__all__ = ["write_attribute", "write_attributes"]
+__all__ = ["write_attribute", "write_attributes", "write_object", "write_objects"]
