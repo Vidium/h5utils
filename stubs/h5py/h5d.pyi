@@ -1,0 +1,3 @@
+from . import _objects as __h5py__objects
+
+class DatasetID(__h5py__objects.ObjectID): ...

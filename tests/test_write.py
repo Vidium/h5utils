@@ -7,30 +7,21 @@
 import pickle
 import pytest
 import numpy as np
-from h5py import File
-from h5py import Group
 from enum import Enum
-from tempfile import NamedTemporaryFile
 
 from typing import Any
 
 from h5utils.write import write_attribute
 from h5utils.write import write_dataset
 from h5utils.write import write_object
+from h5utils.pickle.wrap import File
+from h5utils.pickle.wrap import Group
 
 
 # ====================================================
 # code
 class State(Enum):
     RNA = "RNA"
-
-
-@pytest.fixture
-def group():
-    tmp = NamedTemporaryFile()
-
-    with File(tmp.name, "r+") as h5_file:
-        yield h5_file.create_group("test")
 
 
 @pytest.mark.parametrize("obj, expected", [(1, 1), ("abc", "abc"), (None, "None")])
@@ -52,7 +43,9 @@ def test_should_write_complex_objects_as_strings_in_attributes(group):
     write_attribute(group, "something", State.RNA)
 
     assert "something" in group.attrs.keys()
-    assert group.attrs["something"].tobytes() == pickle.dumps(State.RNA)
+    assert group.attrs["something"].tobytes() == pickle.dumps(
+        State.RNA, protocol=pickle.HIGHEST_PROTOCOL
+    )
 
 
 @pytest.mark.parametrize(
