@@ -1,7 +1,7 @@
 import pytest
 from tempfile import NamedTemporaryFile
 
-from h5utils.pickle.wrap import File
+from h5utils import File
 
 
 @pytest.fixture

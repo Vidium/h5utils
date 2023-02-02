@@ -2,18 +2,24 @@
 
 # ====================================================
 # imports
+from __future__ import annotations
+
 import pickle
 import numpy as np
 from h5py import string_dtype
 from numbers import Number
 
+import numpy.typing as npt
 from typing import Any
 from typing import Mapping
-from typing import Collection
-from typing import TypeGuard
+from typing import TYPE_CHECKING
 
-from h5utils.pickle.wrap import File
-from h5utils.pickle.wrap import Group
+from h5utils.objects import File
+from h5utils.objects import Group
+from h5utils.utils import is_sequence
+
+if TYPE_CHECKING:
+    from h5utils import H5Array
 
 
 # ====================================================
@@ -35,6 +41,17 @@ def write_attributes(group: Group, **kwargs: Any) -> None:
         write_attribute(group, name, obj)
 
 
+def _store_dataset(
+    loc: Group | File, name: str, array: npt.NDArray[Any] | H5Array[Any]
+) -> None:
+    """Store a dataset."""
+    if np.issubdtype(array.dtype, np.str_):
+        loc.create_dataset(name, data=array.astype(object), dtype=string_dtype())
+
+    else:
+        loc.create_dataset(name, data=array)
+
+
 def write_dataset(loc: Group | File, name: str, obj: Any) -> None:
     """Write an array-like object to a H5 dataset."""
     if isinstance(obj, Mapping):
@@ -42,13 +59,25 @@ def write_dataset(loc: Group | File, name: str, obj: Any) -> None:
         write_datasets(group, **obj)
 
     else:
-        array = np.array(obj)
+        # cast to np.array if needed (to get shape and dtype)
+        array = np.array(obj) if not hasattr(obj, "shape") else obj
 
-        if np.issubdtype(array.dtype, np.str_):
-            loc.create_dataset(name, data=array.astype(object), dtype=string_dtype())
+        if name in loc.keys():
+            if loc[name] is array:
+                # this exact dataset is already stored, do nothing
+                return
+
+            elif loc[name].shape == array.shape and loc[name].dtype == array.dtype:
+                # a similar array already exists, simply copy the data
+                loc[name][()] = array
+
+            else:
+                # a different array was stored, delete it before storing the new array
+                del loc[name]
+                _store_dataset(loc, name, array)
 
         else:
-            loc.create_dataset(name, data=array)
+            _store_dataset(loc, name, array)
 
 
 def write_datasets(loc: Group | File, **kwargs: Any) -> None:
@@ -57,20 +86,13 @@ def write_datasets(loc: Group | File, **kwargs: Any) -> None:
         write_dataset(loc, name, obj)
 
 
-def is_collection(obj: Any) -> TypeGuard[Collection[Any]]:
-    """Is the object a sequence of objects ? (excluding strings and byte objects.)"""
-    return isinstance(obj, Collection) and not isinstance(
-        obj, (str, bytes, bytearray, memoryview)
-    )
-
-
 def write_object(loc: Group | File, name: str, obj: Any) -> None:
     """Write any object to a H5 file."""
     if isinstance(obj, Mapping):
         group = loc.create_group(name)
         write_objects(group, **obj)
 
-    elif is_collection(obj) or isinstance(obj, (Number, str)):
+    elif is_sequence(obj) or isinstance(obj, (Number, str)):
         write_dataset(loc, name, obj)
 
     else:

@@ -8,6 +8,7 @@ from collections.abc import MutableMapping
 from typing import TypeVar
 
 from .._objects import ObjectID
+from .files import File
 
 _K = TypeVar("_K", bound=str)
 _V = TypeVar("_V")
@@ -22,6 +23,8 @@ class HLObject(CommonStateObject):
     def id(self) -> ObjectID: ...
     @property
     def name(self) -> str: ...
+    @property
+    def file(self) -> File: ...
 
 class MappingHDF5(Mapping[_K, _V], metaclass=ABCMeta):
     def keys(self) -> KeysViewHDF5[_K]: ...

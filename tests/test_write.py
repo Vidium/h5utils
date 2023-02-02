@@ -4,6 +4,8 @@
 
 # ====================================================
 # imports
+from __future__ import annotations
+
 import pickle
 import pytest
 import numpy as np
@@ -14,8 +16,8 @@ from typing import Any
 from h5utils.write import write_attribute
 from h5utils.write import write_dataset
 from h5utils.write import write_object
-from h5utils.pickle.wrap import File
-from h5utils.pickle.wrap import Group
+from h5utils import File
+from h5utils import Group
 
 
 # ====================================================
