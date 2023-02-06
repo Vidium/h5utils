@@ -113,5 +113,21 @@ def test_should_get_view(array):
     assert np.array_equal(sub_arr, np.array([[20, 22, 23], [30, 32, 33]]))
 
 
+def test_should_get_view_from_view(array):
+    sub_arr = array[2:4, [0, 2, 3]]
+    assert np.array_equal(sub_arr[1, [1, 2]], np.array([32, 33]))
+
+
 def test_should_get_single_value_from_view(array):
     assert array[2:4, [0, 2, 3]][0, 1] == 22
+
+
+def test_should_set_value_in_array(array):
+    array[5, 7] = -1
+    assert array[5, 7] == -1
+
+
+def test_should_set_value_in_view(array):
+    sub_arr = array[2:4, [0, 2, 3]]
+    sub_arr[1, [1, 2]] = [-2, -3]
+    assert np.array_equal(array[3, [2, 3]], [-2, -3])

@@ -76,12 +76,12 @@ class Dataset(Generic[_T], PickleableH5PyObject, h5py.Dataset):
     """Mix in our pickling class"""
 
     def __getitem__(self,                                                                       # type: ignore[override]
-                    arg: SELECTOR | tuple[SELECTOR],
+                    arg: SELECTOR | tuple[SELECTOR, ...],
                     new_dtype: npt.DTypeLike | None = None) -> Number | str | npt.NDArray[_T]:
-        return super().__getitem__(arg, new_dtype)                                                 # type: ignore[index]
+        return super().__getitem__(arg, new_dtype)
 
-    def __setitem__(self, arg: SELECTOR | tuple[SELECTOR], val: Any) -> None:
-        super().__setitem__(arg, val)                                                              # type: ignore[index]
+    def __setitem__(self, arg: SELECTOR | tuple[SELECTOR, ...], val: Any) -> None:
+        super().__setitem__(arg, val)
 
 
 class Group(PickleableH5PyObject, _GroupManagerMixin):

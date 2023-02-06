@@ -24,9 +24,12 @@ from h5utils.h5array.inplace import get_chunks
 from h5utils.h5array.inplace import get_work_sel
 from h5utils.h5array.inplace import get_work_array
 from h5utils.h5array.functions import _HANDLED_FUNCTIONS
+from h5utils.h5array.io import parse_selector
+from h5utils.h5array.io import write_to_dataset
 
 if TYPE_CHECKING:
     from h5utils.h5array.subset import H5ArrayView
+
 
 # ====================================================
 # code
@@ -56,19 +59,38 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     def __str__(self) -> str:
         return repr.print_dataset(self, sep="")
 
-    def __getitem__(self, index: SELECTOR | tuple[SELECTOR]) -> _T | H5Array[_T] | H5ArrayView[_T]:
-        from h5utils.h5array.subset import parse_selector, H5ArrayView
+    def __getitem__(self, index: SELECTOR | tuple[SELECTOR, ...]) -> _T | H5Array[_T] | H5ArrayView[_T]:
+        from h5utils.h5array.subset import H5ArrayView
 
         selection, nb_elements = parse_selector(self.shape, index)
 
         if nb_elements == 1:
-            return cast(_T, self._dset[index])
+            return cast(_T, self._dset[cast(SELECTOR, index)])
 
         elif selection is None:
             return H5Array(dset=self._dset)
 
         else:
             return H5ArrayView(dset=self._dset, sel=selection)
+
+    def __setitem__(self, index: SELECTOR | tuple[SELECTOR, ...], value: Any) -> None:
+        selection, nb_elements = parse_selector(self.shape, index)
+
+        try:
+            value_arr = np.array(value, dtype=self.dtype)
+
+        except ValueError:
+            raise ValueError(f'Could set value of type {type(value)} in H5Array of type {self.dtype}.')
+
+        if nb_elements != value_arr.size:
+            raise ValueError(f"{' x '.join(map(str, self.shape if selection is None else map(len, selection)))} "
+                             f"values were selected but {' x '.join(map(str, value_arr.shape))} were given.")
+
+        if selection is None:
+            self._dset[()] = value_arr
+
+        else:
+            write_to_dataset(self._dset, value_arr, selection)
 
     def __len__(self) -> int:
         return len(self._dset)

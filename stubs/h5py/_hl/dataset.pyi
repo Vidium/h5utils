@@ -3,8 +3,10 @@ import numpy.typing as npt
 from numbers import Number
 
 from typing import Any
+from typing import Union
 from typing import Literal
 from typing import TypeVar
+from typing import Sequence
 from typing import Collection
 
 from .base import HLObject
@@ -12,6 +14,7 @@ from ..h5d import DatasetID
 
 
 _T = TypeVar('_T', bound=np.generic)
+SELECTOR = Union[int, slice, range, Sequence[int], tuple[()]]
 
 
 class AstypeWrapper:
@@ -32,9 +35,9 @@ class AsStrWrapper:
 class Dataset(HLObject):
     def __init__(self, bind: DatasetID, *, readonly: bool = False): ...
     def __getitem__(
-        self, args: int | slice | Collection[int] | tuple[()], new_dtype: npt.DTypeLike | None = None
-    ) -> npt.NDArray[Any]: ...
-    def __setitem__(self, args: int, val: npt.NDArray[Any] | Number | str) -> None: ...
+        self, args: SELECTOR | tuple[SELECTOR, ...], new_dtype: npt.DTypeLike | None = None) -> npt.NDArray[Any]: ...
+    def __setitem__(self, args: SELECTOR | tuple[SELECTOR, ...],
+                    val: npt.NDArray[Any] | Number | str) -> None: ...
     @property
     def id(self) -> DatasetID: ...
     @property
