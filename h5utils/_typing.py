@@ -4,20 +4,14 @@
 # imports
 from __future__ import annotations
 
-from numbers import Number
-
-import numpy.typing as npt
 from typing import Any
 from typing import Union
-from typing import Protocol
 from typing import Sequence
-
+from typing import Callable
 
 # ====================================================
 # code
 SELECTOR = Union[int, range, slice, Sequence[int], tuple[()]]
 
-
-class NP_FUNCTION(Protocol):
-    def __call__(self, *args: Any, **kwargs: Any) -> npt.NDArray[Any] | Number | bool:
-        ...
+NP_FUNC = Callable[..., Any]
+H5_FUNC = Callable[..., Any]

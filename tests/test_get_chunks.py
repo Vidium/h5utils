@@ -194,3 +194,32 @@ def test_3d_array_0rows():
         (4, 4, slice(0, 3, None)),
         (4, 4, slice(3, 5, None)),
     )
+
+
+def test_3d_array():
+    assert get_chunks(24, (3, 4, 5), 8) == (
+        (0, 0, slice(0, 3, None)),
+        (0, 0, slice(3, 5, None)),
+        (0, 1, slice(0, 3, None)),
+        (0, 1, slice(3, 5, None)),
+        (0, 2, slice(0, 3, None)),
+        (0, 2, slice(3, 5, None)),
+        (0, 3, slice(0, 3, None)),
+        (0, 3, slice(3, 5, None)),
+        (1, 0, slice(0, 3, None)),
+        (1, 0, slice(3, 5, None)),
+        (1, 1, slice(0, 3, None)),
+        (1, 1, slice(3, 5, None)),
+        (1, 2, slice(0, 3, None)),
+        (1, 2, slice(3, 5, None)),
+        (1, 3, slice(0, 3, None)),
+        (1, 3, slice(3, 5, None)),
+        (2, 0, slice(0, 3, None)),
+        (2, 0, slice(3, 5, None)),
+        (2, 1, slice(0, 3, None)),
+        (2, 1, slice(3, 5, None)),
+        (2, 2, slice(0, 3, None)),
+        (2, 2, slice(3, 5, None)),
+        (2, 3, slice(0, 3, None)),
+        (2, 3, slice(3, 5, None)),
+    )

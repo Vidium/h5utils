@@ -84,7 +84,7 @@ def get_chunks(
     if block_axes + 1 == len(shape):
         return right_chunks
 
-    left_shape = rev_shape[(block_axes + 1):]
+    left_shape = shape[:-(block_axes+1)]
     left_chunks = np.array(np.meshgrid(*map(range, left_shape))).T.reshape(
         -1, len(left_shape)
     )
@@ -95,10 +95,10 @@ def get_chunks(
 
 
 def _len(obj: int | slice) -> int:
-    if isinstance(obj, int):
-        return 1
+    if isinstance(obj, slice):
+        return int(obj.stop - obj.start)
 
-    return int(obj.stop - obj.start)
+    return 1
 
 
 def get_work_array(shape: tuple[int, ...], slicer: tuple[int | slice, ...], dtype: _DT) -> npt.NDArray[_DT]:
@@ -111,5 +111,15 @@ def get_work_array(shape: tuple[int, ...], slicer: tuple[int | slice, ...], dtyp
 
 
 def get_work_sel(slicer: tuple[int | slice, ...]) -> tuple[int | slice, ...]:
-    return tuple(s if isinstance(s, int) or s == slice(None) else slice(0, s.stop - s.start)
-                 for s in slicer)
+    sel: tuple[int | slice, ...] = ()
+    for s in slicer:
+        if s == slice(None):
+            sel += (slice(None),)
+
+        elif isinstance(s, slice):
+            sel += (slice(0, s.stop - s.start),)
+
+        else:
+            sel += (0,)
+
+    return sel

@@ -88,9 +88,9 @@ def read_from_dataset(
     dtype: _DT | None,
 ) -> npt.NDArray[_DT]:
     if dtype is None:
-        dtype = dataset.dtype                                                                 # type: ignore[assignment]
+        dtype = dataset.dtype
 
-    loaded_array = np.empty(shape, dtype=dtype)
+    loaded_array: npt.NDArray[_DT] = np.empty(shape, dtype=dtype)
 
     for dataset_idx, array_idx in _selection_iter(selection):
         dataset.read_direct(loaded_array, source_sel=dataset_idx, dest_sel=array_idx)

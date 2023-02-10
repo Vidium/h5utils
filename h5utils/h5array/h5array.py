@@ -14,9 +14,11 @@ from typing import cast
 from typing import Generic
 from typing import TypeVar
 from typing import Iterator
+from typing import Generator
+from typing import Collection
 from typing import TYPE_CHECKING
+from h5utils._typing import NP_FUNC
 from h5utils._typing import SELECTOR
-from h5utils._typing import NP_FUNCTION
 
 from h5utils import Dataset
 from h5utils.h5array import repr
@@ -90,7 +92,7 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
             self._dset[()] = value_arr
 
         else:
-            write_to_dataset(self._dset, value_arr, selection)
+            write_to_dataset(self._dset, value_arr, selection)                                      # type: ignore[misc]
 
     def __len__(self) -> int:
         return len(self._dset)
@@ -102,13 +104,13 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     def __contains__(self, item: Any) -> bool:
         raise NotImplementedError
 
-    def _inplace_operation(self, func: NP_FUNCTION, value: Any) -> H5Array[_T]:
+    def _inplace_operation(self, func: NP_FUNC, value: Any) -> H5Array[_T]:
         if self.shape == ():
             self._dset[:] = func(self._dset[:], value)
 
         else:
             chunks = get_chunks(H5Array.MAX_MEM_USAGE, self.shape, self.dtype.itemsize)
-            work_array = get_work_array(self.shape, chunks[0], dtype=self._dset.dtype)          # type: ignore[type-var]
+            work_array = get_work_array(self.shape, chunks[0], dtype=self._dset.dtype)
 
             for chunk in chunks:
                 self._dset.read_direct(
@@ -161,20 +163,19 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
     # region interface
     def __array__(self, dtype: npt.DTypeLike | None = None) -> npt.NDArray[Any]:
-        return self._dset.astype(dtype)[()]
+        return np.array(self._dset.astype(dtype))
 
-    def __array_ufunc__(
-        self, ufunc: NP_FUNCTION, method: str, *inputs: Any, **kwargs: Any
-    ) -> npt.NDArray[_T] | Number | bool:
+    def __array_ufunc__(self, ufunc: NP_FUNC, method: str, *inputs: Any, **kwargs: Any) \
+            -> Any:
         if method == "__call__":
-            operands: list[Number | Dataset[Any]] = []
+            operands: list[Number | Collection[Any] | Dataset[Any]] = []
 
             for input in inputs:
-                if isinstance(input, Number):
-                    operands.append(input)
-
-                elif isinstance(input, H5Array):
+                if isinstance(input, H5Array):
                     operands.append(input.dset)
+
+                elif isinstance(input, (Number, Collection)):
+                    operands.append(input)
 
                 else:
                     return NotImplemented
@@ -186,11 +187,11 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
     def __array_function__(
         self,
-        func: NP_FUNCTION,
+        func: NP_FUNC,
         types: tuple[type, ...],
         args: tuple[Any, ...],
         kwargs: dict[str, Any],
-    ) -> npt.NDArray[_T] | Number | bool:
+    ) -> Any:
         if func not in _HANDLED_FUNCTIONS:
             return NotImplemented
 
@@ -208,7 +209,7 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
         return self._dset.shape
 
     @property
-    def dtype(self) -> np.dtype[_T]:
+    def dtype(self) -> _T:
         return self._dset.dtype
 
     @property
@@ -220,5 +221,21 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     # region methods
     def astype(self, dtype: npt.DTypeLike) -> npt.NDArray[Any]:
         return np.array(self, dtype=dtype)
+
+    def iter_chunks(self, keepdims: bool = False) \
+            -> Generator[tuple[tuple[int | slice, ...], npt.NDArray[_T]], None, None]:
+        chunks = get_chunks(self.MAX_MEM_USAGE, self.shape, self.dtype.itemsize)
+        work_array = get_work_array(self.shape, chunks[0], dtype=self.dtype)
+
+        for chunk in chunks:
+            work_subset = get_work_sel(chunk)
+            self._dset.read_direct(work_array, source_sel=chunk, dest_sel=work_subset)
+
+            if keepdims:
+                res = work_array[work_subset]
+                yield chunk, res.reshape((1,) * (self.ndim - res.ndim) + res.shape)
+
+            else:
+                yield chunk, work_array[work_subset]
 
     # endregion

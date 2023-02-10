@@ -12,7 +12,7 @@ from typing import cast
 from typing import TypeVar
 from typing import Sequence
 from h5utils._typing import SELECTOR
-from h5utils._typing import NP_FUNCTION
+from h5utils._typing import NP_FUNC
 
 import h5utils.h5array.h5array as h5array
 from h5utils import Dataset
@@ -87,7 +87,7 @@ class H5ArrayView(h5array.H5Array[_T]):
             self._dset[map_slice(self._selection)] = value_arr
 
         else:
-            write_to_dataset(self._dset, value_arr,  _cast_selection(selection, on=self._selection))
+            write_to_dataset(self._dset, value_arr,  _cast_selection(selection, on=self._selection))# type: ignore[misc]
 
     def __len__(self) -> int:
         return self.shape[0]
@@ -95,7 +95,7 @@ class H5ArrayView(h5array.H5Array[_T]):
     def __contains__(self, item: Any) -> bool:
         raise NotImplementedError
 
-    def _inplace_operation(self, func: NP_FUNCTION, value: Any) -> H5ArrayView[_T]:
+    def _inplace_operation(self, func: NP_FUNC, value: Any) -> H5ArrayView[_T]:
         raise NotImplementedError
 
     # endregion

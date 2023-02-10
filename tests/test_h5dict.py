@@ -84,11 +84,10 @@ def test_backed_dict_can_set_regular_value(backed_dict):
     assert np.all(backed_dict["a"] == 5)
 
 
-# TODO
-# def test_backed_dict_can_set_array_value(backed_dict):
-#     backed_dict["b"][1] = 6
-#
-#     assert np.all(backed_dict["b"] == [1, 6, 3])
+def test_backed_dict_can_set_array_value(backed_dict):
+    backed_dict["b"][1] = 6
+
+    assert np.all(backed_dict["b"] == [1, 6, 3])
 
 
 def test_backed_dict_can_set_new_regular_value(backed_dict):
@@ -97,24 +96,22 @@ def test_backed_dict_can_set_new_regular_value(backed_dict):
     assert backed_dict["x"] == 9
 
 
-# TODO
-# def test_backed_dict_can_set_new_array(backed_dict):
-#     backed_dict["y"] = np.array([1, 2, 3])
-#
-#     assert np.all(backed_dict["y"] == [1, 2, 3])
+def test_backed_dict_can_set_new_array(backed_dict):
+    backed_dict["y"] = np.array([1, 2, 3])
+
+    assert np.all(backed_dict["y"] == [1, 2, 3])
 
 
-# TODO
-# def test_backed_dict_can_set_new_dict(backed_dict):
-#     backed_dict["z"] = {"l": 10, "m": [10, 11, 12], "n": {"o": 13}}
-#
-#     assert (
-#         isinstance(backed_dict["z"], H5Dict)
-#         and backed_dict["z"]["l"] == 10
-#         and np.all(backed_dict["z"]["m"] == [10, 11, 12])
-#         and isinstance(backed_dict["z"]["n"], H5Dict)
-#         and backed_dict["z"]["n"]["o"] == 13
-#     )
+def test_backed_dict_can_set_new_dict(backed_dict):
+    backed_dict["z"] = {"l": 10, "m": [10, 11, 12], "n": {"o": 13}}
+
+    assert (
+        isinstance(backed_dict["z"], H5Dict)
+        and backed_dict["z"]["l"] == 10
+        and np.all(backed_dict["z"]["m"] == [10, 11, 12])
+        and isinstance(backed_dict["z"]["n"], H5Dict)
+        and backed_dict["z"]["n"]["o"] == 13
+    )
 
 
 def test_backed_dict_can_delete_regular_value(backed_dict):

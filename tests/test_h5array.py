@@ -2,59 +2,28 @@
 
 # ====================================================
 # imports
-import pytest
 import numpy as np
-from pathlib import Path
-
-from h5utils import H5Array
-from h5utils import File
-from h5utils import H5Mode
-from h5utils import write_object
 
 
 # ====================================================
 # code
-@pytest.fixture
-def array() -> H5Array:
-    data = np.arange(100).reshape((10, 10))
-
-    with File("h5_array", H5Mode.WRITE_TRUNCATE) as h5_file:
-        write_object(h5_file, "data", data)
-
-    yield H5Array(File("h5_array", H5Mode.READ_WRITE)["data"])
-
-    Path("h5_array").unlink()
-
-
-@pytest.fixture
-def large_array() -> H5Array:
-    data = np.arange(200_000 * 10_000).reshape((200_000, 10_000))
-
-    with File("h5_large_array", H5Mode.WRITE_TRUNCATE) as h5_file:
-        write_object(h5_file, "data", data)
-
-    yield H5Array(File("h5_large_array", H5Mode.READ_WRITE)["data"])
-
-    Path("h5_large_array").unlink()
-
-
 def test_should_get_shape(array):
     assert array.shape == (10, 10)
 
 
 def test_should_get_dtype(array):
-    assert array.dtype == np.int64
+    assert array.dtype == np.float64
 
 
 def test_should_print_repr(array):
     assert (
-        repr(array) == "H5Array([[0, 1, 2, ..., 7, 8, 9],\n"
-        "         [10, 11, 12, ..., 17, 18, 19],\n"
-        "         [20, 21, 22, ..., 27, 28, 29],\n"
+        repr(array) == "H5Array([[0.0, 1.0, 2.0, ..., 7.0, 8.0, 9.0],\n"
+        "         [10.0, 11.0, 12.0, ..., 17.0, 18.0, 19.0],\n"
+        "         [20.0, 21.0, 22.0, ..., 27.0, 28.0, 29.0],\n"
         "         ...,\n"
-        "         [70, 71, 72, ..., 77, 78, 79],\n"
-        "         [80, 81, 82, ..., 87, 88, 89],\n"
-        "         [90, 91, 92, ..., 97, 98, 99]], shape=(10, 10), dtype=int64)"
+        "         [70.0, 71.0, 72.0, ..., 77.0, 78.0, 79.0],\n"
+        "         [80.0, 81.0, 82.0, ..., 87.0, 88.0, 89.0],\n"
+        "         [90.0, 91.0, 92.0, ..., 97.0, 98.0, 99.0]], shape=(10, 10), dtype=float64)"
     )
 
 
@@ -105,7 +74,7 @@ def test_should_get_whole_dset(array):
 
 def test_should_print_view_repr(array):
     sub_arr = array[2:4, [0, 2, 3]]
-    assert str(sub_arr) == "[[20 22 23],\n" " [30 32 33]]\n"
+    assert str(sub_arr) == "[[20.0 22.0 23.0],\n" " [30.0 32.0 33.0]]\n"
 
 
 def test_should_get_view(array):
@@ -131,3 +100,14 @@ def test_should_set_value_in_view(array):
     sub_arr = array[2:4, [0, 2, 3]]
     sub_arr[1, [1, 2]] = [-2, -3]
     assert np.array_equal(array[3, [2, 3]], [-2, -3])
+
+
+def test_apply_all_function(array):
+    assert not np.all(array)
+
+    array += 1
+    assert np.all(array)
+
+
+def test_apply_any_function(array):
+    assert np.any(array)

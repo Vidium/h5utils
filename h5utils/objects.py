@@ -83,6 +83,10 @@ class Dataset(Generic[_T], PickleableH5PyObject, h5py.Dataset):
     def __setitem__(self, arg: SELECTOR | tuple[SELECTOR, ...], val: Any) -> None:
         super().__setitem__(arg, val)
 
+    @property
+    def dtype(self) -> _T:
+        return self.id.dtype                                                                # type: ignore[return-value]
+
 
 class Group(PickleableH5PyObject, _GroupManagerMixin):
     """Overwrite group to allow pickling, and to create new groups and datasets
