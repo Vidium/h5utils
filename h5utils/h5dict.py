@@ -140,7 +140,7 @@ def _parse_value(obj: Group | Dataset[Any]) -> H5DICT_CONTENT:
 
 
 class H5DictValuesView(Iterable[H5DICT_CONTENT]):
-    """Class for iterating over values in a H5Dict."""
+    """Class for iterating over values in an H5Dict."""
 
     # region magic methods
     def __init__(self, values: Collection[Group | Dataset[Any]]):
@@ -156,7 +156,7 @@ class H5DictValuesView(Iterable[H5DICT_CONTENT]):
 
 
 class H5DictItemsView(Iterable[tuple[str, H5DICT_CONTENT]]):
-    """Class for iterating over items in a H5Dict."""
+    """Class for iterating over items in an H5Dict."""
 
     # region magic methods
     def __init__(self, keys: Collection[str], values: Collection[Group | Dataset[Any]]):
