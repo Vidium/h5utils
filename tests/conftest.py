@@ -18,6 +18,18 @@ def group():
 
 
 @pytest.fixture
+def small_array() -> H5Array:
+    data = [1, 2, 3, 4, 5]
+
+    with File("h5_s_array", H5Mode.WRITE_TRUNCATE) as h5_file:
+        write_object(h5_file, "data", data)
+
+    yield H5Array(File("h5_s_array", H5Mode.READ_WRITE)["data"])
+
+    Path("h5_s_array").unlink()
+
+
+@pytest.fixture
 def array() -> H5Array:
     data = np.arange(100.).reshape((10, 10))
 

@@ -43,7 +43,7 @@ def _get_output_array(out: H5Array[Any] | npt.NDArray[Any] | None,
                       axis: tuple[int, ...],
                       keepdims: bool,
                       dtype: npt.DTypeLike | None,
-                      initial: int | float | complex | None) -> H5Array[Any] | npt.NDArray[Any]:
+                      initial: int | float | complex) -> H5Array[Any] | npt.NDArray[Any]:
     if keepdims:
         expected_shape = tuple(s if i not in axis else 1 for i, s in enumerate(shape))
 
@@ -62,7 +62,7 @@ def _get_output_array(out: H5Array[Any] | npt.NDArray[Any] | None,
     else:
         out = np.empty(shape=expected_shape, dtype=dtype)
 
-    out[()] = 0 if initial is None else initial
+    out[()] = initial
     return out
 
 
@@ -93,7 +93,7 @@ def apply(func: partial[Callable[..., npt.NDArray[Any] | Iterable[Any] | int | f
           out: H5Array[Any] | npt.NDArray[Any] | None,
           *,
           dtype: npt.DTypeLike | None,
-          initial: int | float | complex | None,
+          initial: int | float | complex,
           where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue) -> Any:
     axis = _as_tuple(func.keywords['axis'], a.ndim)
     output_array = _get_output_array(out, a.shape, axis, func.keywords['keepdims'], dtype, initial)

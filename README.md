@@ -178,10 +178,10 @@ Mathematical functions
 - [ ] np.around
 - [ ] np.rint
 - [ ] np.fix
-- [ ] np.floor
-- [ ] np.ceil
-- [ ] np.trunc
-- [ ] np.prod
+- [x] np.floor
+- [x] np.ceil
+- [x] np.trunc
+- [x] np.prod
 - [x] np.sum
 - [ ] np.nanprod
 - [ ] np.nansum
@@ -194,13 +194,13 @@ Mathematical functions
 - [ ] np.gradient
 - [ ] np.cross
 - [ ] np.trapz
-- [ ] np.exp
-- [ ] np.expm1
-- [ ] np.exp2
-- [ ] np.log
-- [ ] np.log10
-- [ ] np.log2
-- [ ] np.log1p
+- [x] np.exp
+- [x] np.expm1
+- [x] np.exp2
+- [x] np.log
+- [x] np.log10
+- [x] np.log2
+- [x] np.log1p
 - [ ] np.logaddexp
 - [ ] np.logaddexp2
 - [ ] np.i0
@@ -215,8 +215,8 @@ Mathematical functions
 - [ ] np.gcd
 - [ ] np.add
 - [ ] np.reciprocal
-- [ ] np.positive
-- [ ] np.negative
+- [x] np.positive
+- [x] np.negative
 - [ ] np.multiply
 - [ ] np.divide
 - [ ] np.power
@@ -244,12 +244,12 @@ Mathematical functions
 - [ ] np.nanmin
 - [ ] np.convolve
 - [ ] np.clip
-- [ ] np.sqrt
-- [ ] np.cbrt
-- [ ] np.square
-- [ ] np.absolute
-- [ ] np.fabs
-- [ ] np.sign
+- [x] np.sqrt
+- [x] np.cbrt
+- [x] np.square
+- [x] np.absolute
+- [x] np.fabs
+- [x] np.sign
 - [ ] np.heaviside
 - [ ] np.nan_to_num
 - [ ] np.real_if_close

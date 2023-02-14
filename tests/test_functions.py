@@ -84,3 +84,43 @@ def test_all(array):
 def test_all_axis_keepdims(array):
     assert np.array_equal(np.all(array, axis=1, keepdims=True), np.array([[False], [True], [True], [True], [True],
                                                                           [True],  [True], [True], [True], [True]]))
+
+
+def test_floor(array):
+    array += 0.7
+    assert np.array_equal(np.floor(array), np.arange(100.).reshape((10, 10)))
+
+
+def test_ceil(array):
+    array += 0.2
+    assert np.array_equal(np.ceil(array), np.arange(1., 101.).reshape((10, 10)))
+
+
+def test_trunc(array):
+    array += 0.2
+    assert np.array_equal(np.trunc(array), np.arange(100.).reshape((10, 10)))
+
+
+def test_prod(array):
+    assert np.array_equal(
+        np.prod(array, axis=0, where=[True, False, False, False, False, True, True, True, True, True]),
+        [0, 1, 1, 1, 1, 6393838623046875, 9585618768101376, 13865696119905399, 19511273389031424, 26853950884211451]
+    )
+
+
+def test_exp(array):
+    assert np.array_equal(
+        np.exp(array),
+        np.exp(np.arange(100.).reshape((10, 10)))
+    )
+
+
+def test_exp_where(small_array):
+    out = np.array([1., 1., 1., 1., 1.])
+    np.exp(small_array, where=[True, False, False, True, True], out=out)
+
+    assert np.array_equal(out, [np.exp(1), 1., 1., np.exp(4), np.exp(5)])
+
+
+def test_expm1(small_array):
+    assert np.array_equal(np.expm1(small_array), np.expm1([1, 2, 3, 4, 5]))
