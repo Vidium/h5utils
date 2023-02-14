@@ -84,7 +84,8 @@ def test_should_get_view(array):
 
 def test_should_get_view_from_view(array):
     sub_arr = array[2:4, [0, 2, 3]]
-    assert np.array_equal(sub_arr[1, [1, 2]], np.array([32, 33]))
+    sub_sub_arr = sub_arr[1, [1, 2]]
+    assert np.array_equal(sub_sub_arr, np.array([32, 33]))
 
 
 def test_should_get_single_value_from_view(array):

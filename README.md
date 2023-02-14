@@ -58,47 +58,10 @@ np.array(h5_array)
 ```
 
 ### Roadmap
-- [x] np.add
-- [ ] np.subtract
-- [ ] np.multiply
-- [ ] np.matmul
-- [ ] np.divide
-- [ ] np.logaddexp
-- [ ] np.logaddexp2
-- [ ] np.true_divide
-- [ ] np.floor_divide
-- [ ] np.negative
-- [ ] np.positive
-- [ ] np.power
-- [ ] np.float_power
-- [ ] np.remainder
-- [ ] np.mod
-- [ ] np.fmod
-- [ ] np.divmod
-- [ ] np.absolute
-- [ ] np.fabs
-- [ ] np.rint
-- [ ] np.sign
-- [ ] np.heaviside
-- [ ] np.conj
-- [ ] np.conjugate
-- [ ] np.exp
-- [ ] np.exp2
-- [ ] np.log
-- [ ] np.log2
-- [ ] np.log10
-- [ ] np.expm1
-- [ ] np.log1p
-- [ ] np.sqrt
-- [ ] np.square
-- [ ] np.cbrt
-- [ ] np.reciproqual
-- [ ] np.gcd
-- [ ] np.lcm
 
 Logic functions
-- [ ] np.all
-- [ ] np.any
+- [x] np.all
+- [x] np.any
 - [ ] np.isfinite
 - [ ] np.isinf
 - [ ] np.isnan
@@ -117,7 +80,7 @@ Logic functions
 - [ ] np.logical_xor
 - [ ] np.allclose
 - [ ] np.isclose
-- [ ] np.array_equal
+- [x] np.array_equal
 - [ ] np.array_equiv
 - [ ] np.greater
 - [ ] np.greater_equal
@@ -219,7 +182,7 @@ Mathematical functions
 - [ ] np.ceil
 - [ ] np.trunc
 - [ ] np.prod
-- [ ] np.sum
+- [x] np.sum
 - [ ] np.nanprod
 - [ ] np.nansum
 - [ ] np.cumprod

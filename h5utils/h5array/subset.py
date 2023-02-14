@@ -16,12 +16,11 @@ from h5utils._typing import NP_FUNC
 
 import h5utils.h5array.h5array as h5array
 from h5utils import Dataset
-from h5utils.h5array.io import map_slice
 from h5utils.h5array.io import parse_selector
 from h5utils.h5array.io import read_from_dataset
 from h5utils.h5array.io import write_to_dataset
 from h5utils.h5array.slice import FullSlice
-
+from h5utils.h5array.slice import map_slice
 
 # ====================================================
 # code
@@ -64,9 +63,10 @@ class H5ArrayView(h5array.H5Array[_T]):
             return H5ArrayView(dset=self._dset, sel=self._selection)
 
         elif nb_elements == 1:
-            return cast(_T,
-                        read_from_dataset(self._dset, _cast_selection(selection, on=self._selection),
-                                          shape=(1,), dtype=None)[0])
+            loading_array = np.empty(1, dtype=self.dtype)
+            read_from_dataset(self._dset, _cast_selection(selection, on=self._selection), loading_array)
+
+            return cast(_T, loading_array[0])
 
         return H5ArrayView(dset=self._dset, sel=_cast_selection(selection, on=self._selection))
 
@@ -84,10 +84,12 @@ class H5ArrayView(h5array.H5Array[_T]):
                              f"values were selected but {' x '.join(map(str, value_arr.shape))} were given.")
 
         if selection is None:
-            self._dset[map_slice(self._selection)] = value_arr
+            selection_as_slices: tuple[Sequence[int] | slice, ...] = \
+                tuple(e.as_slice() if isinstance(e, FullSlice) else e for e in self._selection)
+            self._dset[selection_as_slices] = value_arr
 
         else:
-            write_to_dataset(self._dset, value_arr,  _cast_selection(selection, on=self._selection))# type: ignore[misc]
+            write_to_dataset(self._dset, value_arr,  _cast_selection(selection, on=self._selection))
 
     def __len__(self) -> int:
         return self.shape[0]
@@ -102,7 +104,13 @@ class H5ArrayView(h5array.H5Array[_T]):
 
     # region interface
     def __array__(self, dtype: npt.DTypeLike | None = None) -> npt.NDArray[Any]:
-        return read_from_dataset(self._dset, self._selection, self.shape, dtype=dtype)
+        if dtype is None:
+            dtype = self.dtype
+
+        loading_array = np.empty(self.shape, dtype)
+        read_from_dataset(self._dset, self._selection, loading_array)
+
+        return loading_array
 
     # endregion
 
@@ -114,5 +122,20 @@ class H5ArrayView(h5array.H5Array[_T]):
     @property
     def shape(self) -> tuple[int, ...]:
         return tuple(len(axis_sel) for axis_sel in self._selection if len(axis_sel) > 1)
+
+    # endregion
+
+    # region methods
+    def read_direct(self,
+                    dest: npt.NDArray[_T],
+                    source_sel: tuple[FullSlice, ...],
+                    dest_sel: tuple[FullSlice, ...]) -> None:
+        nb_whole_axes_before = (self._dset.ndim - len(source_sel))
+        whole_axes_before = tuple(FullSlice.whole_axis(s) for s in self.shape[:nb_whole_axes_before])
+        nb_whole_axes_after = (len(whole_axes_before) + len(source_sel))
+        whole_axes_after = tuple(FullSlice.whole_axis(s) for s in self.shape[nb_whole_axes_after:])
+
+        source_sel_casted = _cast_selection(whole_axes_before + source_sel + whole_axes_after, on=self._selection)
+        read_from_dataset(self._dset, source_sel_casted, dest[map_slice(dest_sel)])
 
     # endregion

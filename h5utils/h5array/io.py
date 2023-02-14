@@ -43,7 +43,7 @@ def _index_non_slice(elements: Iterable[Collection[int] | FullSlice]) -> int | N
     return None
 
 
-def map_slice(
+def _map_slice(
     elements: tuple[int | Sequence[int] | FullSlice | slice, ...]
 ) -> tuple[int | Sequence[int] | slice, ...]:
     return tuple(e.as_slice() if isinstance(e, FullSlice) else e for e in elements)
@@ -55,7 +55,7 @@ def _selection_iter(sel: tuple[Sequence[int] | FullSlice, ...]) -> Generator[
     cut_index = _index_non_slice(sel)
 
     if len(sel) == 1 or cut_index is None:
-        yield map_slice(sel), _get_array_sel(sel, 0)
+        yield _map_slice(sel), _get_array_sel(sel, 0)
 
     else:
         pre = sel[:cut_index]
@@ -66,7 +66,7 @@ def _selection_iter(sel: tuple[Sequence[int] | FullSlice, ...]) -> Generator[
             for p, arr_idx in _selection_iter(post):
                 s = cut.start if isinstance(cut, FullSlice) else cut[0]
 
-                yield map_slice((*pre, s, *p)), (
+                yield _map_slice((*pre, s, *p)), (
                     *_get_array_sel(pre, 0),
                     *arr_idx,
                 )
@@ -74,28 +74,18 @@ def _selection_iter(sel: tuple[Sequence[int] | FullSlice, ...]) -> Generator[
         else:
             for i, s in enumerate(cut):
                 for p, arr_idx in _selection_iter(post):
-                    yield map_slice((*pre, s, *p)), (
+                    yield _map_slice((*pre, s, *p)), (
                         *_get_array_sel(pre, 0),
                         i,
                         *arr_idx,
                     )
 
 
-def read_from_dataset(
-    dataset: Dataset[_DT],
-    selection: tuple[Sequence[int] | FullSlice, ...],
-    shape: tuple[int, ...],
-    dtype: _DT | None,
-) -> npt.NDArray[_DT]:
-    if dtype is None:
-        dtype = dataset.dtype
-
-    loaded_array: npt.NDArray[_DT] = np.empty(shape, dtype=dtype)
-
+def read_from_dataset(dataset: Dataset[_DT],
+                      selection: tuple[Sequence[int] | FullSlice, ...],
+                      loading_array: npt.NDArray[_DT]) -> None:
     for dataset_idx, array_idx in _selection_iter(selection):
-        dataset.read_direct(loaded_array, source_sel=dataset_idx, dest_sel=array_idx)
-
-    return loaded_array
+        dataset.read_direct(loading_array, source_sel=dataset_idx, dest_sel=array_idx)
 
 
 def write_to_dataset(

@@ -84,7 +84,7 @@ class Dataset(Generic[_T], PickleableH5PyObject, h5py.Dataset):
         super().__setitem__(arg, val)
 
     @property
-    def dtype(self) -> _T:
+    def dtype(self) -> np.dtype[_T]:
         return self.id.dtype                                                                # type: ignore[return-value]
 
 

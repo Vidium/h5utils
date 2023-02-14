@@ -4,12 +4,15 @@
 # imports
 from __future__ import annotations
 
+from typing import Literal
+
 import numpy as np
 from numpy import _NoValue as NoValue                                                       # type: ignore[attr-defined]
+from numbers import Number
+from functools import partial
 
 import numpy.typing as npt
 from typing import Any
-from typing import cast
 from typing import TypeVar
 from typing import Callable
 from typing import Iterable
@@ -18,14 +21,12 @@ from typing import TYPE_CHECKING
 import h5utils
 from h5utils._typing import NP_FUNC
 from h5utils._typing import H5_FUNC
-from h5utils.h5array.inplace import get_chunks
-from h5utils.h5array.inplace import get_work_array
-from h5utils.h5array.inplace import get_work_sel
-from h5utils.utils import is_sequence
+from h5utils.h5array.inplace import iter_chunks_2
+from h5utils.h5array.slice import FullSlice
+from h5utils.h5array.slice import map_slice
 
 if TYPE_CHECKING:
     from h5utils import H5Array
-    from h5utils import Dataset
 
 # ====================================================
 # code
@@ -46,21 +47,15 @@ def implements(np_function: NP_FUNC | np.ufunc) -> Callable[[H5_FUNC], H5_FUNC]:
 
 def _get_output_array(out: H5Array[Any] | npt.NDArray[Any] | None,
                       shape: tuple[int, ...],
-                      axis: int | Iterable[int] | tuple[int] | None,
+                      axis: tuple[int, ...],
                       keepdims: bool,
                       dtype: npt.DTypeLike | None,
                       initial: int | float | complex | None) -> H5Array[Any] | npt.NDArray[Any]:
-    if axis is None:
-        expected_shape: tuple[int, ...] = ()
+    if keepdims:
+        expected_shape = tuple(s if i not in axis else 1 for i, s in enumerate(shape))
 
     else:
-        if isinstance(axis, int):
-            axis = (axis,)
-
         expected_shape = tuple(s for i, s in enumerate(shape) if i not in axis)
-
-    if keepdims:
-        expected_shape = (1,) * (len(shape) - len(expected_shape)) + expected_shape
 
     if out is not None:
         ndim = len(expected_shape)
@@ -78,28 +73,70 @@ def _get_output_array(out: H5Array[Any] | npt.NDArray[Any] | None,
     return out
 
 
-def _nest(obj: int, degree: int) -> tuple[Any]:
-    obj_: tuple[Any] = (obj,)
-
-    for _ in range(degree-1):
-        obj_ = (obj_,)
-
-    return obj_
-
-
-def _cast_chunk_index(index: tuple[int | slice, ...],
-                      axis: int | Iterable[int] | tuple[int] | None) -> tuple[tuple[Any] | int | slice, ...]:
-    if index == (slice(None),):
-        return ()
-
+def _as_tuple(axis: int | Iterable[int] | tuple[int, ...] | None,
+              ndim: int) -> tuple[int, ...]:
     if axis is None:
-        return index
+        return tuple(range(ndim))
 
-    if not isinstance(axis, Iterable):
-        axis = (axis,)
+    elif not isinstance(axis, Iterable):
+        return axis,
 
-    return tuple(e if isinstance(e, slice) else _nest(e, len(index) - len(tuple(axis)))
-                 for i, e in enumerate(index) if i not in axis)
+    return tuple(axis)
+
+
+def _get_indices(index: tuple[FullSlice, ...],
+                 axis: tuple[int, ...],
+                 where: Where) -> tuple[tuple[slice, ...] | tuple[()], npt.NDArray[np.bool_] | Literal[True]]:
+    if len(index) == 1 and index[0].is_whole_axis():
+        return (), where[:]
+
+    else:
+        return map_slice((e for i, e in enumerate(index) if i not in axis)), where[map_slice(index)]
+
+
+class Where:
+    def __init__(self,
+                 where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue,
+                 shape: tuple[int, ...]):
+        # TODO : make memory efficient (avoid broadcast)
+        self._where = None if where in (True, NoValue) else np.broadcast_to(where, shape)       # type: ignore[arg-type]
+
+    def __getitem__(self, item: tuple[Any, ...] | slice) -> npt.NDArray[np.bool_] | Literal[True]:
+        if self._where is None:
+            return True
+
+        return self._where[item]
+
+
+def _apply(func: partial[Callable[..., npt.NDArray[Any] | Iterable[Any] | int | float]],
+           operation: str,
+           a: H5Array[Any],
+           out: H5Array[Any] | npt.NDArray[Any] | None,
+           *,
+           dtype: npt.DTypeLike | None,
+           initial: int | float | complex | None,
+           where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue) -> Any:
+    axis = _as_tuple(func.keywords['axis'], a.ndim)
+    output_array = _get_output_array(out, a.shape, axis, func.keywords['keepdims'], dtype, initial)
+
+    if where is not False:
+        for index, chunk in a.iter_chunks(keepdims=True):
+            out_index, comp_index = _get_indices(index, axis, Where(where, a.shape))
+
+            if output_array.ndim:
+                getattr(output_array[out_index], operation)(
+                    np.array(func(chunk, where=comp_index), dtype=output_array.dtype)
+                )
+
+            else:
+                getattr(output_array, operation)(
+                    np.array(func(chunk, where=comp_index), dtype=output_array.dtype)
+                )
+
+    if out is None:
+        return output_array[()]
+
+    return output_array
 
 
 @implements(np.sum)
@@ -110,207 +147,60 @@ def sum(a: H5Array[Any],
         keepdims: bool = False,
         initial: int | float | complex | None = None,
         where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue) -> Any:
-    accumulator = _get_output_array(out, a.shape, axis, keepdims, dtype, initial)
-
-    for index, chunk in a.iter_chunks(keepdims=True):
-        acc_index = _cast_chunk_index(index, axis)
-        accumulator[acc_index] += np.array(
-            np.sum(chunk, keepdims=keepdims, dtype=dtype, axis=axis, where=where),    # type: ignore[arg-type, operator]
-            dtype=accumulator.dtype
-        )
-
-    if out is None and accumulator.ndim == 0:
-        return accumulator[()]
-
-    return accumulator
-
-
-@implements(np.mean)
-def mean(a: H5Array[Any],
-         axis: int | Iterable[Any] | tuple[int] | None = None,
-         out: H5Array[Any] | npt.NDArray[Any] | None = None,
-         keepdims: bool | None = None,
-         *,
-         where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | None = None,
-         **kwargs: Any) -> Any:
-    return np.mean(a.dset, axis=axis)  # type: ignore[call-overload]
+    return _apply(partial(np.sum, keepdims=keepdims, dtype=dtype, axis=axis), '__iadd__', a, out,
+                  dtype=dtype, initial=initial, where=where)
 
 
 @implements(np.all)
 def all(a: H5Array[Any],
         axis: int | Iterable[Any] | tuple[int] | None = None,
         out: H5Array[Any] | npt.NDArray[Any] | None = None,
-        keepdims: bool | None = None,
+        keepdims: bool = False,
         *,
-        where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | None = None,
-        **kwargs: Any) -> npt.NDArray[Any] | bool:
-    if axis is not None or keepdims is not None or where is not None:
-        raise NotImplementedError
-
-    if out is not None and (not isinstance(out, npt.NDArray) or out.ndim != 0):
-        raise ValueError('Expected one NDArray with 0 dimensions.')
-
-    chunks = get_chunks(a.MAX_MEM_USAGE, a.shape, a.dtype.itemsize)
-    work_array = get_work_array(a.shape, chunks[0], dtype=a.dtype)
-    res = out or True
-
-    for chunk in chunks:
-        work_subset = get_work_sel(chunk)
-        a.dset.read_direct(work_array, source_sel=chunk, dest_sel=work_subset)
-
-        if not np.all(work_array[work_subset]):
-            if out is None:
-                res = False
-            else:
-                cast(npt.NDArray[Any], res)[()] = False
-
-            break
-
-    return res
+        where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue) -> npt.NDArray[Any] | bool:
+    return _apply(partial(np.all, keepdims=keepdims, axis=axis), '__iand__', a, out,       # type: ignore[no-any-return]
+                  dtype=bool, initial=True, where=where)
 
 
 @implements(np.any)
 def any(a: H5Array[Any],
         axis: int | Iterable[Any] | tuple[int] | None = None,
         out: H5Array[Any] | npt.NDArray[Any] | None = None,
-        keepdims: bool | None = None,
+        keepdims: bool = False,
         *,
-        where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | None = None,
-        **kwargs: Any) -> npt.NDArray[Any] | bool:
-    if axis is not None or keepdims is not None or where is not None:
-        raise NotImplementedError
-
-    if out is not None and (not isinstance(out, npt.NDArray) or out.ndim != 0):
-        raise ValueError('Expected one NDArray with 0 dimensions.')
-
-    chunks = get_chunks(a.MAX_MEM_USAGE, a.shape, a.dtype.itemsize)
-    work_array = get_work_array(a.shape, chunks[0], dtype=a.dtype)
-    res = out or False
-
-    for chunk in chunks:
-        work_subset = get_work_sel(chunk)
-        a.dset.read_direct(work_array, source_sel=chunk, dest_sel=work_subset)
-
-        if np.any(work_array[work_subset]):
-            if out is None:
-                res = True
-            else:
-                cast(npt.NDArray[Any], res)[()] = True
-
-            break
-
-    return res
-
-
-def _set_false(r: H5Array[Any] | npt.NDArray[Any] | bool) -> H5Array[Any] | npt.NDArray[Any] | bool:
-    if isinstance(r, bool):
-        return False
-
-    r[()] = False
-    return r
+        where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue) -> npt.NDArray[Any] | bool:
+    return _apply(partial(np.any, keepdims=keepdims, axis=axis), '__ior__', a, out,        # type: ignore[no-any-return]
+                  dtype=bool, initial=False, where=where)
 
 
 def _cast_H5Array(obj: Any) -> H5Array[Any]:
     return obj                                                                             # type: ignore[no-any-return]
 
 
-@implements(np.equal)
-def equal(x1: int | float | complex | str | bytes | bool | np.generic | npt.NDArray[Any] | H5Array[Any],
-          x2: int | float | complex | str | bytes | bool | np.generic | npt.NDArray[Any] | H5Array[Any],
-          out: H5Array[Any] | npt.NDArray[Any] | None = None,
-          *,
-          where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | None = None,
-          **kwargs: Any) -> H5Array[Any] | npt.NDArray[Any] | bool:
-    if where is not None:
-        raise NotImplementedError
-
-    if out is not None and (not isinstance(out, npt.NDArray) or out.ndim != 0):
-        raise ValueError('Expected one NDArray with 0 dimensions.')
-
-    res: H5Array[Any] | npt.NDArray[Any] | bool = out or True
-
-    if not isinstance(x1, h5utils.H5Array):
-        # ensure x1 is an H5Array
-        x1, x2 = _cast_H5Array(x2), x1
-
-    if isinstance(x2, h5utils.H5Array):
-        if x1.shape != x2.shape:
-            return _set_false(res)
-
-        chunks = get_chunks(min(x1.MAX_MEM_USAGE, x2.MAX_MEM_USAGE),
-                            x1.shape,
-                            max(x1.dtype.itemsize, x2.dtype.itemsize))
-
-        work_array_x1 = get_work_array(x1.shape, chunks[0], dtype=x1.dtype)
-        work_array_x2 = get_work_array(x1.shape, chunks[0], dtype=x2.dtype)
-
-        for chunk in chunks:
-            work_subset = get_work_sel(chunk)
-            x1.dset.read_direct(work_array_x1, source_sel=chunk, dest_sel=work_subset)
-            x2.dset.read_direct(work_array_x2, source_sel=chunk, dest_sel=work_subset)
-
-            if not np.equal(work_array_x1[work_subset], work_array_x2[work_subset]):
-                res = _set_false(res)
-                break
-
-        return res
-
-    elif is_sequence(x2):
-        x2 = np.array(x2)
-
-        chunks = get_chunks(x1.MAX_MEM_USAGE, x1.shape, x1.dtype.itemsize)
-        work_array = get_work_array(x1.shape, chunks[0], dtype=x1.dtype)
-
-        for chunk in chunks:
-            work_subset = get_work_sel(chunk)
-            x1.dset.read_direct(work_array, source_sel=chunk, dest_sel=work_subset)
-
-            if not np.equal(work_array[work_subset], x2[work_subset]):
-                res = _set_false(res)
-                break
-
-        return res
-
-    else:
-        chunks = get_chunks(x1.MAX_MEM_USAGE, x1.shape, x1.dtype.itemsize)
-        work_array = get_work_array(x1.shape, chunks[0], dtype=x1.dtype)
-
-        for chunk in chunks:
-            work_subset = get_work_sel(chunk)
-            x1.dset.read_direct(work_array, source_sel=chunk, dest_sel=work_subset)
-
-            if not np.equal(work_array[work_subset], x2):
-                res = _set_false(res)
-                break
-
-        return res
-
-
 @implements(np.array_equal)
 def array_equal(x1: npt.NDArray[Any] | Iterable[Any] | int | float | H5Array[Any],
                 x2: npt.NDArray[Any] | Iterable[Any] | int | float | H5Array[Any],
                 equal_nan: bool = False) -> bool:
+    # ensure x1 is an H5Array
     if not isinstance(x1, h5utils.H5Array):
-        # ensure x1 is an H5Array
         x1, x2 = _cast_H5Array(x2), x1
 
-    if isinstance(x2, h5utils.H5Array):
-        if x1.shape != x2.shape:
+    # case 0D
+    if isinstance(x2, Number):
+        if x1.ndim:
             return False
 
+        return np.array_equal(x1[()], x2, equal_nan=equal_nan)                                  # type: ignore[arg-type]
 
+    # case nD
+    if not isinstance(x2, (np.ndarray, h5utils.H5Array)):
+        x2 = np.array(x2)
 
+    if x1.shape != x2.shape:
+        return False
 
+    for index, chunk_x1, chunk_x2 in iter_chunks_2(x1, x2):
+        if not np.array_equal(chunk_x1, chunk_x2):
+            return False
 
-
-    if isinstance(x1, h5utils.H5Array):
-        arr1_data: npt.NDArray[Any] | Iterable[Any] | int | float | Dataset[Any] = np.array(x1)
-    else:
-        arr1_data = x1
-
-    if isinstance(x2, h5utils.H5Array):
-        arr2_data: npt.NDArray[Any] | Iterable[Any] | int | float | Dataset[Any] = np.array(x2)
-    else:
-        arr2_data = x2
-
-    return np.array_equal(arr1_data, arr2_data, equal_nan=equal_nan)                            # type: ignore[arg-type]
+    return True

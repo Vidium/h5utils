@@ -52,3 +52,35 @@ def test_sum_axis_2(small_large_array):
     assert np.array_equal(np.sum(small_large_array, axis=2), np.array([[10., 35., 60., 85.],
                                                                        [110., 135., 160., 185.],
                                                                        [210., 235., 260., 285.]]))
+
+
+def test_sum_where(small_large_array):
+    assert np.array_equal(np.sum(small_large_array, axis=1, where=[True, False, False, True, True]),
+                          np.array([[30., 0., 0., 42., 46.],
+                                    [110., 0., 0., 122., 126.],
+                                    [190., 0., 0., 202., 206.]]))
+
+
+def test_sum_where_multiple_rows(small_large_array):
+    small_large_array.MAX_MEM_USAGE = str(40 * small_large_array.dtype.itemsize)
+    assert np.array_equal(np.sum(small_large_array, axis=1, where=[True, False, False, True, True]),
+                          np.array([[30., 0., 0., 42., 46.],
+                                    [110., 0., 0., 122., 126.],
+                                    [190., 0., 0., 202., 206.]]))
+
+
+def test_sum_where_few_elements(small_large_array):
+    small_large_array.MAX_MEM_USAGE = str(3 * small_large_array.dtype.itemsize)
+    assert np.array_equal(np.sum(small_large_array, axis=1, where=[True, False, False, True, True]),
+                          np.array([[30., 0., 0., 42., 46.],
+                                    [110., 0., 0., 122., 126.],
+                                    [190., 0., 0., 202., 206.]]))
+
+
+def test_all(array):
+    assert not np.all(array)
+
+
+def test_all_axis_keepdims(array):
+    assert np.array_equal(np.all(array, axis=1, keepdims=True), np.array([[False], [True], [True], [True], [True],
+                                                                          [True],  [True], [True], [True], [True]]))

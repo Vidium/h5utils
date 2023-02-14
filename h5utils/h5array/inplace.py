@@ -4,15 +4,25 @@
 # imports
 from __future__ import annotations
 
+from typing import Generator
+
 import numpy as np
 
 import numpy.typing as npt
+from typing import Any
 from typing import TypeVar
+from typing import TYPE_CHECKING
 
+import h5utils
+from h5utils.h5array.slice import FullSlice
+
+if TYPE_CHECKING:
+    from h5utils import H5Array
 
 # ====================================================
 # code
 _DT = TypeVar("_DT", bound=np.generic)
+INF = np.iinfo(int).max
 
 
 sizes = {"K": 1024, "M": 1024 * 1024, "G": 1024 * 1024 * 1024}
@@ -39,9 +49,9 @@ def get_size(s: int | str) -> int:
     return value
 
 
-def get_chunks(
-    max_memory_usage: int | str, shape: tuple[int, ...], itemsize: int
-) -> tuple[tuple[int | slice, ...], ...]:
+def get_chunks(max_memory_usage: int | str,
+               shape: tuple[int, ...],
+               itemsize: int) -> tuple[tuple[FullSlice, ...], ...]:
     # special case of 0D arrays
     if len(shape) == 0:
         raise ValueError("0D array")
@@ -67,19 +77,15 @@ def get_chunks(
 
     if block_axes == len(shape):
         # all array can be read at once
-        return ((slice(None),),)
+        return ((FullSlice.whole_axis(shape[0]),),)
 
-    if size_block == 1:
-        right_chunks = tuple(
-            (s,) + (slice(None),) * block_axes for s in range(0, rev_shape[block_axes])
-        )
+    whole_axes = tuple(FullSlice.whole_axis(s) for s in rev_shape[:block_axes][::-1])
+    iter_axis = rev_shape[block_axes]
 
-    else:
-        right_chunks = tuple(
-            (slice(s, min(s + size_block, rev_shape[block_axes])),)
-            + (slice(None),) * block_axes
-            for s in range(0, rev_shape[block_axes], size_block)
-        )
+    right_chunks = tuple(
+        (FullSlice(s, min(s + size_block, iter_axis), 1, iter_axis), *whole_axes)
+        for s in range(0, iter_axis, size_block)
+    )
 
     if block_axes + 1 == len(shape):
         return right_chunks
@@ -90,36 +96,55 @@ def get_chunks(
     )
 
     return tuple(
-        tuple(left) + tuple(right) for left in left_chunks for right in right_chunks
+        tuple(map(FullSlice.one, left, shape)) + tuple(right) for left in left_chunks for right in right_chunks
     )
 
 
-def _len(obj: int | slice) -> int:
-    if isinstance(obj, slice):
-        return int(obj.stop - obj.start)
+def _len(obj: int | FullSlice) -> int:
+    if isinstance(obj, FullSlice):
+        return len(obj)
 
     return 1
 
 
-def get_work_array(shape: tuple[int, ...], slicer: tuple[int | slice, ...], dtype: _DT) -> npt.NDArray[_DT]:
-    if slicer == (slice(None),):
+def get_work_array(shape: tuple[int, ...],
+                   slicer: tuple[FullSlice, ...],
+                   dtype: np.dtype[_DT]) -> npt.NDArray[_DT]:
+    if len(slicer) == 1 and slicer[0].is_whole_axis():
         return np.empty(shape, dtype=dtype)
 
-    slicer_shape = tuple(shape[i] if s == slice(None) else _len(s)
-                         for i, s in enumerate(slicer))
+    slicer_shape = tuple(_len(s) for s in slicer)
     return np.empty(slicer_shape, dtype=dtype)
 
 
-def get_work_sel(slicer: tuple[int | slice, ...]) -> tuple[int | slice, ...]:
-    sel: tuple[int | slice, ...] = ()
-    for s in slicer:
-        if s == slice(None):
-            sel += (slice(None),)
+def _read_array(arr: npt.NDArray[Any] | H5Array[Any],
+                out: npt.NDArray[Any],
+                source_sel: tuple[FullSlice, ...],
+                dest_sel: tuple[FullSlice, ...]) -> None:
+    if isinstance(arr, h5utils.H5Array):
+        arr.read_direct(out, source_sel=source_sel, dest_sel=dest_sel)
 
-        elif isinstance(s, slice):
-            sel += (slice(0, s.stop - s.start),)
+    else:
+        out[dest_sel] = arr[source_sel]
 
-        else:
-            sel += (0,)
 
-    return sel
+def iter_chunks_2(x1: npt.NDArray[Any] | H5Array[Any],
+                  x2: npt.NDArray[Any] | H5Array[Any]) \
+        -> Generator[tuple[tuple[FullSlice, ...], npt.NDArray[Any], npt.NDArray[Any]], None, None]:
+    if x1.shape != x2.shape:
+        raise ValueError(f'Cannot iterate chunks of arrays with different shapes: {x1.shape} != {x2.shape}')
+
+    max_mem_x1 = get_size(x1.MAX_MEM_USAGE) if isinstance(x1, h5utils.H5Array) else INF
+    max_mem_x2 = get_size(x2.MAX_MEM_USAGE) if isinstance(x2, h5utils.H5Array) else INF
+
+    chunks = get_chunks(min(max_mem_x1, max_mem_x2), x1.shape, max(x1.dtype.itemsize, x2.dtype.itemsize))
+    work_array_x1 = get_work_array(x1.shape, chunks[0], dtype=x1.dtype)
+    work_array_x2 = get_work_array(x1.shape, chunks[0], dtype=x2.dtype)
+
+    for chunk in chunks:
+        work_subset = tuple(c.shift_to_zero() for c in chunk)
+
+        _read_array(x1, work_array_x1, chunk, work_subset)
+        _read_array(x2, work_array_x2, chunk, work_subset)
+
+        yield chunk, work_array_x1[work_subset], work_array_x2[work_subset]
