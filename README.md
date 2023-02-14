@@ -62,12 +62,12 @@ np.array(h5_array)
 Logic functions
 - [x] np.all
 - [x] np.any
-- [ ] np.isfinite
-- [ ] np.isinf
-- [ ] np.isnan
+- [x] np.isfinite
+- [x] np.isinf
+- [x] np.isnan
 - [ ] np.isnat
-- [ ] np.isneginf
-- [ ] np.isposinf
+- [x] np.isneginf
+- [x] np.isposinf
 - [ ] np.iscomplex
 - [ ] np.iscomplexobj
 - [ ] np.isfortran

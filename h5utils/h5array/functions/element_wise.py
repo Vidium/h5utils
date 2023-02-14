@@ -239,3 +239,39 @@ def any(a: H5Array[Any],
         where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue) -> npt.NDArray[Any] | bool:
     return apply(partial(np.any, keepdims=keepdims, axis=axis), '__ior__', a, out,  # type: ignore[no-any-return]
                  dtype=bool, initial=False, where=where)
+
+
+@implements(np.isfinite)
+def isfinite(a: H5Array[Any],
+             out: H5Array[Any] | npt.NDArray[Any] | None = None,
+             *,
+             where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue) -> Any:
+    return apply(partial(np.any), '__ior__', a, out, dtype=bool, initial=False, where=where)
+
+
+@implements(np.isinf)
+def isinf(a: H5Array[Any],
+          out: H5Array[Any] | npt.NDArray[Any] | None = None,
+          *,
+          where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue) -> Any:
+    return apply(partial(np.isinf), '__ior__', a, out, dtype=bool, initial=False, where=where)
+
+
+@implements(np.isnan)
+def isnan(a: H5Array[Any],
+          out: H5Array[Any] | npt.NDArray[Any] | None = None,
+          *,
+          where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue) -> Any:
+    return apply(partial(np.isnan), '__ior__', a, out, dtype=bool, initial=False, where=where)
+
+
+@implements(np.isneginf)
+def isneginf(a: H5Array[Any],
+             out: H5Array[Any] | npt.NDArray[Any] | None = None) -> Any:
+    return apply(partial(np.isneginf), '__ior__', a, out, dtype=bool, initial=False, where=NoValue)
+
+
+@implements(np.isposinf)
+def isposinf(a: H5Array[Any],
+             out: H5Array[Any] | npt.NDArray[Any] | None = None) -> Any:
+    return apply(partial(np.isposinf), '__ior__', a, out, dtype=bool, initial=False, where=NoValue)

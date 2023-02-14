@@ -124,3 +124,8 @@ def test_exp_where(small_array):
 
 def test_expm1(small_array):
     assert np.array_equal(np.expm1(small_array), np.expm1([1, 2, 3, 4, 5]))
+
+
+def test_isfinite(small_array):
+    small_array[0] = np.inf
+    assert np.array_equal(np.isfinite(small_array), [False, True, True, True, True])

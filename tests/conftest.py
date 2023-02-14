@@ -19,7 +19,7 @@ def group():
 
 @pytest.fixture
 def small_array() -> H5Array:
-    data = [1, 2, 3, 4, 5]
+    data = [1., 2., 3., 4., 5.]
 
     with File("h5_s_array", H5Mode.WRITE_TRUNCATE) as h5_file:
         write_object(h5_file, "data", data)
