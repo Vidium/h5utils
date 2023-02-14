@@ -24,7 +24,7 @@ from h5utils import Dataset
 from h5utils.h5array import repr
 from h5utils.h5array.inplace import get_chunks
 from h5utils.h5array.inplace import get_work_array
-from h5utils.h5array.functions import _HANDLED_FUNCTIONS
+from h5utils.h5array.functions import HANDLED_FUNCTIONS
 from h5utils.h5array.io import parse_selector
 from h5utils.h5array.io import write_to_dataset
 from h5utils.h5array.slice import FullSlice
@@ -213,10 +213,10 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
         args: tuple[Any, ...],
         kwargs: dict[str, Any],
     ) -> Any:
-        if func not in _HANDLED_FUNCTIONS:
+        if func not in HANDLED_FUNCTIONS:
             return NotImplemented
 
-        return _HANDLED_FUNCTIONS[func](*args, **kwargs)
+        return HANDLED_FUNCTIONS[func](*args, **kwargs)
 
     # endregion
 
