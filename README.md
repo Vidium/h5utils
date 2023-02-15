@@ -1,10 +1,11 @@
-# H5Utils
+# Ch5ampy
 
+Pronounced "champy".
 Collection of helper tools for reading or writing to h5 files using the h5py library.
 
 ## Description
 
-H5Utils provides a set of abstractions over h5py's (https://docs.h5py.org/en/stable/) objects for handling them as 
+Ch5mpy provides a set of abstractions over h5py's (https://docs.h5py.org/en/stable/) objects for handling them as 
 more commonly used objects.
 
 ### Pickle
