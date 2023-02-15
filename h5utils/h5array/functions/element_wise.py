@@ -36,6 +36,114 @@ def _apply_ufunc(a: H5Array[Any],
                  default_0D_output=False)
 
 
+@implements(np.sin)
+def sin(a: H5Array[Any],
+        out: tuple[H5Array[Any] | npt.NDArray[Any]] | None = None,
+        *,
+        where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue,
+        dtype: npt.DTypeLike | None = None) -> Any:
+    return _apply_ufunc(a, out, partial(np.sin, dtype=dtype), where, dtype)
+
+
+@implements(np.cos)
+def cos(a: H5Array[Any],
+        out: tuple[H5Array[Any] | npt.NDArray[Any]] | None = None,
+        *,
+        where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue,
+        dtype: npt.DTypeLike | None = None) -> Any:
+    return _apply_ufunc(a, out, partial(np.cos, dtype=dtype), where, dtype)
+
+
+@implements(np.tan)
+def tan(a: H5Array[Any],
+        out: tuple[H5Array[Any] | npt.NDArray[Any]] | None = None,
+        *,
+        where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue,
+        dtype: npt.DTypeLike | None = None) -> Any:
+    return _apply_ufunc(a, out, partial(np.tan, dtype=dtype), where, dtype)
+
+
+@implements(np.arcsin)
+def arcsin(a: H5Array[Any],
+           out: tuple[H5Array[Any] | npt.NDArray[Any]] | None = None,
+           *,
+           where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue,
+           dtype: npt.DTypeLike | None = None) -> Any:
+    return _apply_ufunc(a, out, partial(np.arcsin, dtype=dtype), where, dtype)
+
+
+@implements(np.arccos)
+def arccos(a: H5Array[Any],
+           out: tuple[H5Array[Any] | npt.NDArray[Any]] | None = None,
+           *,
+           where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue,
+           dtype: npt.DTypeLike | None = None) -> Any:
+    return _apply_ufunc(a, out, partial(np.arccos, dtype=dtype), where, dtype)
+
+
+@implements(np.arctan)
+def arctan(a: H5Array[Any],
+           out: tuple[H5Array[Any] | npt.NDArray[Any]] | None = None,
+           *,
+           where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue,
+           dtype: npt.DTypeLike | None = None) -> Any:
+    return _apply_ufunc(a, out, partial(np.arctan, dtype=dtype), where, dtype)
+
+
+@implements(np.sinh)
+def sinh(a: H5Array[Any],
+         out: tuple[H5Array[Any] | npt.NDArray[Any]] | None = None,
+         *,
+         where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue,
+         dtype: npt.DTypeLike | None = None) -> Any:
+    return _apply_ufunc(a, out, partial(np.sinh, dtype=dtype), where, dtype)
+
+
+@implements(np.cosh)
+def cosh(a: H5Array[Any],
+         out: tuple[H5Array[Any] | npt.NDArray[Any]] | None = None,
+         *,
+         where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue,
+         dtype: npt.DTypeLike | None = None) -> Any:
+    return _apply_ufunc(a, out, partial(np.cosh, dtype=dtype), where, dtype)
+
+
+@implements(np.tanh)
+def tanh(a: H5Array[Any],
+         out: tuple[H5Array[Any] | npt.NDArray[Any]] | None = None,
+         *,
+         where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue,
+         dtype: npt.DTypeLike | None = None) -> Any:
+    return _apply_ufunc(a, out, partial(np.tanh, dtype=dtype), where, dtype)
+
+
+@implements(np.arcsinh)
+def arcsinh(a: H5Array[Any],
+            out: tuple[H5Array[Any] | npt.NDArray[Any]] | None = None,
+            *,
+            where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue,
+            dtype: npt.DTypeLike | None = None) -> Any:
+    return _apply_ufunc(a, out, partial(np.arcsinh, dtype=dtype), where, dtype)
+
+
+@implements(np.arccosh)
+def arccosh(a: H5Array[Any],
+            out: tuple[H5Array[Any] | npt.NDArray[Any]] | None = None,
+            *,
+            where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue,
+            dtype: npt.DTypeLike | None = None) -> Any:
+    return _apply_ufunc(a, out, partial(np.arccosh, dtype=dtype), where, dtype)
+
+
+@implements(np.arctanh)
+def arctanh(a: H5Array[Any],
+            out: tuple[H5Array[Any] | npt.NDArray[Any]] | None = None,
+            *,
+            where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue,
+            dtype: npt.DTypeLike | None = None) -> Any:
+    return _apply_ufunc(a, out, partial(np.arctanh, dtype=dtype), where, dtype)
+
+
 @implements(np.floor)
 def floor(a: H5Array[Any],
           out: tuple[H5Array[Any] | npt.NDArray[Any]] | None = None,

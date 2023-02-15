@@ -156,12 +156,12 @@ String operations
 - [ ] np.char.chararray
 
 Mathematical functions
-- [ ] np.sin
-- [ ] np.cos
-- [ ] np.tan
-- [ ] np.arcsin
-- [ ] np.arccos
-- [ ] np.arctan
+- [x] np.sin
+- [x] np.cos
+- [x] np.tan
+- [x] np.arcsin
+- [x] np.arccos
+- [x] np.arctan
 - [ ] np.hypot
 - [ ] np.arctan2
 - [ ] np.degrees
@@ -169,12 +169,12 @@ Mathematical functions
 - [ ] np.unwrap
 - [ ] np.deg2rad
 - [ ] np.rad2deg
-- [ ] np.sinh
-- [ ] np.cosh
-- [ ] np.tanh
-- [ ] np.arcsinh
-- [ ] np.arccosh
-- [ ] np.arctanh
+- [x] np.sinh
+- [x] np.cosh
+- [x] np.tanh
+- [x] np.arcsinh
+- [x] np.arccosh
+- [x] np.arctanh
 - [ ] np.around
 - [ ] np.rint
 - [ ] np.fix
