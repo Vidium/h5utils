@@ -213,19 +213,19 @@ Mathematical functions
 - [ ] np.spacing
 - [ ] np.lcm
 - [ ] np.gcd
-- [ ] np.add
+- [x] np.add
 - [ ] np.reciprocal
 - [x] np.positive
 - [x] np.negative
 - [x] np.multiply
-- [ ] np.divide
-- [ ] np.power
-- [ ] np.subtract
-- [ ] np.true_divide
-- [ ] np.floor_divide
-- [ ] np.float_power
-- [ ] np.fmod
-- [ ] np.mod
+- [x] np.divide
+- [x] np.power
+- [x] np.subtract
+- [x] np.true_divide
+- [x] np.floor_divide
+- [x] np.float_power
+- [x] np.fmod
+- [x] np.mod
 - [ ] np.modf
 - [ ] np.remainder
 - [ ] np.divmod
@@ -234,12 +234,12 @@ Mathematical functions
 - [ ] np.imag
 - [ ] np.conj
 - [ ] np.conjugate
-- [ ] np.maximum
-- [ ] np.fmax
+- [x] np.maximum
+- [x] np.fmax
 - [ ] np.amax
 - [ ] np.nanmax
-- [ ] np.minimum
-- [ ] np.fmin
+- [x] np.minimum
+- [x] np.fmin
 - [ ] np.amin
 - [ ] np.nanmin
 - [ ] np.convolve
