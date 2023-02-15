@@ -74,10 +74,10 @@ Logic functions
 - [ ] np.isreal
 - [ ] np.isrealobj
 - [ ] np.isscalar
-- [ ] np.logical_and
-- [ ] np.logical_or
-- [ ] np.logical_not
-- [ ] np.logical_xor
+- [x] np.logical_and
+- [x] np.logical_or
+- [x] np.logical_not
+- [x] np.logical_xor
 - [ ] np.allclose
 - [ ] np.isclose
 - [x] np.array_equal

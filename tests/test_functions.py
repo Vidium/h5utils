@@ -172,3 +172,8 @@ def test_isinf_out(small_array):
     out = np.array([1, 2, 3, 4, 5])
     np.isinf(small_array, where=[True, False, False, True, True], out=out)
     assert np.array_equal(out, [False, 2, 3, True, False])
+
+
+def test_logical_and(small_array):
+    assert np.array_equal(np.logical_and(small_array, [True, True, False, False, True]),
+                          [True, True, False, False, True])
