@@ -5,14 +5,13 @@ from numbers import Number
 from typing import Any
 from typing import Union
 from typing import Literal
-from typing import Sequence
 from typing import Collection
 
 from .base import HLObject
 from ..h5d import DatasetID
 
 
-SELECTOR = Union[int, slice, range, Sequence[int], tuple[()]]
+SELECTOR = Union[int, bool, slice, range, Collection[int], Collection[bool], Collection[np.bool_], tuple[()]]
 
 
 class AstypeWrapper:
@@ -33,10 +32,9 @@ class AsStrWrapper:
 
 class Dataset(HLObject):
     def __init__(self, bind: DatasetID, *, readonly: bool = False): ...
-    def __getitem__(
-        self, args: SELECTOR | tuple[SELECTOR, ...], new_dtype: npt.DTypeLike | None = None) -> npt.NDArray[Any]: ...
-    def __setitem__(self, args: SELECTOR | tuple[SELECTOR, ...],
-                    val: npt.NDArray[Any] | Number | str) -> None: ...
+    def __getitem__(self, args: SELECTOR | tuple[SELECTOR, ...], new_dtype: npt.DTypeLike | None = None) \
+            -> npt.NDArray[Any]: ...
+    def __setitem__(self, args: SELECTOR | tuple[SELECTOR, ...], val: npt.NDArray[Any] | Number | str) -> None: ...
     @property
     def ndim(self) -> int: ...
     @property

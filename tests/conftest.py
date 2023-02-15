@@ -55,7 +55,7 @@ def small_large_array() -> H5Array:
 
 @pytest.fixture
 def large_array() -> H5Array:
-    data = np.arange(200_000 * 10_000).reshape((200_000, 10_000))
+    data = np.arange(20_000 * 10_000).reshape((20_000, 10_000))
 
     with File("h5_large_array", H5Mode.WRITE_TRUNCATE) as h5_file:
         write_object(h5_file, "data", data)

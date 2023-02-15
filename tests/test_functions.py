@@ -7,6 +7,10 @@ import numpy as np
 
 # ====================================================
 # code
+def test_array_equal(small_array):
+    assert np.array_equal(small_array, [1, 2, 3, 4, 5])
+
+
 def test_sum(array):
     assert np.sum(array) == 4950
 
@@ -96,6 +100,10 @@ def test_ceil(array):
     assert np.array_equal(np.ceil(array), np.arange(1., 101.).reshape((10, 10)))
 
 
+# def test_ceil_large(large_array):
+#     np.ceil(large_array)
+
+
 def test_trunc(array):
     array += 0.2
     assert np.array_equal(np.trunc(array), np.arange(100.).reshape((10, 10)))
@@ -117,7 +125,7 @@ def test_exp(array):
 
 def test_exp_where(small_array):
     out = np.array([1., 1., 1., 1., 1.])
-    np.exp(small_array, where=[True, False, False, True, True], out=out)
+    np.exp(small_array, out, where=[True, False, False, True, True])
 
     assert np.array_equal(out, [np.exp(1), 1., 1., np.exp(4), np.exp(5)])
 
@@ -129,3 +137,38 @@ def test_expm1(small_array):
 def test_isfinite(small_array):
     small_array[0] = np.inf
     assert np.array_equal(np.isfinite(small_array), [False, True, True, True, True])
+
+
+def test_equal(small_array):
+    assert np.all(np.equal(small_array, [1, 2, 3, 4, 5]))
+    assert np.array_equal(np.equal(small_array, 2), [False, True, False, False, False])
+
+
+def test_equal_where(small_array):
+    assert np.array_equal(np.equal(small_array, [1, 2, 3, 3, 3], where=[True, True, False, False, True]),
+                          [True, True, False, False, False])
+
+
+def test_greater_element(small_array):
+    assert np.array_equal(np.greater(small_array, 3), [False, False, False, True, True])
+
+
+def test_multiply(small_array):
+    assert np.array_equal(np.multiply(small_array, [2, 3, 4, 5, 6]), [2, 6, 12, 20, 30])
+
+
+def test_multiply_where(small_array):
+    assert np.array_equal(np.multiply(small_array, [2, 3, 4, 5, 6], where=[True, False, False, True, True]),
+                          [2, 2, 3, 20, 30])
+
+
+def test_isinf(small_array):
+    small_array[1] = np.inf
+    assert np.array_equal(np.isinf(small_array), [False, True, False, False, False])
+
+
+def test_isinf_out(small_array):
+    small_array[3] = np.inf
+    out = np.array([1, 2, 3, 4, 5])
+    np.isinf(small_array, where=[True, False, False, True, True], out=out)
+    assert np.array_equal(out, [False, 2, 3, True, False])

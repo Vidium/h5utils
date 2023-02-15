@@ -4,7 +4,9 @@
 # imports
 from __future__ import annotations
 
+from numbers import Number
 from typing import Generator
+from typing import cast
 
 import numpy as np
 
@@ -130,21 +132,35 @@ def _read_array(arr: npt.NDArray[Any] | H5Array[Any],
 
 def iter_chunks_2(x1: npt.NDArray[Any] | H5Array[Any],
                   x2: npt.NDArray[Any] | H5Array[Any]) \
-        -> Generator[tuple[tuple[FullSlice, ...], npt.NDArray[Any], npt.NDArray[Any]], None, None]:
-    if x1.shape != x2.shape:
-        raise ValueError(f'Cannot iterate chunks of arrays with different shapes: {x1.shape} != {x2.shape}')
+        -> Generator[tuple[tuple[FullSlice, ...], npt.NDArray[Any], npt.NDArray[Any] | Number], None, None]:
+    # special case where x2 is a 0D array, iterate through chunks of x1 and always yield x2
+    if x2.ndim == 0:
+        max_mem_x1 = get_size(x1.MAX_MEM_USAGE) if isinstance(x1, h5utils.H5Array) else INF
 
-    max_mem_x1 = get_size(x1.MAX_MEM_USAGE) if isinstance(x1, h5utils.H5Array) else INF
-    max_mem_x2 = get_size(x2.MAX_MEM_USAGE) if isinstance(x2, h5utils.H5Array) else INF
+        chunks = get_chunks(max_mem_x1, x1.shape, x1.dtype.itemsize)
+        work_array_x1 = get_work_array(x1.shape, chunks[0], dtype=x1.dtype)
 
-    chunks = get_chunks(min(max_mem_x1, max_mem_x2), x1.shape, max(x1.dtype.itemsize, x2.dtype.itemsize))
-    work_array_x1 = get_work_array(x1.shape, chunks[0], dtype=x1.dtype)
-    work_array_x2 = get_work_array(x1.shape, chunks[0], dtype=x2.dtype)
+        for chunk in chunks:
+            work_subset = tuple(c.shift_to_zero() for c in chunk)
+            _read_array(x1, work_array_x1, chunk, work_subset)
 
-    for chunk in chunks:
-        work_subset = tuple(c.shift_to_zero() for c in chunk)
+            yield chunk, work_array_x1[work_subset], cast(Number, x2[()])
 
-        _read_array(x1, work_array_x1, chunk, work_subset)
-        _read_array(x2, work_array_x2, chunk, work_subset)
+    # nD case
+    else:
+        if x1.shape != x2.shape:
+            raise ValueError(f'Cannot iterate chunks of arrays with different shapes: {x1.shape} != {x2.shape}')
 
-        yield chunk, work_array_x1[work_subset], work_array_x2[work_subset]
+        max_mem_x1 = get_size(x1.MAX_MEM_USAGE) if isinstance(x1, h5utils.H5Array) else INF
+        max_mem_x2 = get_size(x2.MAX_MEM_USAGE) if isinstance(x2, h5utils.H5Array) else INF
+
+        chunks = get_chunks(min(max_mem_x1, max_mem_x2), x1.shape, max(x1.dtype.itemsize, x2.dtype.itemsize))
+        work_array_x1 = get_work_array(x1.shape, chunks[0], dtype=x1.dtype)
+        work_array_x2 = get_work_array(x1.shape, chunks[0], dtype=x2.dtype)
+
+        for chunk in chunks:
+            work_subset = tuple(c.shift_to_zero() for c in chunk)
+            _read_array(x1, work_array_x1, chunk, work_subset)
+            _read_array(x2, work_array_x2, chunk, work_subset)
+
+            yield chunk, work_array_x1[work_subset], work_array_x2[work_subset]

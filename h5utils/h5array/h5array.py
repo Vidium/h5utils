@@ -15,7 +15,6 @@ from typing import Generic
 from typing import TypeVar
 from typing import Iterator
 from typing import Generator
-from typing import Collection
 from typing import TYPE_CHECKING
 from h5utils._typing import NP_FUNC
 from h5utils._typing import SELECTOR
@@ -189,19 +188,10 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     def __array_ufunc__(self, ufunc: NP_FUNC, method: str, *inputs: Any, **kwargs: Any) \
             -> Any:
         if method == "__call__":
-            operands: list[Number | Collection[Any] | Dataset[Any]] = []
+            if ufunc not in HANDLED_FUNCTIONS:
+                return NotImplemented
 
-            for input in inputs:
-                if isinstance(input, H5Array):
-                    operands.append(input.dset)
-
-                elif isinstance(input, (Number, Collection)):
-                    operands.append(input)
-
-                else:
-                    return NotImplemented
-
-            return ufunc(*operands, **kwargs)
+            return HANDLED_FUNCTIONS[ufunc](*inputs, **kwargs)
 
         else:
             raise NotImplemented

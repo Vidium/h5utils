@@ -82,12 +82,12 @@ Logic functions
 - [ ] np.isclose
 - [x] np.array_equal
 - [ ] np.array_equiv
-- [ ] np.greater
-- [ ] np.greater_equal
-- [ ] np.less
-- [ ] np.less_equal
-- [ ] np.equal
-- [ ] np.not_equal
+- [x] np.greater
+- [x] np.greater_equal
+- [x] np.less
+- [x] np.less_equal
+- [x] np.equal
+- [x] np.not_equal
 
 Binary operations
 - [ ] np.bitwize_and
@@ -217,7 +217,7 @@ Mathematical functions
 - [ ] np.reciprocal
 - [x] np.positive
 - [x] np.negative
-- [ ] np.multiply
+- [x] np.multiply
 - [ ] np.divide
 - [ ] np.power
 - [ ] np.subtract
