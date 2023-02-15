@@ -14,12 +14,12 @@ from typing import Any
 from typing import Mapping
 from typing import TYPE_CHECKING
 
-from h5utils.objects import File
-from h5utils.objects import Group
-from h5utils.utils import is_sequence
+from ch5mpy.objects import File
+from ch5mpy.objects import Group
+from ch5mpy.utils import is_sequence
 
 if TYPE_CHECKING:
-    from h5utils import H5Array
+    from ch5mpy import H5Array
 
 
 # ====================================================

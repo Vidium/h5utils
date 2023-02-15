@@ -4,7 +4,7 @@
 # imports
 import numpy as np
 
-from h5utils.h5array.repr import print_dataset
+from ch5mpy.h5array.repr import print_dataset
 
 
 # ====================================================

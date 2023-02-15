@@ -2,7 +2,7 @@
 
 # ====================================================
 # imports
-from h5utils.h5array.functions.implement import HANDLED_FUNCTIONS
+from ch5mpy.h5array.functions.implement import HANDLED_FUNCTIONS
 
 # ====================================================
 # code

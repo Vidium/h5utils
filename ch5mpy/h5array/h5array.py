@@ -16,21 +16,21 @@ from typing import TypeVar
 from typing import Iterator
 from typing import Generator
 from typing import TYPE_CHECKING
-from h5utils._typing import NP_FUNC
-from h5utils._typing import SELECTOR
+from ch5mpy._typing import NP_FUNC
+from ch5mpy._typing import SELECTOR
 
-from h5utils import Dataset
-from h5utils.h5array import repr
-from h5utils.h5array.inplace import get_chunks
-from h5utils.h5array.inplace import get_work_array
-from h5utils.h5array.functions import HANDLED_FUNCTIONS
-from h5utils.h5array.io import parse_selector
-from h5utils.h5array.io import write_to_dataset
-from h5utils.h5array.slice import FullSlice
-from h5utils.h5array.slice import map_slice
+from ch5mpy import Dataset
+from ch5mpy.h5array import repr
+from ch5mpy.h5array.inplace import get_chunks
+from ch5mpy.h5array.inplace import get_work_array
+from ch5mpy.h5array.functions import HANDLED_FUNCTIONS
+from ch5mpy.h5array.io import parse_selector
+from ch5mpy.h5array.io import write_to_dataset
+from ch5mpy.h5array.slice import FullSlice
+from ch5mpy.h5array.slice import map_slice
 
 if TYPE_CHECKING:
-    from h5utils.h5array.subset import H5ArrayView
+    from ch5mpy.h5array.subset import H5ArrayView
 
 
 # ====================================================
@@ -62,7 +62,7 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
         return repr.print_dataset(self, sep="")
 
     def __getitem__(self, index: SELECTOR | tuple[SELECTOR, ...]) -> _T | H5Array[_T] | H5ArrayView[_T]:
-        from h5utils.h5array.subset import H5ArrayView
+        from ch5mpy.h5array.subset import H5ArrayView
 
         selection, nb_elements = parse_selector(self.shape, index)
 

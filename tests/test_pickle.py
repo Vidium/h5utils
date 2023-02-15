@@ -5,7 +5,7 @@
 import pickle
 import numpy as np
 
-from h5utils.write import write_object
+from ch5mpy.write import write_object
 
 
 # ====================================================

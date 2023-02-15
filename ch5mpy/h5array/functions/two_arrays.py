@@ -12,14 +12,14 @@ from typing import Any
 from typing import Iterable
 from typing import TYPE_CHECKING
 
-import h5utils
-from h5utils.h5array.inplace import iter_chunks_2
-from h5utils.h5array.functions.apply import apply_2
-from h5utils.h5array.functions.implement import implements
+import ch5mpy
+from ch5mpy.h5array.inplace import iter_chunks_2
+from ch5mpy.h5array.functions.apply import apply_2
+from ch5mpy.h5array.functions.implement import implements
 
 
 if TYPE_CHECKING:
-    from h5utils import H5Array
+    from ch5mpy import H5Array
 
 
 # ====================================================
@@ -31,7 +31,7 @@ def _cast_H5Array(obj: Any) -> H5Array[Any]:
 def ensure_h5array_first(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
                          x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any]) \
         -> tuple[H5Array[Any], npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any]]:
-    if not isinstance(x1, h5utils.H5Array):
+    if not isinstance(x1, ch5mpy.H5Array):
         return _cast_H5Array(x2), x1
 
     return _cast_H5Array(x1), x2
@@ -51,7 +51,7 @@ def array_equal(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
         return np.array_equal(x1, x2, equal_nan=equal_nan)                                  # type: ignore[arg-type]
 
     # case nD
-    if not isinstance(x2, (np.ndarray, h5utils.H5Array)):
+    if not isinstance(x2, (np.ndarray, ch5mpy.H5Array)):
         x2 = np.array(x2)
 
     if x1.shape != x2.shape:

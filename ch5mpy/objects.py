@@ -18,8 +18,8 @@ from typing import cast
 from typing import TypeVar
 from typing import Generic
 
-from h5utils._typing import SELECTOR
-from h5utils.pickle.wrap import PickleableH5PyObject
+from ch5mpy._typing import SELECTOR
+from ch5mpy.pickle.wrap import PickleableH5PyObject
 
 
 # ====================================================

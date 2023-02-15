@@ -9,8 +9,8 @@ import numpy as np
 
 from typing import Callable
 
-from h5utils._typing import NP_FUNC
-from h5utils._typing import H5_FUNC
+from ch5mpy._typing import NP_FUNC
+from ch5mpy._typing import H5_FUNC
 
 
 # ====================================================
@@ -29,5 +29,5 @@ def implements(np_function: NP_FUNC | np.ufunc) -> Callable[[H5_FUNC], H5_FUNC]:
 
 
 # manually import function implementations otherwise they are never imported
-importlib.__import__("h5utils.h5array.functions.two_arrays")
-importlib.__import__("h5utils.h5array.functions.element_wise")
+importlib.__import__("ch5mpy.h5array.functions.two_arrays")
+importlib.__import__("ch5mpy.h5array.functions.element_wise")

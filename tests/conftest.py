@@ -3,10 +3,10 @@ import numpy as np
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
-from h5utils import H5Array
-from h5utils import File
-from h5utils import H5Mode
-from h5utils import write_object
+from ch5mpy import H5Array
+from ch5mpy import File
+from ch5mpy import H5Mode
+from ch5mpy import write_object
 
 
 @pytest.fixture

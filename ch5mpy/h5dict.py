@@ -17,11 +17,11 @@ from typing import cast
 from typing import Union
 from typing import Iterator
 
-import h5utils as hu
-from h5utils.objects import File
-from h5utils.objects import Group
-from h5utils.objects import Dataset
-from h5utils.write import write_object
+import ch5mpy as hu
+from ch5mpy.objects import File
+from ch5mpy.objects import Group
+from ch5mpy.objects import Dataset
+from ch5mpy.write import write_object
 
 # ====================================================
 # code

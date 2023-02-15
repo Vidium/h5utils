@@ -13,11 +13,11 @@ from enum import Enum
 
 from typing import Any
 
-from h5utils.write import write_attribute
-from h5utils.write import write_dataset
-from h5utils.write import write_object
-from h5utils import File
-from h5utils import Group
+from ch5mpy.write import write_attribute
+from ch5mpy.write import write_dataset
+from ch5mpy.write import write_object
+from ch5mpy import File
+from ch5mpy import Group
 
 
 # ====================================================

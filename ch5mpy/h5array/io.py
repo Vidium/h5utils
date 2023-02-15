@@ -16,10 +16,10 @@ from typing import Union
 from typing import TypeVar
 from typing import Iterable
 
-from h5utils import Dataset
-from h5utils._typing import SELECTOR
-from h5utils.h5array.slice import FullSlice
-from h5utils.utils import is_sequence
+from ch5mpy import Dataset
+from ch5mpy._typing import SELECTOR
+from ch5mpy.h5array.slice import FullSlice
+from ch5mpy.utils import is_sequence
 
 # ====================================================
 # code

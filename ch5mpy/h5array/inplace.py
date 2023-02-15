@@ -15,11 +15,11 @@ from typing import Any
 from typing import TypeVar
 from typing import TYPE_CHECKING
 
-import h5utils
-from h5utils.h5array.slice import FullSlice
+import ch5mpy
+from ch5mpy.h5array.slice import FullSlice
 
 if TYPE_CHECKING:
-    from h5utils import H5Array
+    from ch5mpy import H5Array
 
 # ====================================================
 # code
@@ -123,7 +123,7 @@ def _read_array(arr: npt.NDArray[Any] | H5Array[Any],
                 out: npt.NDArray[Any],
                 source_sel: tuple[FullSlice, ...],
                 dest_sel: tuple[FullSlice, ...]) -> None:
-    if isinstance(arr, h5utils.H5Array):
+    if isinstance(arr, ch5mpy.H5Array):
         arr.read_direct(out, source_sel=source_sel, dest_sel=dest_sel)
 
     else:
@@ -135,7 +135,7 @@ def iter_chunks_2(x1: npt.NDArray[Any] | H5Array[Any],
         -> Generator[tuple[tuple[FullSlice, ...], npt.NDArray[Any], npt.NDArray[Any] | Number], None, None]:
     # special case where x2 is a 0D array, iterate through chunks of x1 and always yield x2
     if x2.ndim == 0:
-        max_mem_x1 = get_size(x1.MAX_MEM_USAGE) if isinstance(x1, h5utils.H5Array) else INF
+        max_mem_x1 = get_size(x1.MAX_MEM_USAGE) if isinstance(x1, ch5mpy.H5Array) else INF
 
         chunks = get_chunks(max_mem_x1, x1.shape, x1.dtype.itemsize)
         work_array_x1 = get_work_array(x1.shape, chunks[0], dtype=x1.dtype)
@@ -151,8 +151,8 @@ def iter_chunks_2(x1: npt.NDArray[Any] | H5Array[Any],
         if x1.shape != x2.shape:
             raise ValueError(f'Cannot iterate chunks of arrays with different shapes: {x1.shape} != {x2.shape}')
 
-        max_mem_x1 = get_size(x1.MAX_MEM_USAGE) if isinstance(x1, h5utils.H5Array) else INF
-        max_mem_x2 = get_size(x2.MAX_MEM_USAGE) if isinstance(x2, h5utils.H5Array) else INF
+        max_mem_x1 = get_size(x1.MAX_MEM_USAGE) if isinstance(x1, ch5mpy.H5Array) else INF
+        max_mem_x2 = get_size(x2.MAX_MEM_USAGE) if isinstance(x2, ch5mpy.H5Array) else INF
 
         chunks = get_chunks(min(max_mem_x1, max_mem_x2), x1.shape, max(x1.dtype.itemsize, x2.dtype.itemsize))
         work_array_x1 = get_work_array(x1.shape, chunks[0], dtype=x1.dtype)

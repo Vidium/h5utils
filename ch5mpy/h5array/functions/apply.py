@@ -15,13 +15,13 @@ from typing import Union
 from typing import Iterable
 from typing import TYPE_CHECKING
 
-import h5utils
-from h5utils.h5array.inplace import iter_chunks_2
-from h5utils.h5array.slice import map_slice
-from h5utils.h5array.slice import FullSlice
+import ch5mpy
+from ch5mpy.h5array.inplace import iter_chunks_2
+from ch5mpy.h5array.slice import map_slice
+from ch5mpy.h5array.slice import FullSlice
 
 if TYPE_CHECKING:
-    from h5utils import H5Array
+    from ch5mpy import H5Array
 
 
 # ====================================================
@@ -195,7 +195,7 @@ def apply_2(func: np.ufunc,
         where_compute = Where(where, a.shape)
         where_output = Where(where, output_array.shape)
 
-        if not isinstance(b, (np.ndarray, h5utils.H5Array)):
+        if not isinstance(b, (np.ndarray, ch5mpy.H5Array)):
             b = np.array(b)
 
         for index, chunk_x1, chunk_x2 in iter_chunks_2(a, b):

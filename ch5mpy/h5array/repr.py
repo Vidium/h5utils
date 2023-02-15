@@ -9,7 +9,7 @@ from typing import overload
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from h5utils import H5Array
+    from ch5mpy import H5Array
 
 
 # ====================================================

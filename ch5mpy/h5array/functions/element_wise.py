@@ -13,11 +13,11 @@ from typing import Any
 from typing import Iterable
 from typing import TYPE_CHECKING
 
-from h5utils.h5array.functions.implement import implements
-from h5utils.h5array.functions.apply import apply
+from ch5mpy.h5array.functions.implement import implements
+from ch5mpy.h5array.functions.apply import apply
 
 if TYPE_CHECKING:
-    from h5utils import H5Array
+    from ch5mpy import H5Array
 
 
 # ====================================================

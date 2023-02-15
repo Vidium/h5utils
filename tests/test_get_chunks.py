@@ -2,8 +2,8 @@
 
 # ====================================================
 # imports
-from h5utils.h5array.inplace import get_chunks
-from h5utils.h5array.slice import FullSlice
+from ch5mpy.h5array.inplace import get_chunks
+from ch5mpy.h5array.slice import FullSlice
 
 
 # ====================================================

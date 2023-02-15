@@ -11,16 +11,16 @@ from typing import Any
 from typing import cast
 from typing import TypeVar
 from typing import Sequence
-from h5utils._typing import SELECTOR
-from h5utils._typing import NP_FUNC
+from ch5mpy._typing import SELECTOR
+from ch5mpy._typing import NP_FUNC
 
-import h5utils.h5array.h5array as h5array
-from h5utils import Dataset
-from h5utils.h5array.io import parse_selector
-from h5utils.h5array.io import read_from_dataset
-from h5utils.h5array.io import write_to_dataset
-from h5utils.h5array.slice import FullSlice
-from h5utils.h5array.slice import map_slice
+import ch5mpy.h5array.h5array as h5array
+from ch5mpy import Dataset
+from ch5mpy.h5array.io import parse_selector
+from ch5mpy.h5array.io import read_from_dataset
+from ch5mpy.h5array.io import write_to_dataset
+from ch5mpy.h5array.slice import FullSlice
+from ch5mpy.h5array.slice import map_slice
 
 # ====================================================
 # code

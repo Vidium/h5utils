@@ -9,12 +9,12 @@ more commonly used objects.
 
 ### Pickle
 The first level of abstraction simply wraps h5py's Datasets, Groups and Files to allow pickling. Those objects can 
-be directly imported from h5utils :
+be directly imported from ch5mpy :
 
 ```python
-from h5utils import File
-from h5utils import Group
-from h5utils import Dataset
+from ch5mpy import File
+from ch5mpy import Group
+from ch5mpy import Dataset
 ```
 
 ### H5Dict
@@ -25,9 +25,9 @@ Datasets). Large Datasets are wrapped as H5Arrays (see section [H5Arrays](#H5Arr
 To create an H5Dict, a `File` or `Group` object must be provided as argument :
 
 ```python
-from h5utils import File
-from h5utils import H5Dict
-from h5utils import H5Mode
+from ch5mpy import File
+from ch5mpy import H5Dict
+from ch5mpy import H5Mode
 
 dct = H5Dict(File("backed_dict.h5", H5Mode.READ_WRITE))
 
