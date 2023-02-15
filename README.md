@@ -49,7 +49,17 @@ H5Arrays wrap Datasets and implement numpy arrays' interface to fully behave as 
 amount of RAM used. The maximum amount of available RAM for performing operations can be set with the class variable 
 `H5Array.MAX_MEM_USAGE`, using suffixes `K`, `M` and `G` for expressing amounts in bytes.
 
-H5Arrays can be created by passing a `Dataset` as argument. Then, all usual numpy indexing and methods can be used. 
+H5Arrays can be created by passing a `Dataset` as argument. 
+
+```python
+from ch5mpy import File
+from ch5mpy import H5Mode
+from ch5mpy import H5Array
+
+h5_array = H5Array(File("h5_s_array", H5Mode.READ_WRITE)["data"])
+```
+
+Then, all usual numpy indexing and methods can be used. 
 When possible, those methods will be applied repeatedly on small chunks of the Dataset.
 
 To load an H5Array into memory as a numpy array, simply run :
