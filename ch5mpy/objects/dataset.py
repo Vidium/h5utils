@@ -17,6 +17,7 @@ from typing import cast
 from typing import TypeVar
 from typing import Generic
 from typing import Literal
+from typing import Collection
 
 from ch5mpy._typing import SELECTOR
 from ch5mpy.pickle.wrap import PickleableH5PyObject
@@ -70,6 +71,21 @@ class DatasetWrapper(ABC, Generic[_WT]):
 
     # endregion
 
+    # region methods
+    def read_direct(self,
+                    dest: npt.NDArray[Any],
+                    source_sel: tuple[int | slice | Collection[int], ...] | None = None,
+                    dest_sel: tuple[int | slice | Collection[int], ...] | None = None) -> None:
+        if source_sel is None:
+            source_sel = ()
+
+        if dest_sel is None:
+            dest_sel = ()
+
+        dest[dest_sel] = self[source_sel]
+
+    # endregion
+
 
 class AsStrWrapper(DatasetWrapper[str]):
     """Wrapper to decode strings on reading the dataset"""
@@ -101,6 +117,10 @@ class AsObjectWrapper(DatasetWrapper[_WT]):
     def __init__(self, dset: Dataset[Any], otype: type[_WT]):
         super().__init__(dset)
         self._otype = otype
+
+    def __repr__(self) -> str:
+        return f'<HDF5 dataset wrapper "{self._dset.name[1:]}": shape {self._dset.shape}, ' \
+               f'otype "{self._otype.__name__}">'
 
     def __getitem__(self, args: SELECTOR | tuple[SELECTOR, ...]) -> npt.NDArray[np.object_] | _WT:
         subset = self._dset[args]
