@@ -10,5 +10,3 @@ numpy==1.24.2
     # via
     #   ch5mpy (pyproject.toml)
     #   h5py
-typing-extensions==4.5.0
-    # via ch5mpy (pyproject.toml)
