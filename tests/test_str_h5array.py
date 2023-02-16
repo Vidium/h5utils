@@ -31,3 +31,8 @@ def test_str_array_dtype(str_array):
 
 def test_str_array_equals(str_array):
     assert np.array_equal(str_array, ['a', 'b', 'c', 'd', 'e'])
+
+
+def test_str_array_should_convert_to_numpy_array(str_array):
+    np_arr = np.array(str_array)
+    assert isinstance(np_arr, np.ndarray)

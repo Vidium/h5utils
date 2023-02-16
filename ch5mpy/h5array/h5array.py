@@ -185,7 +185,12 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
     # region interface
     def __array__(self, dtype: npt.DTypeLike | None = None) -> npt.NDArray[Any]:
-        return np.array(self._dset).astype(dtype)
+        array = np.array(self._dset)
+
+        if dtype is None:
+            return array
+
+        return array.astype(dtype)
 
     def __array_ufunc__(self, ufunc: NP_FUNC, method: str, *inputs: Any, **kwargs: Any) \
             -> Any:

@@ -45,6 +45,12 @@ class AsStrWrapper:
 
     # endregion
 
+    # region numpy interface
+    def __array__(self, dtype: npt.DTypeLike | None = None) -> npt.NDArray[Any]:
+        return self[()]
+
+    # endregion
+
     # region attributes
     @property
     def dtype(self) -> np.dtype[np.str_]:
