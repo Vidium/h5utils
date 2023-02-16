@@ -26,7 +26,7 @@ def str_array() -> H5Array:
 
 
 def test_str_array_dtype(str_array):
-    assert str_array.dtype == np.dtype('<U')
+    assert str_array.dtype == np.dtype('<U1')
 
 
 def test_str_array_equals(str_array):

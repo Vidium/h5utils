@@ -54,7 +54,9 @@ class AsStrWrapper:
     # region attributes
     @property
     def dtype(self) -> np.dtype[np.str_]:
-        return np.dtype('<U')
+        max_str_len = len(max(self._dset, key=len))                                        # type: ignore[call-overload]
+        return np.dtype('<U' + str(max_str_len))                    # FIXME : is there a better way to find out the
+                                                                    #  largest string ?
 
     @property
     def size(self) -> int:
