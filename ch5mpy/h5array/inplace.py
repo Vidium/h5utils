@@ -113,10 +113,10 @@ def get_work_array(shape: tuple[int, ...],
                    slicer: tuple[FullSlice, ...],
                    dtype: np.dtype[_DT]) -> npt.NDArray[_DT]:
     if len(slicer) == 1 and slicer[0].is_whole_axis():
-        return np.empty(shape, dtype=dtype)
+        return np.empty(shape, dtype=object if np.issubdtype(dtype, str) else dtype)
 
     slicer_shape = tuple(_len(s) for s in slicer)
-    return np.empty(slicer_shape, dtype=dtype)
+    return np.empty(slicer_shape, dtype=object if np.issubdtype(dtype, str) else dtype)
 
 
 def _read_array(arr: npt.NDArray[Any] | H5Array[Any],
@@ -128,6 +128,14 @@ def _read_array(arr: npt.NDArray[Any] | H5Array[Any],
 
     else:
         out[dest_sel] = arr[source_sel]
+
+
+def _as_non_bytes(arr: npt.NDArray[Any],
+                  dtype: np.dtype[Any]) -> npt.NDArray[Any]:
+    if np.issubdtype(dtype, str):
+        return arr.astype(str)
+
+    return arr
 
 
 def iter_chunks_2(x1: npt.NDArray[Any] | H5Array[Any],
@@ -144,7 +152,9 @@ def iter_chunks_2(x1: npt.NDArray[Any] | H5Array[Any],
             work_subset = tuple(c.shift_to_zero() for c in chunk)
             _read_array(x1, work_array_x1, chunk, work_subset)
 
-            yield chunk, work_array_x1[work_subset], cast(Number, x2[()])
+            yield chunk, \
+                _as_non_bytes(work_array_x1[work_subset], x1.dtype), \
+                cast(Number, x2[()])
 
     # nD case
     else:
@@ -163,4 +173,6 @@ def iter_chunks_2(x1: npt.NDArray[Any] | H5Array[Any],
             _read_array(x1, work_array_x1, chunk, work_subset)
             _read_array(x2, work_array_x2, chunk, work_subset)
 
-            yield chunk, work_array_x1[work_subset], work_array_x2[work_subset]
+            yield chunk, \
+                _as_non_bytes(work_array_x1[work_subset], x1.dtype), \
+                _as_non_bytes(work_array_x2[work_subset], x2.dtype)

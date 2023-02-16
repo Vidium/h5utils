@@ -21,6 +21,7 @@ from ch5mpy.h5array.io import read_from_dataset
 from ch5mpy.h5array.io import write_to_dataset
 from ch5mpy.h5array.slice import FullSlice
 from ch5mpy.h5array.slice import map_slice
+from ch5mpy.objects.dataset import AsStrWrapper
 
 # ====================================================
 # code
@@ -52,7 +53,7 @@ class H5ArrayView(h5array.H5Array[_T]):
     """A view on a H5Array."""
 
     # region magic methods
-    def __init__(self, dset: Dataset[_T], sel: tuple[Sequence[int] | FullSlice, ...]):
+    def __init__(self, dset: Dataset[_T] | AsStrWrapper, sel: tuple[Sequence[int] | FullSlice, ...]):
         super().__init__(dset)
         self._selection = sel
 

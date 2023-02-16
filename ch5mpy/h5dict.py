@@ -17,22 +17,23 @@ from typing import cast
 from typing import Union
 from typing import Iterator
 
-import ch5mpy as hu
-from ch5mpy.objects import File
-from ch5mpy.objects import Group
-from ch5mpy.objects import Dataset
+import ch5mpy as ch
+from ch5mpy import File
+from ch5mpy import Group
+from ch5mpy import Dataset
 from ch5mpy.write import write_object
+from ch5mpy.objects.dataset import AsStrWrapper
 
 # ====================================================
 # code
-H5DICT_CONTENT = Union["H5Dict", "hu.H5Array[Any]", Number, str]
+H5DICT_CONTENT = Union["H5Dict", "ch.H5Array[Any]", Number, str]
 
 
 def _get_in_memory(value: Any) -> Any:
     if isinstance(value, H5Dict):
         return value.copy()
 
-    elif isinstance(value, Dataset):
+    elif isinstance(value, (Dataset, AsStrWrapper)):
         return value[()]
 
     return value
@@ -120,18 +121,16 @@ def _parse_value(obj: Group | Dataset[Any]) -> H5DICT_CONTENT:
     elif isinstance(obj, Dataset):
         if obj.shape == ():
             # single value in dataset
-            if np.issubdtype(obj.dtype, np.number) or np.issubdtype(
-                obj.dtype, np.bool_
-            ):
+            if np.issubdtype(obj.dtype, np.number) or np.issubdtype(obj.dtype, np.bool_):
                 # return numeric value
                 return cast(Number, obj[()])
 
             else:
                 # return string value
-                return cast(str, obj.asstr()[()])
+                return cast(str, obj.asstr()[()][()])
 
         # return dataset as H5Array
-        return hu.H5Array(obj)
+        return ch.H5Array(obj)
 
     else:
         raise ValueError(

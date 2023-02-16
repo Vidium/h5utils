@@ -5,26 +5,32 @@
 from __future__ import annotations
 
 import h5py
-import numpy as np
 from abc import ABC
 from abc import abstractmethod
-from numbers import Number
 from h5py._hl.base import ValuesViewHDF5
 from h5py._hl.base import ItemsViewHDF5
 
-import numpy.typing as npt
 from typing import Any
 from typing import cast
-from typing import TypeVar
-from typing import Generic
 
-from ch5mpy._typing import SELECTOR
+from ch5mpy.objects.dataset import Dataset
 from ch5mpy.pickle.wrap import PickleableH5PyObject
 
 
 # ====================================================
 # code
-_T = TypeVar('_T', bound=np.generic)
+def _h5py_wrap_type(obj: Any) -> Any:
+    """Produce our objects instead of h5py default objects"""
+    if isinstance(obj, h5py.Dataset):
+        return Dataset(obj.id)
+    elif isinstance(obj, h5py.File):
+        return File(obj.id)
+    elif isinstance(obj, h5py.Group):
+        return Group(obj.id)
+    elif isinstance(obj, h5py.Datatype):
+        return obj  # Not supported for pickling yet. Haven't really thought about it
+    else:
+        return obj  # Just return, since we want to wrap h5py.Group.get too
 
 
 class _GroupManagerMixin(h5py.Group, ABC):
@@ -56,36 +62,6 @@ class _GroupManagerMixin(h5py.Group, ABC):
         group = super().create_group(name, track_order=track_order)
 
         return cast(Group, self._wrap(group))
-
-
-def _h5py_wrap_type(obj: Any) -> Any:
-    """Produce our objects instead of h5py default objects"""
-    if isinstance(obj, h5py.Dataset):
-        return Dataset(obj.id)
-    elif isinstance(obj, h5py.File):
-        return File(obj.id)
-    elif isinstance(obj, h5py.Group):
-        return Group(obj.id)
-    elif isinstance(obj, h5py.Datatype):
-        return obj  # Not supported for pickling yet. Haven't really thought about it
-    else:
-        return obj  # Just return, since we want to wrap h5py.Group.get too
-
-
-class Dataset(Generic[_T], PickleableH5PyObject, h5py.Dataset):
-    """Mix in our pickling class"""
-
-    def __getitem__(self,                                                                       # type: ignore[override]
-                    arg: SELECTOR | tuple[SELECTOR, ...],
-                    new_dtype: npt.DTypeLike | None = None) -> Number | str | npt.NDArray[_T]:
-        return super().__getitem__(arg, new_dtype)
-
-    def __setitem__(self, arg: SELECTOR | tuple[SELECTOR, ...], val: Any) -> None:
-        super().__setitem__(arg, val)
-
-    @property
-    def dtype(self) -> np.dtype[_T]:
-        return self.id.dtype                                                                # type: ignore[return-value]
 
 
 class Group(PickleableH5PyObject, _GroupManagerMixin):

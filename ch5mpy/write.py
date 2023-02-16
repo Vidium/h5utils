@@ -14,8 +14,8 @@ from typing import Any
 from typing import Mapping
 from typing import TYPE_CHECKING
 
-from ch5mpy.objects import File
-from ch5mpy.objects import Group
+from ch5mpy import File
+from ch5mpy import Group
 from ch5mpy.utils import is_sequence
 
 if TYPE_CHECKING:
