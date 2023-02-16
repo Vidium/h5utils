@@ -127,7 +127,7 @@ def _parse_value(obj: Group | Dataset[Any]) -> H5DICT_CONTENT:
 
             else:
                 # return string value
-                return cast(str, obj.asstr()[()][()])
+                return cast(str, obj.asstr()[()])
 
         # return dataset as H5Array
         return ch.H5Array(obj)

@@ -19,7 +19,7 @@ from typing import Iterable
 from ch5mpy import Dataset
 from ch5mpy._typing import SELECTOR
 from ch5mpy.h5array.slice import FullSlice
-from ch5mpy.objects.dataset import AsStrWrapper
+from ch5mpy.objects.dataset import DatasetWrapper
 from ch5mpy.utils import is_sequence
 
 # ====================================================
@@ -82,7 +82,7 @@ def _selection_iter(sel: tuple[Sequence[int] | FullSlice, ...]) -> Generator[
                     )
 
 
-def read_from_dataset(dataset: Dataset[_DT] | AsStrWrapper,
+def read_from_dataset(dataset: Dataset[_DT] | DatasetWrapper[_DT],
                       selection: tuple[Sequence[int] | FullSlice, ...],
                       loading_array: npt.NDArray[_DT]) -> None:
     for dataset_idx, array_idx in _selection_iter(selection):
@@ -90,7 +90,7 @@ def read_from_dataset(dataset: Dataset[_DT] | AsStrWrapper,
 
 
 def write_to_dataset(
-        dataset: Dataset[_DT] | AsStrWrapper,
+        dataset: Dataset[_DT] | DatasetWrapper[_DT],
         values: npt.NDArray[_DT],
         selection: tuple[Sequence[int] | FullSlice, ...]
 ) -> None:

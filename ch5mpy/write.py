@@ -51,6 +51,8 @@ def _store_dataset(
     else:
         loc.create_dataset(name, data=array)
 
+    loc[name].attrs['dtype'] = str(array.dtype)
+
 
 def write_dataset(loc: Group | File, name: str, obj: Any) -> None:
     """Write an array-like object to a H5 dataset."""

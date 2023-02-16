@@ -20,7 +20,7 @@ from ch5mpy._typing import NP_FUNC
 from ch5mpy._typing import SELECTOR
 
 from ch5mpy import Dataset
-from ch5mpy.objects.dataset import AsStrWrapper
+from ch5mpy.objects.dataset import DatasetWrapper
 from ch5mpy.h5array import repr
 from ch5mpy.h5array.inplace import get_chunks
 from ch5mpy.h5array.inplace import get_work_array
@@ -45,14 +45,15 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     MAX_MEM_USAGE: int | str = "250M"
 
     # region magic methods
-    def __init__(self, dset: Dataset[_T] | AsStrWrapper):
-        if not isinstance(dset, (Dataset, AsStrWrapper)):
+    def __init__(self, dset: Dataset[_T] | DatasetWrapper[_T]):
+        if not isinstance(dset, (Dataset, DatasetWrapper)):
             raise TypeError(f"Object of type '{type(dset)}' is not supported by H5Array.")
 
-        if dset.dtype == object:
-            dset = dset.asstr()
+        if np.issubdtype(np.dtype(str(dset.attrs.get('dtype', 'O'))), str):
+            self._dset: Dataset[_T] | DatasetWrapper[_T] = dset.asstr()                       # type: ignore[assignment]
 
-        self._dset = dset
+        else:
+            self._dset = dset
 
     def __repr__(self) -> str:
         return (
@@ -223,7 +224,7 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
     # region attributes
     @property
-    def dset(self) -> Dataset[_T] | AsStrWrapper:
+    def dset(self) -> Dataset[_T] | DatasetWrapper[_T]:
         return self._dset
 
     @property
@@ -232,7 +233,7 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
     @property
     def dtype(self) -> np.dtype[_T]:
-        return self._dset.dtype                                                             # type: ignore[return-value]
+        return self._dset.dtype
 
     @property
     def ndim(self) -> int:

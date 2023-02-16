@@ -9,6 +9,7 @@ from typing import TypeVar
 
 from .._objects import ObjectID
 from .files import File
+from .attrs import AttributeManager
 
 _K = TypeVar("_K", bound=str)
 _V = TypeVar("_V")
@@ -25,6 +26,9 @@ class HLObject(CommonStateObject):
     def name(self) -> str: ...
     @property
     def file(self) -> File: ...
+
+    @property
+    def attrs(self) -> AttributeManager: ...
 
 class MappingHDF5(Mapping[_K, _V], metaclass=ABCMeta):
     def keys(self) -> KeysViewHDF5[_K]: ...
