@@ -25,7 +25,7 @@ def co_array() -> H5Array:
     with File("h5_str_array", H5Mode.WRITE_TRUNCATE) as h5_file:
         write_object(h5_file, "data", data)
 
-    yield H5Array(File("h5_str_array", H5Mode.READ_WRITE)["data"].maptype(ComplexObject))
+    yield H5Array(File("h5_str_array", H5Mode.READ_WRITE)["data"]).maptype(ComplexObject)
 
     Path("h5_str_array").unlink()
 

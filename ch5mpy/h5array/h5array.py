@@ -249,6 +249,9 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     def astype(self, dtype: npt.DTypeLike) -> npt.NDArray[Any]:
         return np.array(self, dtype=dtype)
 
+    def maptype(self, otype: type[Any]) -> H5Array[Any]:
+        return H5Array(self._dset.maptype(otype))
+
     def iter_chunks(self, keepdims: bool = False) \
             -> Generator[tuple[tuple[FullSlice, ...], npt.NDArray[_T]], None, None]:
         chunks = get_chunks(self.MAX_MEM_USAGE, self.shape, self.dtype.itemsize)
