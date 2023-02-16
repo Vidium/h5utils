@@ -104,7 +104,11 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
             yield self[i]
 
     def __contains__(self, item: Any) -> bool:
-        raise NotImplementedError
+        for _, chunk in self.iter_chunks():
+            if item in chunk:
+                return True
+
+        return False
 
     def _inplace_operation(self, func: NP_FUNC, value: Any) -> H5Array[_T]:
         if self.shape == ():

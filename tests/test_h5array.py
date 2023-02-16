@@ -112,3 +112,13 @@ def test_apply_all_function(array):
 
 def test_apply_any_function(array):
     assert np.any(array)
+
+
+def test_should_find_value_in_array(small_large_array):
+    small_large_array.MAX_MEM_USAGE = str(3 * small_large_array.dtype.itemsize)
+    assert 10 in small_large_array
+
+
+def test_should_not_find_missing_value_in_array(small_large_array):
+    small_large_array.MAX_MEM_USAGE = str(3 * small_large_array.dtype.itemsize)
+    assert 1000 not in small_large_array
