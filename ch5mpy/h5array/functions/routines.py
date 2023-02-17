@@ -10,6 +10,7 @@ import numpy.typing as npt
 from typing import Any
 from typing import TYPE_CHECKING
 
+import ch5mpy
 from ch5mpy.h5array.functions.implement import implements
 
 if TYPE_CHECKING:
@@ -78,3 +79,19 @@ def unique(ar: H5Array[Any],
     if len(to_return) == 1:
         return to_return[0]
     return to_return                                                                        # type: ignore[return-value]
+
+
+@implements(np.concatenate)
+def concatenate(arrays: H5Array[Any] | tuple[H5Array[Any] | npt.NDArray[Any], ...],
+                axis: int | None = 0,
+                out: H5Array[Any] | npt.NDArray[Any] | None = None,
+                dtype: npt.DTypeLike | None = None) -> H5Array[Any] | npt.NDArray[Any]:
+    if out is None:
+        if isinstance(arrays, ch5mpy.H5Array):
+            return np.concatenate(np.array(arrays), axis=axis, dtype=dtype)
+
+        else:
+            return np.concatenate(tuple(map(np.array, arrays)), axis=axis, dtype=dtype)
+
+    else:
+        raise NotImplementedError
