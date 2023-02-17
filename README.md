@@ -268,7 +268,7 @@ Mathematical functions
 
 Set routines
 - [x] np.unique
-- [ ] np.in1d
+- [x] np.in1d
 - [ ] np.intersect1d
 - [ ] np.isin
 - [ ] np.setdiff1d

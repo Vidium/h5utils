@@ -233,3 +233,23 @@ def test_unique_not_equal_nan_with_counts(repeating_array):
     repeating_array[1, 4] = np.nan
     _, counts = np.unique(repeating_array, return_counts=True, equal_nan=False)
     assert np.array_equal(counts, [1, 5, 4, 1, 1])
+
+
+def test_in1d_np_in_h5(small_array):
+    small_array.MAX_MEM_USAGE = 3 * small_array.dtype.itemsize
+    assert np.array_equal(np.in1d([4, 1, 7], small_array), [True, True, False])
+
+
+def test_in1d_np_in_h5_invert(small_array):
+    small_array.MAX_MEM_USAGE = 3 * small_array.dtype.itemsize
+    assert np.array_equal(np.in1d([4, 1, 7], small_array, invert=True), [False, False, True])
+
+
+def test_in1d_h5_in_np(small_array):
+    small_array.MAX_MEM_USAGE = 3 * small_array.dtype.itemsize
+    assert np.array_equal(np.in1d(small_array, [4, 1, 7]), [True, False, False, True, False])
+
+
+def test_in1d_h5_in_h5(small_array):
+    small_array.MAX_MEM_USAGE = 3 * small_array.dtype.itemsize
+    assert np.array_equal(np.in1d(small_array, small_array), [True, True, True, True, True])

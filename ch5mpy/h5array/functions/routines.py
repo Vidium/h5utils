@@ -4,6 +4,8 @@
 # imports
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 
 import numpy.typing as npt
@@ -79,6 +81,62 @@ def unique(ar: H5Array[Any],
     if len(to_return) == 1:
         return to_return[0]
     return to_return                                                                        # type: ignore[return-value]
+
+
+def _in_chunk(chunk_1: npt.NDArray[Any], chunk_2: npt.NDArray[Any], res: npt.NDArray[Any], invert: bool) -> None:
+    if invert:
+        np.logical_and(res, np.in1d(chunk_1, chunk_2, invert=True), out=res)
+    else:
+        np.logical_or(res, np.in1d(chunk_1, chunk_2), out=res)
+
+
+@implements(np.in1d)
+def in1d(ar1: Any,
+         ar2: Any,
+         invert: bool = False) -> npt.NDArray[np.bool_]:
+    # cast arrays as either np.arrays or H5Arrays
+    if not isinstance(ar1, (np.ndarray, ch5mpy.H5Array)):
+        ar1 = np.array(ar1)
+
+    if not isinstance(ar2, (np.ndarray, ch5mpy.H5Array)):
+        ar2 = np.array(ar2)
+
+    # prepare output
+    if invert:
+        res = np.ones(ar1.size, dtype=bool)
+    else:
+        res = np.zeros(ar1.size, dtype=bool)
+
+    # case np.array in H5Array
+    if isinstance(ar1, np.ndarray):
+        ar2 = cast(ch5mpy.H5Array[Any], ar2)
+
+        for _, chunk in ar2.iter_chunks():
+            _in_chunk(ar1, chunk, res, invert=invert)
+
+    else:
+        ar1 = cast(ch5mpy.H5Array[Any], ar1)
+        index_offset = 0
+
+        # case H5Array in np.array
+        if isinstance(ar2, np.ndarray):
+            for _, chunk in ar1.iter_chunks():
+                index = slice(index_offset, index_offset + chunk.size)
+                index_offset += chunk.size
+                _in_chunk(chunk, ar2, res[index], invert=invert)
+
+        # case H5Array in H5Array
+        else:
+            ar2 = cast(ch5mpy.H5Array[Any], ar2)
+
+            for _, chunk_1 in ar1.iter_chunks():
+                index = slice(index_offset, index_offset + chunk_1.size)
+                index_offset += chunk_1.size
+
+                for _, chunk_2 in ar2.iter_chunks():
+                    _in_chunk(chunk_1, chunk_2, res[index], invert=invert)
+
+    return res
 
 
 @implements(np.concatenate)
