@@ -92,6 +92,19 @@ def test_should_get_single_value_from_view(array):
     assert array[2:4, [0, 2, 3]][0, 1] == 22
 
 
+def test_should_subset_from_boolean_array(array):
+    subset = array[np.array([True, False, True, False, False, False, False, False, False, False])]
+    assert np.array_equal(subset, np.array([[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                                            [20, 21, 22, 23, 24, 25, 26, 27, 28, 29]]))
+
+
+def test_should_subset_from_2_boolean_arrays(array):
+    subset = array[[True, False, True, False, False, False, False, False, False, False],
+                   [True, False, True, False, False, False, False, False, False, False]]
+    assert np.array_equal(subset, np.array([[0, 2],
+                                            [20, 22]]))
+
+
 def test_should_set_value_in_array(array):
     array[5, 7] = -1
     assert array[5, 7] == -1
