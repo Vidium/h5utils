@@ -1,0 +1,26 @@
+# coding: utf-8
+
+# ====================================================
+# imports
+from __future__ import annotations
+
+import numpy as np
+
+import numpy.typing as npt
+from typing import TypeVar
+from typing import TYPE_CHECKING
+
+from ch5mpy.h5array.functions.implement import implements
+
+if TYPE_CHECKING:
+    from ch5mpy import H5Array
+
+
+# ====================================================
+# code
+_T = TypeVar("_T", bound=np.generic)
+
+
+@implements(np.copy)
+def copy(a: H5Array[_T]) -> npt.NDArray[_T]:
+    return np.array(a)

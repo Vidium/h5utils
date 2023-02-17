@@ -274,4 +274,7 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
                     dest_sel: tuple[FullSlice, ...]) -> None:
         self._dset.read_direct(dest, source_sel=map_slice(source_sel), dest_sel=map_slice(dest_sel))
 
+    def copy(self) -> npt.NDArray[_T]:
+        return np.copy(self)
+
     # endregion

@@ -275,6 +275,53 @@ Set routines
 - [ ] np.setxor1d
 - [ ] np.union1d
 
+Array creation routines
+- [ ] np.empty
+- [ ] np.empty_like
+- [ ] np.eye
+- [ ] np.identity
+- [ ] np.ones
+- [ ] np.ones_like
+- [ ] np.zeros
+- [ ] np.zeros_like
+- [ ] np.full
+- [ ] np.full_like
+- [x] np.array
+- [x] np.asarray
+- [x] np.asanyarray
+- [ ] np.ascontiguousarray
+- [ ] np.asmatrix
+- [x] np.copy
+- [ ] np.frombuffer
+- [ ] np.from_dlpack
+- [ ] np.fromfile
+- [ ] np.fromfunction
+- [ ] np.fromiter
+- [ ] np.fromstring
+- [ ] np.loadtxt
+- [ ] np.core.records.array
+- [ ] np.core.records.fromarrays
+- [ ] np.core.records.fromrecords
+- [ ] np.core.records.fromstring
+- [ ] np.core.records.fromfile
+- [ ] np.core.defchararray.array
+- [ ] np.core.defchararray.asarray
+- [ ] np.arange
+- [ ] np.linspace
+- [ ] np.logspace
+- [ ] np.geomspace
+- [ ] np.meshgrid
+- [ ] np.mgrid
+- [ ] np.ogrid
+- [ ] np.diag
+- [ ] np.diagflat
+- [ ] np.tri
+- [ ] np.tril
+- [ ] np.triu
+- [ ] np.vander
+- [ ] np.mat
+- [ ] np.bmat
+
 Array manipulation routines
 - [ ] np.copyto
 - [ ] np.shape
