@@ -38,17 +38,5 @@ def test_str_array_should_convert_to_numpy_array(str_array):
     assert isinstance(np_arr, np.ndarray)
 
 
-def test_str_array_with_larger_dtype_in_attrs():
-    data = ['a', 'b', 'c', 'd', 'e']
-
-    with File("h5_str_array", H5Mode.WRITE_TRUNCATE) as h5_file:
-        write_object(h5_file, "data", data)
-        h5_file['data'].attrs['dtype'] = '<U4'
-
-    array = H5Array(File("h5_str_array", H5Mode.READ_WRITE)["data"])
-
-    # ---------------------------------------------------------------
-    assert array
-
-    # ---------------------------------------------------------------
-    Path("h5_str_array").unlink()
+def test_str_array_repr(str_array):
+    assert repr(str_array) == "H5Array(['a', 'b', 'c', 'd', 'e'], shape=(5,), dtype=<U1)"

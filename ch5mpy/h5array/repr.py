@@ -15,15 +15,9 @@ if TYPE_CHECKING:
 # ====================================================
 # code
 @overload
-def _get3(arr: H5Array[Any]) -> list[Any | None]:
-    ...
-
-
+def _get3(arr: H5Array[Any]) -> list[Any | None]: ...
 @overload
-def _get3(arr: None) -> None:
-    ...
-
-
+def _get3(arr: None) -> None: ...
 def _get3(arr: H5Array[Any] | None) -> list[Any | None] | None:
     """Get the first (and last) 3 elements in a set <arr>."""
     if arr is None:
@@ -42,7 +36,7 @@ def _print3(
     if lst is None:
         return f"{before}...{end}"
 
-    return f"{before}[{(sep + ' ').join(['...' if e is None else str(e) for e in lst])}]{end}"
+    return f"{before}[{(sep + ' ').join(['...' if e is None else repr(e) for e in lst])}]{end}"
 
 
 def _get_padding(
