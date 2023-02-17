@@ -52,7 +52,7 @@ def unique(ar: H5Array[Any],
         index_concat = np.concatenate((index, index_chunk + index_offset))
 
         for u, c in zip(unique_chunk, counts_chunk):
-            if np.isnan(u):
+            if isinstance(u, float) and np.isnan(u):
                 u = _NAN_PLACEHOLDER
             counts[u] = counts.setdefault(u, 0) + c
 
