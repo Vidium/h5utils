@@ -2,7 +2,14 @@
 
 # ====================================================
 # imports
+import pytest
 import numpy as np
+from pathlib import Path
+
+from ch5mpy import File
+from ch5mpy import H5Mode
+from ch5mpy import H5Array
+from ch5mpy import write_object
 
 
 # ====================================================
@@ -177,3 +184,52 @@ def test_isinf_out(small_array):
 def test_logical_and(small_array):
     assert np.array_equal(np.logical_and(small_array, [True, True, False, False, True]),
                           [True, True, False, False, True])
+
+
+@pytest.fixture
+def repeating_array() -> H5Array:
+    data = np.array([[1., 2, 1, 1, 2, 1],
+                     [2, 1, 0, 1, 1, 2]])
+
+    with File("h5_r_array", H5Mode.WRITE_TRUNCATE) as h5_file:
+        write_object(h5_file, "data", data)
+
+    yield H5Array(File("h5_r_array", H5Mode.READ_WRITE)["data"])
+
+    Path("h5_r_array").unlink()
+
+
+def test_unique(repeating_array):
+    assert np.array_equal(np.unique(repeating_array), [0, 1, 2])
+
+
+def test_unique_by_chunks(repeating_array):
+    repeating_array.MAX_MEM_USAGE = 3 * repeating_array.dtype.itemsize
+    assert np.array_equal(np.unique(repeating_array), [0, 1, 2])
+
+
+def test_unique_with_index(repeating_array):
+    repeating_array.MAX_MEM_USAGE = 3 * repeating_array.dtype.itemsize
+    unique, index = np.unique(repeating_array, return_index=True)
+    assert np.array_equal(unique, [0, 1, 2])
+    assert np.array_equal(index, [8, 0, 1])
+
+
+def test_unique_with_counts(repeating_array):
+    repeating_array.MAX_MEM_USAGE = 3 * repeating_array.dtype.itemsize
+    _, counts = np.unique(repeating_array, return_counts=True)
+    assert np.array_equal(counts, [1, 7, 4])
+
+
+def test_unique_not_equal_nan(repeating_array):
+    repeating_array[0, 0] = np.nan
+    repeating_array[1, 4] = np.nan
+    unique = np.unique(repeating_array, equal_nan=False)
+    assert np.array_equal(unique, [0, 1, 2, np.nan, np.nan], equal_nan=True)
+
+
+def test_unique_not_equal_nan_with_counts(repeating_array):
+    repeating_array[0, 0] = np.nan
+    repeating_array[1, 4] = np.nan
+    _, counts = np.unique(repeating_array, return_counts=True, equal_nan=False)
+    assert np.array_equal(counts, [1, 5, 4, 1, 1])

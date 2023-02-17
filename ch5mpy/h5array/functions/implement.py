@@ -29,5 +29,6 @@ def implements(np_function: NP_FUNC | np.ufunc) -> Callable[[H5_FUNC], H5_FUNC]:
 
 
 # manually import function implementations otherwise they are never imported
+importlib.__import__("ch5mpy.h5array.functions.routines")
 importlib.__import__("ch5mpy.h5array.functions.two_arrays")
 importlib.__import__("ch5mpy.h5array.functions.element_wise")

@@ -265,3 +265,12 @@ Mathematical functions
 - [ ] np.nan_to_num
 - [ ] np.real_if_close
 - [ ] np.interp
+
+Set routines
+- [x] np.unique
+- [ ] np.in1d
+- [ ] np.intersect1d
+- [ ] np.isin
+- [ ] np.setdiff1d
+- [ ] np.setxor1d
+- [ ] np.union1d
