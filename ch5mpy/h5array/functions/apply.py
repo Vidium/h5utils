@@ -16,6 +16,7 @@ from typing import Iterable
 from typing import TYPE_CHECKING
 
 import ch5mpy
+from ch5mpy._typing import NP_FUNC
 from ch5mpy.h5array.inplace import iter_chunks_2
 from ch5mpy.h5array.slice import map_slice
 from ch5mpy.h5array.slice import FullSlice
@@ -152,7 +153,7 @@ def _apply_operation(operation: str,
         raise NotImplementedError(f"Do not know how to apply operation '{operation}'")
 
 
-def apply(func: partial[np.ufunc],
+def apply(func: partial[NP_FUNC],
           operation: str,
           a: H5Array[Any],
           out: H5Array[Any] | npt.NDArray[Any] | None,
@@ -181,14 +182,73 @@ def apply(func: partial[np.ufunc],
     return output_array
 
 
-def apply_2(func: np.ufunc,
+def _get_str_dtype(a: npt.NDArray[np.str_] | H5Array[np.str_],
+                   b: npt.NDArray[Any] | H5Array[Any],
+                   func: NP_FUNC) -> np.dtype[Any]:
+    assert np.issubdtype(a.dtype, str)
+
+    if func == np.char.multiply:
+        assert np.issubdtype(b.dtype, np.number)
+        return np.dtype(f'<U{a.dtype.itemsize // 4 * max(b)}')
+
+    assert np.issubdtype(b.dtype, str)
+
+    if func == np.char.add:
+        return np.dtype(f'<U{(a.dtype.itemsize + b.dtype.itemsize) // 4}')
+
+    elif func in (np.char.greater, np.char.greater_equal, np.char.less, np.char.less_equal, np.char.equal,
+                  np.char.not_equal):
+        return np.dtype(bool)
+
+    raise NotImplementedError
+
+
+def str_apply_2(func: NP_FUNC,
+                a: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_],
+                b: Any) -> npt.NDArray[Any]:
+    if not isinstance(a, (np.ndarray, ch5mpy.H5Array)):
+        a = np.array(a, dtype=str)
+
+    if not isinstance(b, (np.ndarray, ch5mpy.H5Array)):
+        b = np.array(b)
+
+    if b.dtype == object:
+        b = b.astype(str)
+
+    output_array = np.empty(max(a.shape, b.shape), dtype=_get_str_dtype(a, b, func))
+
+    for index, chunk_x1, chunk_x2 in iter_chunks_2(a, b):
+        output_array[map_slice(index)] = func(chunk_x1, chunk_x2)
+
+    return output_array
+
+
+num_to_str_ufunc: dict[NP_FUNC, NP_FUNC] = {
+    np.add: np.char.add,
+    np.multiply: np.char.multiply,
+    np.greater: np.char.greater,
+    np.greater_equal: np.char.greater_equal,
+    np.less: np.char.less,
+    np.less_equal: np.char.less_equal,
+    np.equal: np.char.equal,
+    np.not_equal: np.char.not_equal
+}
+
+
+def apply_2(func: NP_FUNC,
             a: H5Array[Any],
             b: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
             *,
             out: H5Array[Any] | npt.NDArray[Any] | None,
             default: Any,
             dtype: npt.DTypeLike | None,
-            where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue) -> Any:
+            where: npt.NDArray[np.bool_] | Iterable[bool] | int | bool) -> Any:
+    # if a is a str H5Array (got here because the operators ==, +, *, ... were used), pass to str_apply_2()
+    if np.issubdtype(a.dtype, str):
+        assert out is None and where is True
+        return str_apply_2(num_to_str_ufunc[func], a, b)
+
+    # operation on regular H5Arrays
     output_array = _get_output_array(out, a.shape, (), False, dtype, None, default)
 
     if where is not False:

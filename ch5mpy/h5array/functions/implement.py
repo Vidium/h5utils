@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 import importlib
-import numpy as np
 
 from typing import Callable
 
@@ -15,14 +14,15 @@ from ch5mpy._typing import H5_FUNC
 
 # ====================================================
 # code
-HANDLED_FUNCTIONS: dict[NP_FUNC | np.ufunc, H5_FUNC] = {}
+HANDLED_FUNCTIONS: dict[NP_FUNC | NP_FUNC, H5_FUNC] = {}
 
 
-def implements(np_function: NP_FUNC | np.ufunc) -> Callable[[H5_FUNC], H5_FUNC]:
-    """Register an __array_function__ implementation for DiagonalArray objects."""
+def implements(*np_functions: NP_FUNC | NP_FUNC) -> Callable[[H5_FUNC], H5_FUNC]:
+    """Register an __array_function__ implementation for H5Array objects."""
 
     def decorator(func: H5_FUNC) -> H5_FUNC:
-        HANDLED_FUNCTIONS[np_function] = func
+        for f in np_functions:
+            HANDLED_FUNCTIONS[f] = func
         return func
 
     return decorator

@@ -112,9 +112,9 @@ Binary operations
 - [ ] np.binary_repr
 
 String operations
-- [ ] np.char.add
-- [ ] np.char.multiply
-- [ ] np.char.mod
+- [x] np.char.add
+- [x] np.char.multiply
+- [x] np.char.mod
 - [ ] np.char.capitalize
 - [ ] np.char.center
 - [ ] np.char.decode
@@ -138,12 +138,12 @@ String operations
 - [ ] np.char.translate
 - [ ] np.char.upper
 - [ ] np.char.zfill
-- [ ] np.char.equal
-- [ ] np.char.not_equal
-- [ ] np.char.greater_equal
-- [ ] np.char.less_equal
-- [ ] np.char.greater
-- [ ] np.char.less
+- [x] np.char.equal
+- [x] np.char.not_equal
+- [x] np.char.greater_equal
+- [x] np.char.less_equal
+- [x] np.char.greater
+- [x] np.char.less
 - [ ] np.char.compare_chararrays
 - [ ] np.char.count
 - [ ] np.char.endswith

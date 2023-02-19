@@ -13,6 +13,7 @@ from typing import Any
 from typing import Iterable
 from typing import TYPE_CHECKING
 
+from ch5mpy._typing import NP_FUNC
 from ch5mpy.h5array.functions.implement import implements
 from ch5mpy.h5array.functions.apply import apply
 
@@ -25,7 +26,7 @@ if TYPE_CHECKING:
 # ufuncs ----------------------------------------------------------------------
 def _apply_ufunc(a: H5Array[Any],
                  out: tuple[H5Array[Any] | npt.NDArray[Any]] | None,
-                 ufunc: partial[np.ufunc],
+                 ufunc: partial[NP_FUNC],
                  where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue,
                  dtype: npt.DTypeLike | None) -> Any:
     return apply(ufunc, '__set__', a,
