@@ -18,8 +18,8 @@ from typing import TYPE_CHECKING
 import ch5mpy
 from ch5mpy._typing import NP_FUNC
 from ch5mpy.h5array.inplace import iter_chunks_2
-from ch5mpy.h5array.slice import map_slice
-from ch5mpy.h5array.slice import FullSlice
+from ch5mpy.h5array.indexing.slice import map_slice
+from ch5mpy.h5array.indexing.slice import FullSlice
 
 if TYPE_CHECKING:
     from ch5mpy import H5Array

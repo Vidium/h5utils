@@ -5,13 +5,14 @@ from numbers import Number
 from typing import Any
 from typing import Union
 from typing import Literal
+from typing import Iterable
 from typing import Collection
 
 from .base import HLObject
 from ..h5d import DatasetID
 
 
-SELECTOR = Union[int, bool, slice, range, Collection[int], Collection[bool], Collection[np.bool_], tuple[()]]
+SELECTOR = Union[int, bool, slice, range, Iterable[Any], tuple[()]]
 
 
 class AstypeWrapper:

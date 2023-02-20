@@ -27,8 +27,8 @@ from ch5mpy.h5array.inplace import get_work_array
 from ch5mpy.h5array.functions import HANDLED_FUNCTIONS
 from ch5mpy.h5array.io import parse_selector
 from ch5mpy.h5array.io import write_to_dataset
-from ch5mpy.h5array.slice import FullSlice
-from ch5mpy.h5array.slice import map_slice
+from ch5mpy.h5array.indexing.slice import FullSlice
+from ch5mpy.h5array.indexing.slice import map_slice
 
 if TYPE_CHECKING:
     from ch5mpy.h5array.subset import H5ArrayView

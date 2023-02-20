@@ -10,17 +10,17 @@ import numpy.typing as npt
 from typing import Any
 from typing import cast
 from typing import TypeVar
-from typing import Collection
 from ch5mpy._typing import SELECTOR
 from ch5mpy._typing import NP_FUNC
 
 import ch5mpy.h5array.h5array as h5array
 from ch5mpy import Dataset
+from ch5mpy.h5array.indexing.selection import Selection
 from ch5mpy.h5array.io import parse_selector
 from ch5mpy.h5array.io import read_from_dataset
 from ch5mpy.h5array.io import write_to_dataset
-from ch5mpy.h5array.slice import FullSlice
-from ch5mpy.h5array.slice import map_slice
+from ch5mpy.h5array.indexing.slice import FullSlice
+from ch5mpy.h5array.indexing.slice import map_slice
 from ch5mpy.objects.dataset import DatasetWrapper
 
 # ====================================================
@@ -29,31 +29,13 @@ _T = TypeVar("_T", bound=np.generic)
 _DT = TypeVar("_DT", bound=np.generic)
 
 
-def _cast_selection(
-        selection: tuple[Collection[int] | FullSlice, ...],
-        on: tuple[Collection[int] | FullSlice, ...],
-) -> tuple[Collection[int] | FullSlice, ...]:
-    casted_indices: tuple[Collection[int] | FullSlice, ...] = ()
-
-    for s, o in zip(selection, on):
-        if isinstance(s, FullSlice) and \
-                s.is_whole_axis(o.max if isinstance(o, FullSlice) else s.max):
-            casted_indices += (o,)
-
-        elif isinstance(o, FullSlice) and o.is_whole_axis():
-            casted_indices += (s,)
-
-        else:
-            casted_indices += (np.array(o)[np.array(s)],)
-
-    return casted_indices
-
-
 class H5ArrayView(h5array.H5Array[_T]):
     """A view on a H5Array."""
 
     # region magic methods
-    def __init__(self, dset: Dataset[_T] | DatasetWrapper[_T], sel: tuple[Collection[int] | FullSlice, ...]):
+    def __init__(self,
+                 dset: Dataset[_T] | DatasetWrapper[_T],
+                 sel: Selection):
         super().__init__(dset)
         self._selection = sel
 
@@ -63,13 +45,15 @@ class H5ArrayView(h5array.H5Array[_T]):
         if selection is None:
             return H5ArrayView(dset=self._dset, sel=self._selection)
 
-        elif nb_elements == 1:
-            loading_array = np.empty(1, dtype=self.dtype)
-            read_from_dataset(self._dset, _cast_selection(selection, on=self._selection), loading_array)
+        selection = selection.cast_on(self._selection)
+
+        if nb_elements == 1:
+            loading_array = np.empty((1,) * selection.max_ndim, dtype=self.dtype)
+            read_from_dataset(self._dset, selection, loading_array)
 
             return cast(_T, loading_array[0])
 
-        return H5ArrayView(dset=self._dset, sel=_cast_selection(selection, on=self._selection))
+        return H5ArrayView(dset=self._dset, sel=selection)
 
     def __setitem__(self, index: SELECTOR | tuple[SELECTOR, ...], value: Any) -> None:
         selection, nb_elements = parse_selector(self.shape_selection, index)
@@ -85,12 +69,10 @@ class H5ArrayView(h5array.H5Array[_T]):
                              f"values were selected but {' x '.join(map(str, value_arr.shape))} were given.")
 
         if selection is None:
-            selection_as_slices: tuple[Collection[int] | slice, ...] = \
-                tuple(e.as_slice() if isinstance(e, FullSlice) else e for e in self._selection)
-            self._dset[selection_as_slices] = value_arr
+            self._dset[self._selection.get()] = value_arr
 
         else:
-            write_to_dataset(self._dset, value_arr,  _cast_selection(selection, on=self._selection))
+            write_to_dataset(self._dset, value_arr,  selection.cast_on(self._selection))
 
     def __len__(self) -> int:
         return self.shape[0]
@@ -122,7 +104,7 @@ class H5ArrayView(h5array.H5Array[_T]):
 
     @property
     def shape(self) -> tuple[int, ...]:
-        return tuple(len(axis_sel) for axis_sel in self._selection if len(axis_sel) > 1)
+        return tuple(len(axis_sel) for axis_sel in self._selection if len(axis_sel) > 1 or axis_sel.ndim > 1)
 
     # endregion
 
@@ -136,7 +118,7 @@ class H5ArrayView(h5array.H5Array[_T]):
         nb_whole_axes_after = (len(whole_axes_before) + len(source_sel))
         whole_axes_after = tuple(FullSlice.whole_axis(s) for s in self.shape[nb_whole_axes_after:])
 
-        source_sel_casted = _cast_selection(whole_axes_before + source_sel + whole_axes_after, on=self._selection)
+        source_sel_casted = Selection(whole_axes_before + source_sel + whole_axes_after).cast_on(self._selection)
         read_from_dataset(self._dset, source_sel_casted, dest[map_slice(dest_sel)])
 
     # endregion

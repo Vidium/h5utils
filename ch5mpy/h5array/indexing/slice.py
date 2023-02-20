@@ -8,7 +8,10 @@ import numpy as np
 
 import numpy.typing as npt
 from typing import Any
+from typing import Literal
 from typing import Iterable
+
+from ch5mpy.h5array.indexing.list import ListIndex
 
 
 # ====================================================
@@ -53,6 +56,9 @@ class FullSlice:
     def __len__(self) -> int:
         return (self.true_stop - self._start) // self._step + 1
 
+    def __getitem__(self, item: ListIndex | FullSlice) -> ListIndex:
+        return ListIndex(np.array(self)[item])
+
     @classmethod
     def whole_axis(cls, max_: int) -> FullSlice:
         return FullSlice(0, max_, 1, max_)
@@ -94,6 +100,10 @@ class FullSlice:
     @property
     def max(self) -> int:
         return self._max
+
+    @property
+    def ndim(self) -> Literal[1]:
+        return 1
 
     # endregion
 

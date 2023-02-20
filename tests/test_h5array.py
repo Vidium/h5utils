@@ -135,3 +135,13 @@ def test_should_find_value_in_array(small_large_array):
 def test_should_not_find_missing_value_in_array(small_large_array):
     small_large_array.MAX_MEM_USAGE = str(3 * small_large_array.dtype.itemsize)
     assert 1000 not in small_large_array
+
+
+def test_subset_1d(array):
+    subset = array[0]
+    assert subset.ndim == 1
+
+
+def test_subset_2d(array):
+    subset = array[[0, 2], [[0]]]
+    assert subset.ndim == 2

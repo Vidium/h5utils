@@ -16,7 +16,7 @@ from typing import TypeVar
 from typing import TYPE_CHECKING
 
 import ch5mpy
-from ch5mpy.h5array.slice import FullSlice
+from ch5mpy.h5array.indexing.slice import FullSlice
 
 if TYPE_CHECKING:
     from ch5mpy import H5Array
