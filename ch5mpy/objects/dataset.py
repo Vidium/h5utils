@@ -104,9 +104,16 @@ class AsStrWrapper(DatasetWrapper[str]):
     # region attributes
     @property
     def dtype(self) -> np.dtype[np.str_]:
-        max_str_len = len(max(self._dset, key=len))                                        # type: ignore[call-overload]
-        return np.dtype('<U' + str(max_str_len))                    # FIXME : is there a better way to find out the
-                                                                    #  largest string ?
+        str_dset = self._dset.asstr()[:]
+
+        if isinstance(str_dset, np.ndarray):
+            return str_dset.dtype
+
+        return np.dtype(f'<U{len(str_dset)}')
+
+        # max_str_len = len(max(self._dset, key=len))                                        # type: ignore[call-overload]
+        # return np.dtype('<U' + str(max_str_len))                    # FIXME : is there a better way to find out the
+        #                                                             #  largest string ?
     # endregion
 
 
