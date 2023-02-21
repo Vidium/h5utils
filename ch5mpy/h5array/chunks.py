@@ -15,7 +15,6 @@ from typing import Generator
 from typing import TYPE_CHECKING
 
 import ch5mpy
-from ch5mpy import Dataset
 from ch5mpy.h5array.indexing.slice import FullSlice
 from ch5mpy.h5array.indexing.slice import map_slice
 
@@ -51,13 +50,6 @@ def get_size(s: int | str) -> int:
         raise ValueError(f"Got invalid size ({value} <= 0).")
 
     return value
-
-
-# def _len(obj: int | FullSlice) -> int:
-#     if isinstance(obj, FullSlice):
-#         return len(obj)
-#
-#     return 1
 
 
 def get_work_array(shape: tuple[int, ...],
@@ -177,7 +169,7 @@ class PairedChunkIterator:
                     out: npt.NDArray[Any],
                     source_sel: tuple[slice, ...],
                     dest_sel: tuple[slice, ...]) -> None:
-        if isinstance(arr, Dataset):
+        if isinstance(arr, ch5mpy.H5Array):
             arr.read_direct(out, source_sel=source_sel, dest_sel=dest_sel)
 
         else:

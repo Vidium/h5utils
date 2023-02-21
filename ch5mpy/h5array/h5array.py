@@ -26,7 +26,6 @@ from ch5mpy.h5array import repr
 from ch5mpy.h5array.functions import HANDLED_FUNCTIONS
 from ch5mpy.h5array.io import parse_selector
 from ch5mpy.h5array.io import write_to_dataset
-from ch5mpy.h5array.indexing.slice import FullSlice
 from ch5mpy.h5array.indexing.slice import map_slice
 
 if TYPE_CHECKING:
@@ -261,10 +260,10 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
     def read_direct(self,
                     dest: npt.NDArray[_T],
-                    source_sel: tuple[FullSlice, ...],
-                    dest_sel: tuple[FullSlice, ...]) -> None:
+                    source_sel: tuple[slice, ...],
+                    dest_sel: tuple[slice, ...]) -> None:
         dset = self._dset.asstr() if np.issubdtype(self.dtype, str) else self._dset
-        dset.read_direct(dest, source_sel=map_slice(source_sel), dest_sel=map_slice(dest_sel))
+        dset.read_direct(dest, source_sel=source_sel, dest_sel=dest_sel)
 
     def copy(self) -> npt.NDArray[_T]:
         return np.copy(self)

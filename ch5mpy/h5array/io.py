@@ -27,10 +27,7 @@ _DT = TypeVar("_DT", bound=np.generic)
 
 def _get_array_sel(sel: tuple[int | npt.NDArray[np.int_] | slice, ...]) -> Generator[int | slice, None, None]:
     for s in sel:
-        if isinstance(s, int) or (isinstance(s, np.ndarray) and len(s) == 1):
-            yield 0
-
-        else:
+        if not isinstance(s, int) and not (isinstance(s, np.ndarray) and len(s) == 1):
             yield slice(None)
 
 

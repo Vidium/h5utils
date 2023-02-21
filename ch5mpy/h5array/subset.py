@@ -22,7 +22,6 @@ from ch5mpy.h5array.io import parse_selector
 from ch5mpy.h5array.io import read_from_dataset
 from ch5mpy.h5array.io import write_to_dataset
 from ch5mpy.h5array.indexing.slice import FullSlice
-from ch5mpy.h5array.indexing.slice import map_slice
 from ch5mpy.objects.dataset import DatasetWrapper
 
 # ====================================================
@@ -113,18 +112,18 @@ class H5ArrayView(h5array.H5Array[_T]):
     # region methods
     def read_direct(self,
                     dest: npt.NDArray[_T],
-                    source_sel: tuple[FullSlice, ...],
-                    dest_sel: tuple[FullSlice, ...]) -> None:
+                    source_sel: tuple[slice, ...],
+                    dest_sel: tuple[slice, ...]) -> None:
         dset = self._dset.asstr() if np.issubdtype(self.dtype, str) else self._dset
         source_sel_expanded = Selection(_expanded_selection(source_sel, self.shape_selection))
         read_from_dataset(dset,
                           source_sel_expanded.cast_on(self._selection),
-                          dest[map_slice(dest_sel)])
+                          dest[dest_sel])
 
     # endregion
 
 
-def _expanded_selection(selection: tuple[FullSlice, ...],
+def _expanded_selection(selection: tuple[slice, ...],
                         shape: tuple[int, ...]) -> Generator[FullSlice, None, None]:
     sel_index = 0
 
@@ -136,5 +135,5 @@ def _expanded_selection(selection: tuple[FullSlice, ...],
             yield FullSlice.whole_axis(s)
 
         else:
-            yield selection[sel_index]
+            yield FullSlice.from_slice(selection[sel_index])
             sel_index += 1

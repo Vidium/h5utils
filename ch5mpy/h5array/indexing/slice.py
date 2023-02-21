@@ -65,17 +65,6 @@ class FullSlice:
 
         return ListIndex(np.array(self)[item])
 
-    @classmethod
-    def whole_axis(cls, max_: int) -> FullSlice:
-        return FullSlice(0, max_, 1, max_)
-
-    @classmethod
-    def one(cls,
-            element: int,
-            max_: int | None = None) -> FullSlice:
-        max_ = element + 1 if max_ is None else max_
-        return FullSlice(element, element+1, 1, max_)
-
     def __array__(self, dtype: npt.DTypeLike | None = None) -> npt.NDArray[Any]:
         return np.array(range(self.start, self._stop, self._step), dtype=dtype)
 
@@ -124,6 +113,21 @@ class FullSlice:
     # endregion
 
     # region methods
+    @classmethod
+    def whole_axis(cls, max_: int) -> FullSlice:
+        return FullSlice(0, max_, 1, max_)
+
+    @classmethod
+    def one(cls,
+            element: int,
+            max_: int | None = None) -> FullSlice:
+        max_ = element + 1 if max_ is None else max_
+        return FullSlice(element, element+1, 1, max_)
+
+    @classmethod
+    def from_slice(cls, s: slice) -> FullSlice:
+        return FullSlice(s.start, s.stop, s.step, s.stop)
+
     def as_slice(self) -> slice:
         return slice(self.start, self.stop, self.step)
 
