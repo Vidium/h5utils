@@ -63,3 +63,16 @@ def large_array() -> H5Array:
     yield H5Array(File("h5_large_array", H5Mode.READ_WRITE)["data"])
 
     Path("h5_large_array").unlink()
+
+
+@pytest.fixture
+def str_array() -> H5Array:
+    data = ['a', 'bc', 'd', 'efg', 'h']
+
+    with File("h5_str_array", H5Mode.WRITE_TRUNCATE) as h5_file:
+        write_object(h5_file, "data", data)
+
+    yield H5Array(File("h5_str_array", H5Mode.READ_WRITE)["data"])
+
+    Path("h5_str_array").unlink()
+

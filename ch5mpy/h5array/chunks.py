@@ -113,6 +113,13 @@ def _get_chunk_indices(max_memory_usage: int | str,
     )
 
 
+def _valid_dtype(arr: npt.NDArray[Any], dtype: np.dtype[Any]) -> npt.NDArray[Any]:
+    if np.issubdtype(dtype, str):
+        return arr.astype(str)
+
+    return arr
+
+
 class ChunkIterator:
     def __init__(self,
                  array: H5Array[Any],
@@ -127,13 +134,14 @@ class ChunkIterator:
         return f"<ChunkIterator over {self._array.shape} H5Array>"
 
     def __iter__(self) -> Generator[tuple[tuple[FullSlice, ...], npt.NDArray[Any]], None, None]:
-        dset = self._array.dset.asstr() if np.issubdtype(self._array.dtype, str) else self._array.dset
-
         for index in self._chunk_indices:
             work_subset = map_slice(c.shift_to_zero() for c in index)
-            dset.read_direct(self._work_array, source_sel=map_slice(index), dest_sel=work_subset)
-            res = self._work_array[work_subset]
+            self._array.read_direct(self._work_array, source_sel=map_slice(index), dest_sel=work_subset)
 
+            # cast to str if needed
+            res = _valid_dtype(self._work_array, self._array.dtype)[work_subset]
+
+            # reshape to keep dimensions if needed
             if self._keepdims:
                 res = res.reshape((1,) * (self._array.ndim - res.ndim) + res.shape)
 
@@ -181,8 +189,8 @@ class PairedChunkIterator:
             self._read_array(self._arr_1, self._work_array_1, map_slice(index), work_subset)
             self._read_array(self._arr_2, self._work_array_2, map_slice(index), work_subset)
 
-            res_1 = self._work_array_1[work_subset]
-            res_2 = self._work_array_2[work_subset]
+            res_1 = _valid_dtype(self._work_array_1, self._arr_1.dtype)[work_subset]
+            res_2 = _valid_dtype(self._work_array_2, self._arr_2.dtype)[work_subset]
 
             if self._keepdims:
                 res_1 = res_1.reshape((1,) * (self._arr_1.ndim - res_1.ndim) + res_1.shape)

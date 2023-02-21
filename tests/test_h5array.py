@@ -145,3 +145,8 @@ def test_subset_1d(array):
 def test_subset_2d(array):
     subset = array[[0, 2], [[0]]]
     assert subset.ndim == 2
+
+
+def test_iter_chunks_str_array(str_array):
+    _, chunk = list(str_array.iter_chunks())[0]
+    assert np.issubdtype(chunk.dtype, str)
