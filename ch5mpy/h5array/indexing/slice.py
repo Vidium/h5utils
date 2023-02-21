@@ -133,5 +133,10 @@ class FullSlice:
     # endregion
 
 
-def map_slice(index: Iterable[FullSlice]) -> tuple[slice, ...]:
-    return tuple(fs.as_slice() for fs in index)
+def map_slice(index: Iterable[FullSlice],
+              shift_to_zero: bool = False) -> tuple[slice, ...]:
+    if shift_to_zero:
+        return tuple(fs.shift_to_zero().as_slice() for fs in index)
+
+    else:
+        return tuple(fs.as_slice() for fs in index)

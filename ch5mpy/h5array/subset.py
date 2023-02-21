@@ -115,8 +115,9 @@ class H5ArrayView(h5array.H5Array[_T]):
                     dest: npt.NDArray[_T],
                     source_sel: tuple[FullSlice, ...],
                     dest_sel: tuple[FullSlice, ...]) -> None:
+        dset = self._dset.asstr() if np.issubdtype(self.dtype, str) else self._dset
         source_sel_expanded = Selection(_expanded_selection(source_sel, self.shape_selection))
-        read_from_dataset(self._dset,
+        read_from_dataset(dset,
                           source_sel_expanded.cast_on(self._selection),
                           dest[map_slice(dest_sel)])
 

@@ -13,7 +13,6 @@ from typing import Iterable
 from typing import TYPE_CHECKING
 
 import ch5mpy
-from ch5mpy.h5array.inplace import iter_chunks_2
 from ch5mpy.h5array.functions.apply import apply_2
 from ch5mpy.h5array.functions.apply import str_apply_2
 from ch5mpy.h5array.functions.implement import implements
@@ -58,8 +57,8 @@ def array_equal(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
     if x1.shape != x2.shape:
         return False
 
-    for index, chunk_x1, chunk_x2 in iter_chunks_2(x1, x2):
-        if not np.array_equal(chunk_x1, chunk_x2):                                              # type: ignore[arg-type]
+    for index, chunk_x1, chunk_x2 in x1.iter_chunks_with(x2):
+        if not np.array_equal(chunk_x1, chunk_x2):
             return False
 
     return True

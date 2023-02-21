@@ -14,16 +14,15 @@ from typing import cast
 from typing import Generic
 from typing import TypeVar
 from typing import Iterator
-from typing import Generator
 from typing import TYPE_CHECKING
 from ch5mpy._typing import NP_FUNC
 from ch5mpy._typing import SELECTOR
 
 from ch5mpy import Dataset
+from ch5mpy.h5array.chunks import ChunkIterator
+from ch5mpy.h5array.chunks import PairedChunkIterator
 from ch5mpy.objects.dataset import DatasetWrapper
 from ch5mpy.h5array import repr
-from ch5mpy.h5array.inplace import get_chunks
-from ch5mpy.h5array.inplace import get_work_array
 from ch5mpy.h5array.functions import HANDLED_FUNCTIONS
 from ch5mpy.h5array.io import parse_selector
 from ch5mpy.h5array.io import write_to_dataset
@@ -112,20 +111,20 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
         return False
 
     def _inplace_operation(self, func: NP_FUNC, value: Any) -> H5Array[_T]:
+        if np.issubdtype(self.dtype, str):
+            raise TypeError('Cannot perform inplace operation on str H5Array.')
+
+        # special case : 0D array
         if self.shape == ():
             self._dset[:] = func(self._dset[:], value)
+            return self
 
-        else:
-            chunks = get_chunks(self.MAX_MEM_USAGE, self.shape, self.dtype.itemsize)
-            work_array = get_work_array(self.shape, chunks[0], dtype=self.dtype)
+        # general case : 1D+ array
+        for index, chunk in self.iter_chunks():
+            func(chunk, value, out=chunk)
 
-            for chunk in chunks:
-                work_subset = map_slice(c.shift_to_zero() for c in chunk)
-                dataset_subset = map_slice(chunk)
-
-                self._dset.read_direct(work_array, source_sel=dataset_subset, dest_sel=work_subset)
-                func(work_array, value, out=work_array)
-                self._dset.write_direct(work_array, source_sel=work_subset, dest_sel=dataset_subset)
+            # write back result into array
+            self._dset.write_direct(chunk, source_sel=map_slice(index, shift_to_zero=True), dest_sel=map_slice(index))
 
         return self
 
@@ -252,27 +251,20 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     def maptype(self, otype: type[Any]) -> H5Array[Any]:
         return H5Array(self._dset.maptype(otype))
 
-    def iter_chunks(self, keepdims: bool = False) \
-            -> Generator[tuple[tuple[FullSlice, ...], npt.NDArray[_T]], None, None]:
-        chunks = get_chunks(self.MAX_MEM_USAGE, self.shape, self.dtype.itemsize)
-        work_array = get_work_array(self.shape, chunks[0], dtype=self.dtype)
+    def iter_chunks(self, keepdims: bool = False) -> ChunkIterator:
+        return ChunkIterator(self, keepdims)
 
-        for chunk in chunks:
-            work_subset = map_slice(c.shift_to_zero() for c in chunk)
-            self._dset.read_direct(work_array, source_sel=map_slice(chunk), dest_sel=work_subset)
-
-            if keepdims:
-                res = work_array[work_subset]
-                yield chunk, res.reshape((1,) * (self.ndim - res.ndim) + res.shape)
-
-            else:
-                yield chunk, work_array[work_subset]
+    def iter_chunks_with(self,
+                         other: npt.NDArray[Any] | H5Array[Any],
+                         keepdims: bool = False) -> PairedChunkIterator:
+        return PairedChunkIterator(self, other, keepdims)
 
     def read_direct(self,
                     dest: npt.NDArray[_T],
                     source_sel: tuple[FullSlice, ...],
                     dest_sel: tuple[FullSlice, ...]) -> None:
-        self._dset.read_direct(dest, source_sel=map_slice(source_sel), dest_sel=map_slice(dest_sel))
+        dset = self._dset.asstr() if np.issubdtype(self.dtype, str) else self._dset
+        dset.read_direct(dest, source_sel=map_slice(source_sel), dest_sel=map_slice(dest_sel))
 
     def copy(self) -> npt.NDArray[_T]:
         return np.copy(self)
