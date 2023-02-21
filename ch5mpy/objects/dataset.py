@@ -111,9 +111,6 @@ class AsStrWrapper(DatasetWrapper[str]):
 
         return np.dtype(f'<U{len(str_dset)}')
 
-        # max_str_len = len(max(self._dset, key=len))                                        # type: ignore[call-overload]
-        # return np.dtype('<U' + str(max_str_len))                    # FIXME : is there a better way to find out the
-        #                                                             #  largest string ?
     # endregion
 
 

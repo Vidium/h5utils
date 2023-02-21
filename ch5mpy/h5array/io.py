@@ -50,7 +50,10 @@ def _selection_iter(sel: tuple[npt.NDArray[np.int_] | slice, ...]) -> Generator[
 ]:
     cut_index = _index_non_slice(sel)
 
-    if len(sel) == 1 or cut_index is None:
+    if cut_index is None:
+        yield sel, tuple(_get_array_sel(sel))
+
+    elif len(sel) == 1:
         if isinstance(sel[0], np.ndarray) and len(sel[0]) == 1:
             yield (sel[0][0],), tuple(_get_array_sel(sel))
 

@@ -56,7 +56,13 @@ class FullSlice:
     def __len__(self) -> int:
         return (self.true_stop - self._start) // self._step + 1
 
-    def __getitem__(self, item: ListIndex | FullSlice) -> ListIndex:
+    def __getitem__(self, item: ListIndex | FullSlice) -> ListIndex | FullSlice:
+        if isinstance(item, FullSlice):
+            return FullSlice(start=self._start + item.start * self._step,
+                             stop=self._start + item.true_stop * self._step + 1,
+                             step=self._step,
+                             max_=self._max)
+
         return ListIndex(np.array(self)[item])
 
     @classmethod

@@ -4,6 +4,8 @@
 # imports
 from __future__ import annotations
 
+from typing import Generator
+
 import numpy as np
 
 import numpy.typing as npt
@@ -113,12 +115,25 @@ class H5ArrayView(h5array.H5Array[_T]):
                     dest: npt.NDArray[_T],
                     source_sel: tuple[FullSlice, ...],
                     dest_sel: tuple[FullSlice, ...]) -> None:
-        nb_whole_axes_before = (self._dset.ndim - self.ndim)
-        whole_axes_before = tuple(FullSlice.whole_axis(s) for s in self.shape[:nb_whole_axes_before])
-        nb_whole_axes_after = (len(whole_axes_before) + len(source_sel))
-        whole_axes_after = tuple(FullSlice.whole_axis(s) for s in self.shape[nb_whole_axes_after:])
-
-        source_sel_casted = Selection(whole_axes_before + source_sel + whole_axes_after).cast_on(self._selection)
-        read_from_dataset(self._dset, source_sel_casted, dest[map_slice(dest_sel)])
+        source_sel_expanded = Selection(_expanded_selection(source_sel, self.shape_selection))
+        read_from_dataset(self._dset,
+                          source_sel_expanded.cast_on(self._selection),
+                          dest[map_slice(dest_sel)])
 
     # endregion
+
+
+def _expanded_selection(selection: tuple[FullSlice, ...],
+                        shape: tuple[int, ...]) -> Generator[FullSlice, None, None]:
+    sel_index = 0
+
+    for s in shape:
+        if s == 1:
+            yield FullSlice.whole_axis(1)
+
+        elif sel_index >= len(selection):
+            yield FullSlice.whole_axis(s)
+
+        else:
+            yield selection[sel_index]
+            sel_index += 1
