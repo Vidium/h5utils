@@ -51,7 +51,6 @@ class H5ArrayView(h5array.H5Array[_T]):
         if nb_elements == 1:
             loading_array = np.empty((1,) * selection.max_ndim, dtype=self.dtype)
             read_from_dataset(self._dset, selection, loading_array)
-
             return cast(_T, loading_array[0])
 
         return H5ArrayView(dset=self._dset, sel=selection)

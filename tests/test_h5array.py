@@ -150,3 +150,7 @@ def test_subset_2d(array):
 def test_iter_chunks_str_array(str_array):
     _, chunk = list(str_array.iter_chunks())[0]
     assert np.issubdtype(chunk.dtype, str)
+
+
+def test_array_subset_ix(array):
+    assert array[np.ix_([5], [5])] == 55

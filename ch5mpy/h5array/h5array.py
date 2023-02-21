@@ -21,6 +21,7 @@ from ch5mpy._typing import SELECTOR
 from ch5mpy import Dataset
 from ch5mpy.h5array.chunks import ChunkIterator
 from ch5mpy.h5array.chunks import PairedChunkIterator
+from ch5mpy.h5array.io import read_from_dataset
 from ch5mpy.objects.dataset import DatasetWrapper
 from ch5mpy.h5array import repr
 from ch5mpy.h5array.functions import HANDLED_FUNCTIONS
@@ -67,11 +68,13 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
         selection, nb_elements = parse_selector(self.shape, index)
 
-        if nb_elements == 1:
-            return cast(_T, self._dset[cast(SELECTOR, index)])
-
-        elif selection is None:
+        if selection is None:
             return H5Array(dset=self._dset)
+
+        elif nb_elements == 1:
+            res = np.empty((), dtype=self.dtype)
+            read_from_dataset(self._dset, selection, res)
+            return cast(_T, res[()])
 
         else:
             return H5ArrayView(dset=self._dset, sel=selection)
