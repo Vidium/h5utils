@@ -270,7 +270,7 @@ Set routines
 - [x] np.unique
 - [x] np.in1d
 - [ ] np.intersect1d
-- [ ] np.isin
+- [x] np.isin
 - [ ] np.setdiff1d
 - [ ] np.setxor1d
 - [ ] np.union1d
@@ -281,9 +281,9 @@ Array creation routines
 - [ ] np.eye
 - [ ] np.identity
 - [ ] np.ones
-- [ ] np.ones_like
+- [x] np.ones_like
 - [ ] np.zeros
-- [ ] np.zeros_like
+- [x] np.zeros_like
 - [ ] np.full
 - [ ] np.full_like
 - [x] np.array

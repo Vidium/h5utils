@@ -13,6 +13,7 @@ from typing import Any
 from typing import TYPE_CHECKING
 
 import ch5mpy
+from ch5mpy._typing import NP_FUNC
 from ch5mpy.h5array.functions.implement import implements
 
 if TYPE_CHECKING:
@@ -83,11 +84,13 @@ def unique(ar: H5Array[Any],
     return to_return                                                                        # type: ignore[return-value]
 
 
-def _in_chunk(chunk_1: npt.NDArray[Any], chunk_2: npt.NDArray[Any], res: npt.NDArray[Any], invert: bool) -> None:
+def _in_chunk(chunk_1: npt.NDArray[Any], chunk_2: npt.NDArray[Any], res: npt.NDArray[Any], invert: bool,
+              func: NP_FUNC) -> npt.NDArray[np.bool_]:
     if invert:
-        np.logical_and(res, np.in1d(chunk_1, chunk_2, invert=True), out=res)
+        return np.logical_and(res, func(chunk_1, chunk_2, invert=True))
+
     else:
-        np.logical_or(res, np.in1d(chunk_1, chunk_2), out=res)
+        return np.logical_or(res, func(chunk_1, chunk_2))
 
 
 @implements(np.in1d)
@@ -112,7 +115,7 @@ def in1d(ar1: Any,
         ar2 = cast(ch5mpy.H5Array[Any], ar2)
 
         for _, chunk in ar2.iter_chunks():
-            _in_chunk(ar1, chunk, res, invert=invert)
+            res = _in_chunk(ar1, chunk, res, invert=invert, func=np.in1d)
 
     else:
         ar1 = cast(ch5mpy.H5Array[Any], ar1)
@@ -123,7 +126,7 @@ def in1d(ar1: Any,
             for _, chunk in ar1.iter_chunks():
                 index = slice(index_offset, index_offset + chunk.size)
                 index_offset += chunk.size
-                _in_chunk(chunk, ar2, res[index], invert=invert)
+                res[index] = _in_chunk(chunk, ar2, res[index], invert=invert, func=np.in1d)
 
         # case H5Array in H5Array
         else:
@@ -134,7 +137,50 @@ def in1d(ar1: Any,
                 index_offset += chunk_1.size
 
                 for _, chunk_2 in ar2.iter_chunks():
-                    _in_chunk(chunk_1, chunk_2, res[index], invert=invert)
+                    res[index] = _in_chunk(chunk_1, chunk_2, res[index], invert=invert, func=np.in1d)
+
+    return res
+
+
+@implements(np.isin)
+def isin(element: Any,
+         test_elements: Any,
+         invert: bool = False) -> npt.NDArray[np.bool_]:
+    # cast arrays as either np.arrays or H5Arrays
+    if not isinstance(element, (np.ndarray, ch5mpy.H5Array)):
+        element = np.array(element)
+
+    if not isinstance(test_elements, (np.ndarray, ch5mpy.H5Array)):
+        test_elements = np.array(test_elements)
+
+    # prepare output
+    if invert:
+        res = np.ones_like(element, dtype=bool)
+    else:
+        res = np.zeros_like(element, dtype=bool)
+
+    # case np.array in H5Array
+    if isinstance(element, np.ndarray):
+        test_elements = cast(ch5mpy.H5Array[Any], test_elements)
+
+        for _, chunk in test_elements.iter_chunks():
+            res = _in_chunk(element, chunk, res, invert=invert, func=np.isin)
+
+    else:
+        element = cast(ch5mpy.H5Array[Any], element)
+
+        # case H5Array in np.array
+        if isinstance(test_elements, np.ndarray):
+            for index, chunk in element.iter_chunks():
+                res[index] = _in_chunk(chunk, test_elements, res[index], invert=invert, func=np.isin)
+
+        # case H5Array in H5Array
+        else:
+            test_elements = cast(ch5mpy.H5Array[Any], test_elements)
+
+            for index_elem, chunk_elem in element.iter_chunks():
+                for _, chunk_test in test_elements.iter_chunks():
+                    res[index_elem] = _in_chunk(chunk_elem, chunk_test, res[index_elem], invert=invert, func=np.isin)
 
     return res
 

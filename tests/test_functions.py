@@ -253,3 +253,28 @@ def test_in1d_h5_in_np(small_array):
 def test_in1d_h5_in_h5(small_array):
     small_array.MAX_MEM_USAGE = 3 * small_array.dtype.itemsize
     assert np.array_equal(np.in1d(small_array, small_array), [True, True, True, True, True])
+
+
+def test_isin_h5_in_np(small_array):
+    small_array.MAX_MEM_USAGE = 3 * small_array.dtype.itemsize
+    res = np.isin(small_array, [4, 1, 7])
+    assert res.shape == (5,)
+    assert np.array_equal(res, [True, False, False, True, False])
+
+
+def test_isin_np_in_h5(small_array):
+    small_array.MAX_MEM_USAGE = 3 * small_array.dtype.itemsize
+    res = np.isin([4, 1, 7], small_array)
+    assert res.shape == (3,)
+    assert np.array_equal(res, [True, True, False])
+
+
+def test_isin_h5_in_h5(array, small_array):
+    array.MAX_MEM_USAGE = 3 * array.dtype.itemsize
+    small_array.MAX_MEM_USAGE = 3 * small_array.dtype.itemsize
+    res = np.isin(array, small_array)
+    assert res.shape == (10, 10)
+
+    expected = np.zeros((10, 10), dtype=bool)
+    expected[0, [1, 2, 3, 4, 5]] = True
+    assert np.array_equal(res, expected)
