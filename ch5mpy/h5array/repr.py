@@ -69,44 +69,29 @@ def _print_dataset_core(
 
     spacer = "," + "\n" * (arr.ndim - 1)
 
-    return (
-        spacer.join(
-            [
-                _print_dataset_core(
-                    rows[0],
-                    padding=padding,
-                    padding_skip_first=False,
-                    before=_get_padding(padding, before, padding_skip_first)
-                    + before
-                    + "[",
-                    end="",
-                    sep=sep,
-                )
-            ]
-            + [
-                _print_dataset_core(
-                    sub_arr,
-                    padding=padding,
-                    padding_skip_first=False,
-                    before=_get_padding(padding + len(before) + 1),
-                    end="",
-                    sep=sep,
-                )
-                for sub_arr in rows[1:-1]
-            ]
-            + [
-                _print_dataset_core(
-                    rows[-1],
-                    padding=padding,
-                    padding_skip_first=False,
-                    before=_get_padding(padding + len(before) + 1),
-                    end="",
-                    sep=sep,
-                )
-            ]
-        )
-        + "]"
-    )
+    return spacer.join([
+        _print_dataset_core(
+            rows[0],
+            padding=padding,
+            padding_skip_first=False,
+            before=_get_padding(padding, before, padding_skip_first) + before + "[",
+            end="",
+            sep=sep)] + [
+        _print_dataset_core(
+            sub_arr,
+            padding=padding,
+            padding_skip_first=False,
+            before=_get_padding(padding + len(before) + 1),
+            end="",
+            sep=sep) for sub_arr in rows[1:-1]] + ([
+        _print_dataset_core(
+            rows[-1],
+            padding=padding,
+            padding_skip_first=False,
+            before=_get_padding(padding + len(before) + 1),
+            end="",
+            sep=sep)
+    ] if len(rows) > 1 else [])) + "]"
 
 
 def print_dataset(

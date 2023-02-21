@@ -10,16 +10,17 @@ import numpy as np
 
 import numpy.typing as npt
 from typing import Any
-from typing import cast
 from typing import TypeVar
 from ch5mpy._typing import SELECTOR
 from ch5mpy._typing import NP_FUNC
 
-import ch5mpy.h5array.h5array as h5array
+import ch5mpy
 from ch5mpy import Dataset
 from ch5mpy.h5array.indexing.selection import Selection
+from ch5mpy.h5array.indexing.shape import shape_dim_from_selection
 from ch5mpy.h5array.io import parse_selector
 from ch5mpy.h5array.io import read_from_dataset
+from ch5mpy.h5array.io import read_one_from_dataset
 from ch5mpy.h5array.io import write_to_dataset
 from ch5mpy.h5array.indexing.slice import FullSlice
 from ch5mpy.objects.dataset import DatasetWrapper
@@ -30,7 +31,7 @@ _T = TypeVar("_T", bound=np.generic)
 _DT = TypeVar("_DT", bound=np.generic)
 
 
-class H5ArrayView(h5array.H5Array[_T]):
+class H5ArrayView(ch5mpy.H5Array[_T]):
     """A view on a H5Array."""
 
     # region magic methods
@@ -41,7 +42,8 @@ class H5ArrayView(h5array.H5Array[_T]):
         self._selection = sel
 
     def __getitem__(self, index: SELECTOR | tuple[SELECTOR, ...]) -> _T | H5ArrayView[_T]:
-        selection, nb_elements = parse_selector(self.shape_selection, index)
+        selection, nb_elements = parse_selector(shape_dim_from_selection(self.shape_selection, self._selection),
+                                                index)
 
         if selection is None:
             return H5ArrayView(dset=self._dset, sel=self._selection)
@@ -49,14 +51,13 @@ class H5ArrayView(h5array.H5Array[_T]):
         selection = selection.cast_on(self._selection)
 
         if nb_elements == 1:
-            loading_array = np.empty((1,) * selection.max_ndim, dtype=self.dtype)
-            read_from_dataset(self._dset, selection, loading_array)
-            return cast(_T, loading_array[0])
+            return read_one_from_dataset(self._dset, selection, self.dtype)
 
         return H5ArrayView(dset=self._dset, sel=selection)
 
     def __setitem__(self, index: SELECTOR | tuple[SELECTOR, ...], value: Any) -> None:
-        selection, nb_elements = parse_selector(self.shape_selection, index)
+        selection, nb_elements = parse_selector(shape_dim_from_selection(self.shape_selection, self._selection),
+                                                index)
 
         try:
             value_arr = np.array(value, dtype=self.dtype)

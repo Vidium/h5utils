@@ -154,3 +154,10 @@ def test_iter_chunks_str_array(str_array):
 
 def test_array_subset_ix(array):
     assert array[np.ix_([5], [5])] == 55
+
+
+def test_array_subset_2d(array):
+    subarr = array[[[0]]]
+    assert subarr.ndim == 2
+    assert subarr[0].ndim == 1
+    assert repr(subarr) == "H5Array([[0.0, 1.0, 2.0, ..., 7.0, 8.0, 9.0]], shape=(1, 10), dtype=float64)"

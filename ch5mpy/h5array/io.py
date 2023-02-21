@@ -8,14 +8,16 @@ import numpy as np
 from itertools import zip_longest
 
 from numpy import typing as npt
-from typing import Generator
+from typing import cast
 from typing import Union
 from typing import TypeVar
+from typing import Generator
 
 from ch5mpy import Dataset
 from ch5mpy._typing import SELECTOR
 from ch5mpy.h5array.indexing.list import ListIndex
 from ch5mpy.h5array.indexing.selection import Selection
+from ch5mpy.h5array.indexing.shape import ShapeElement
 from ch5mpy.h5array.indexing.slice import FullSlice
 from ch5mpy.objects.dataset import DatasetWrapper
 from ch5mpy.utils import is_sequence
@@ -81,6 +83,14 @@ def read_from_dataset(dataset: Dataset[_DT] | DatasetWrapper[_DT],
         dataset.read_direct(loading_array, source_sel=dataset_idx, dest_sel=array_idx)
 
 
+def read_one_from_dataset(dataset: Dataset[_DT] | DatasetWrapper[_DT],
+                          selection: Selection,
+                          dtype: np.dtype[_DT]) -> _DT:
+    loading_array = np.empty((), dtype=dtype)
+    read_from_dataset(dataset, selection, loading_array)
+    return cast(_DT, loading_array[()])
+
+
 def write_to_dataset(dataset: Dataset[_DT] | DatasetWrapper[_DT],
                      values: npt.NDArray[_DT],
                      selection: Selection) -> None:
@@ -109,12 +119,12 @@ def _check_bounds(max_: int, sel: ListIndex | FullSlice, axis: int) -> None:
 
 
 def _expanded_index(index: tuple[SELECTOR, ...],
-                    shape: tuple[int, ...]) -> Generator[SELECTOR, None, None]:
+                    shape: tuple[ShapeElement, ...]) -> Generator[SELECTOR, None, None]:
     """Generate an index whit added zeros where an axis has length 1 in <shape>."""
     i = 0
 
     for s in shape:
-        if s == 1:
+        if s.size == 1 and s.ndim == 1:
             yield 0
 
         else:
@@ -130,10 +140,10 @@ def _gets_whole_dataset(index: SELECTOR | tuple[SELECTOR, ...]) -> bool:
         (is_sequence(index) and all((e is True for e in index)))
 
 
-def parse_selector(shape: tuple[int, ...],
+def parse_selector(shape: tuple[ShapeElement, ...],
                    index: SELECTOR | tuple[SELECTOR, ...]) -> tuple[Selection | None, np.int_]:
     if _gets_whole_dataset(index):
-        return None, np.product(shape)
+        return None, np.product(tuple(s.size for s in shape))
 
     selection: tuple[ListIndex | FullSlice, ...] = ()
 
@@ -147,7 +157,7 @@ def parse_selector(shape: tuple[int, ...],
 
         if isinstance(axis_index, (slice, range)):
             parsed_axis_index: Union[ListIndex, FullSlice] = \
-                FullSlice(axis_index.start, axis_index.stop, axis_index.step, axis_len)
+                FullSlice(axis_index.start, axis_index.stop, axis_index.step, axis_len.size)
 
         elif is_sequence(axis_index):
             parsed_axis_index = ListIndex(np.array(axis_index))
@@ -158,7 +168,7 @@ def parse_selector(shape: tuple[int, ...],
         else:
             raise RuntimeError
 
-        _check_bounds(axis_len, parsed_axis_index, axis)
+        _check_bounds(axis_len.size, parsed_axis_index, axis)
         selection += (parsed_axis_index,)
 
     return Selection(selection), np.product([len(s) for s in selection])
