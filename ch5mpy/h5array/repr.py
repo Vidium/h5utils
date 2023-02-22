@@ -4,7 +4,11 @@
 # imports
 from __future__ import annotations
 
+import numpy as np
+from numbers import Number
+
 from typing import Any
+from typing import cast
 from typing import overload
 from typing import TYPE_CHECKING
 
@@ -15,13 +19,19 @@ if TYPE_CHECKING:
 # ====================================================
 # code
 @overload
-def _get3(arr: H5Array[Any]) -> list[Any | None]: ...
-@overload
 def _get3(arr: None) -> None: ...
-def _get3(arr: H5Array[Any] | None) -> list[Any | None] | None:
+@overload
+def _get3(arr: H5Array[Any] | Number | str) -> list[Any]: ...
+def _get3(arr: H5Array[Any] | Number | str | None) -> list[Any] | None:
     """Get the first (and last) 3 elements in a set <arr>."""
     if arr is None:
         return None
+
+    if np.isscalar(arr):
+        return [arr]
+
+    if TYPE_CHECKING:
+        arr = cast(H5Array[Any], arr)
 
     if len(arr) <= 6:
         return list(arr[:])
@@ -61,7 +71,7 @@ def _print_dataset_core(
     sep: str,
 ) -> str:
     # exit condition : array is 1D and can be printed
-    if arr is None or arr.ndim == 1:
+    if arr is None or arr.ndim <= 1:
         return _print3(_get3(arr), before=before, end=end, sep=sep)
 
     # recursive calls

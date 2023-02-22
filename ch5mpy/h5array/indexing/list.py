@@ -24,6 +24,7 @@ class ListIndex:
                  elements: npt.NDArray[np.int_ | np.bool_]):
         self._elements = cast(npt.NDArray[np.int_],
                               np.where(elements.flatten())[0] if elements.dtype == bool else elements.flatten())
+
         self._ndim = 1 if elements.dtype == bool else elements.ndim
 
     def __repr__(self) -> str:
@@ -37,9 +38,9 @@ class ListIndex:
 
     def __array__(self, dtype: npt.DTypeLike | None = None) -> npt.NDArray[Any]:
         if dtype is None:
-            return self._elements
+            return self._elements.reshape(self.shape)
 
-        return self._elements.astype(dtype)
+        return self._elements.reshape(self.shape).astype(dtype)
 
     # endregion
 
@@ -55,6 +56,13 @@ class ListIndex:
     @property
     def max(self) -> int:
         return int(self._elements.max())
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        if self.ndim == 0:
+            return ()
+
+        return (1,) * (self._ndim - 1) + (len(self._elements),)
 
     # endregion
 

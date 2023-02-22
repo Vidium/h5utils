@@ -7,9 +7,11 @@ from __future__ import annotations
 import numpy as np
 
 import numpy.typing as npt
+from typing import Any
 from typing import Iterable
 from typing import Iterator
 from typing import overload
+from typing import Generator
 
 from ch5mpy.h5array.indexing.list import ListIndex
 from ch5mpy.h5array.indexing.slice import FullSlice
@@ -17,8 +19,11 @@ from ch5mpy.h5array.indexing.slice import FullSlice
 
 # ====================================================
 # code
-def _cast_one(s: ListIndex | FullSlice,
+def _cast_one(s: ListIndex | FullSlice | None,
               o: ListIndex | FullSlice) -> ListIndex | FullSlice:
+    if s is None:
+        return o
+
     if isinstance(s, FullSlice) and s.is_whole_axis(o.max if isinstance(o, FullSlice) else s.max):
         return o
 
@@ -26,6 +31,17 @@ def _cast_one(s: ListIndex | FullSlice,
         return s
 
     return o[s]
+
+
+def _iter_where(it: Iterable[Any], where: npt.NDArray[np.bool_], replace_by: Any) -> Generator[Any, None, None]:
+    iterating = iter(it)
+
+    for w in where:
+        if w:
+            yield next(iterating)
+
+        else:
+            yield replace_by
 
 
 class Selection:
@@ -58,8 +74,21 @@ class Selection:
 
     # region attributes
     @property
+    def ndims(self) -> npt.NDArray[np.int_]:
+        return np.array([i.ndim for i in self._indices])
+
+    @property
     def max_ndim(self) -> int:
-        return max(i.ndim for i in self._indices)
+        return int(self.ndims.max())
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        base_shape = tuple(len(i) for i in self._indices if len(i) > 1)
+        return (1,) * (self.max_ndim - len(base_shape)) + base_shape
+
+    @property
+    def full_shape(self) -> tuple[int, ...]:
+        return tuple(len(i) for i in self._indices)
 
     # endregion
 
@@ -69,6 +98,9 @@ class Selection:
                      for i in self._indices)
 
     def cast_on(self, selection: Selection) -> Selection:
-        return Selection((_cast_one(s, o) for s, o in zip(self, selection)))
+        return Selection((_cast_one(s, o) for s, o in zip(
+            _iter_where(self, selection.ndims > 0, replace_by=None),
+            selection
+        )))
 
     # endregion

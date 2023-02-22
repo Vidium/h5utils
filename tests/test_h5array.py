@@ -4,6 +4,8 @@
 # imports
 import numpy as np
 
+import ch5mpy
+
 
 # ====================================================
 # code
@@ -161,3 +163,28 @@ def test_array_subset_2d(array):
     assert subarr.ndim == 2
     assert subarr[0].ndim == 1
     assert repr(subarr) == "H5Array([[0.0, 1.0, 2.0, ..., 7.0, 8.0, 9.0]], shape=(1, 10), dtype=float64)"
+
+
+def test_array_should_get_one_element(array):
+    subarr = array[0, 0]
+    assert isinstance(subarr, np.float_)
+
+
+def test_array_should_get_array_of_one_element_in_1d(array):
+    subarr = array[[0], [0]]
+    assert isinstance(subarr, ch5mpy.H5Array)
+    assert subarr.shape == (1,)
+
+
+def test_array_should_get_array_of_one_element_in_2d(array):
+    subarr = array[[0], [[0]]]
+    assert isinstance(subarr, ch5mpy.H5Array)
+    assert subarr.shape == (1, 1)
+
+
+def test_array_should_get_array_in_1d_from_slice(array):
+    subarr = array[:3]
+    subsubarr = subarr[0]
+    assert isinstance(subsubarr, ch5mpy.H5Array)
+    assert subsubarr.shape == (10,)
+

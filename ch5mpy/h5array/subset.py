@@ -17,7 +17,7 @@ from ch5mpy._typing import NP_FUNC
 import ch5mpy
 from ch5mpy import Dataset
 from ch5mpy.h5array.indexing.selection import Selection
-from ch5mpy.h5array.indexing.shape import shape_dim_from_selection
+from ch5mpy.h5array.indexing.shape import DimShape
 from ch5mpy.h5array.io import parse_selector
 from ch5mpy.h5array.io import read_from_dataset
 from ch5mpy.h5array.io import read_one_from_dataset
@@ -42,21 +42,20 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
         self._selection = sel
 
     def __getitem__(self, index: SELECTOR | tuple[SELECTOR, ...]) -> _T | H5ArrayView[_T]:
-        selection, nb_elements = parse_selector(shape_dim_from_selection(self.shape_selection, self._selection),
-                                                index)
+        selection, nb_elements = parse_selector(DimShape.from_selection(self._selection), index)
 
         if selection is None:
             return H5ArrayView(dset=self._dset, sel=self._selection)
 
         selection = selection.cast_on(self._selection)
 
-        if nb_elements == 1:
+        if nb_elements == 1 and selection.max_ndim == 0:
             return read_one_from_dataset(self._dset, selection, self.dtype)
 
         return H5ArrayView(dset=self._dset, sel=selection)
 
     def __setitem__(self, index: SELECTOR | tuple[SELECTOR, ...], value: Any) -> None:
-        selection, nb_elements = parse_selector(shape_dim_from_selection(self.shape_selection, self._selection),
+        selection, nb_elements = parse_selector(DimShape.from_selection(self._selection),
                                                 index)
 
         try:
@@ -100,12 +99,8 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
 
     # region attributes
     @property
-    def shape_selection(self) -> tuple[int, ...]:
-        return tuple(len(axis_sel) for axis_sel in self._selection)
-
-    @property
     def shape(self) -> tuple[int, ...]:
-        return tuple(len(axis_sel) for axis_sel in self._selection if len(axis_sel) > 1 or axis_sel.ndim > 1)
+        return self._selection.shape
 
     # endregion
 
@@ -115,7 +110,7 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
                     source_sel: tuple[slice, ...],
                     dest_sel: tuple[slice, ...]) -> None:
         dset = self._dset.asstr() if np.issubdtype(self.dtype, str) else self._dset
-        source_sel_expanded = Selection(_expanded_selection(source_sel, self.shape_selection))
+        source_sel_expanded = Selection(_expanded_selection(source_sel, self._selection.full_shape))
         read_from_dataset(dset,
                           source_sel_expanded.cast_on(self._selection),
                           dest[dest_sel])

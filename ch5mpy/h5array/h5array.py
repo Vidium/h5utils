@@ -20,7 +20,7 @@ from ch5mpy._typing import SELECTOR
 from ch5mpy import Dataset
 from ch5mpy.h5array.chunks import ChunkIterator
 from ch5mpy.h5array.chunks import PairedChunkIterator
-from ch5mpy.h5array.indexing.shape import ShapeElement
+from ch5mpy.h5array.indexing.shape import DimShape
 from ch5mpy.h5array.io import read_one_from_dataset
 from ch5mpy.objects.dataset import DatasetWrapper
 from ch5mpy.h5array import repr
@@ -66,21 +66,19 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     def __getitem__(self, index: SELECTOR | tuple[SELECTOR, ...]) -> _T | H5Array[_T] | H5ArrayView[_T]:
         from ch5mpy.h5array.subset import H5ArrayView
 
-        selection, nb_elements = parse_selector(tuple(ShapeElement(s) for s in self.shape),
-                                                index)
+        selection, nb_elements = parse_selector(DimShape.from_shape(self.shape), index)
 
         if selection is None:
             return H5Array(dset=self._dset)
 
-        elif nb_elements == 1:
+        elif nb_elements == 1 and selection.max_ndim == 0:
             return read_one_from_dataset(self._dset, selection, self.dtype)
 
         else:
             return H5ArrayView(dset=self._dset, sel=selection)
 
     def __setitem__(self, index: SELECTOR | tuple[SELECTOR, ...], value: Any) -> None:
-        selection, nb_elements = parse_selector(tuple(ShapeElement(s) for s in self.shape),
-                                                index)
+        selection, nb_elements = parse_selector(DimShape.from_shape(self.shape), index)
 
         try:
             value_arr = np.array(value, dtype=self.dtype)

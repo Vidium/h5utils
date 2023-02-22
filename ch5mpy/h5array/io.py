@@ -17,7 +17,7 @@ from ch5mpy import Dataset
 from ch5mpy._typing import SELECTOR
 from ch5mpy.h5array.indexing.list import ListIndex
 from ch5mpy.h5array.indexing.selection import Selection
-from ch5mpy.h5array.indexing.shape import ShapeElement
+from ch5mpy.h5array.indexing.shape import DimShape
 from ch5mpy.h5array.indexing.slice import FullSlice
 from ch5mpy.objects.dataset import DatasetWrapper
 from ch5mpy.utils import is_sequence
@@ -119,7 +119,7 @@ def _check_bounds(max_: int, sel: ListIndex | FullSlice, axis: int) -> None:
 
 
 def _expanded_index(index: tuple[SELECTOR, ...],
-                    shape: tuple[ShapeElement, ...]) -> Generator[SELECTOR, None, None]:
+                    shape: DimShape) -> Generator[SELECTOR, None, None]:
     """Generate an index whit added zeros where an axis has length 1 in <shape>."""
     i = 0
 
@@ -140,7 +140,7 @@ def _gets_whole_dataset(index: SELECTOR | tuple[SELECTOR, ...]) -> bool:
         (is_sequence(index) and all((e is True for e in index)))
 
 
-def parse_selector(shape: tuple[ShapeElement, ...],
+def parse_selector(shape: DimShape,
                    index: SELECTOR | tuple[SELECTOR, ...]) -> tuple[Selection | None, np.int_]:
     if _gets_whole_dataset(index):
         return None, np.product(tuple(s.size for s in shape))
@@ -159,11 +159,8 @@ def parse_selector(shape: tuple[ShapeElement, ...],
             parsed_axis_index: Union[ListIndex, FullSlice] = \
                 FullSlice(axis_index.start, axis_index.stop, axis_index.step, axis_len.size)
 
-        elif is_sequence(axis_index):
+        elif is_sequence(axis_index) or isinstance(axis_index, int):
             parsed_axis_index = ListIndex(np.array(axis_index))
-
-        elif isinstance(axis_index, int):
-            parsed_axis_index = ListIndex(np.array([axis_index]))
 
         else:
             raise RuntimeError
