@@ -70,7 +70,7 @@ class Selection:
             for i in indices:
                 if isinstance(i, ListIndex):
                     if first_list:
-                        largest_dim = max(indices, key=lambda x: x.ndim if isinstance(x, ListIndex) else 0).ndim
+                        largest_dim = max(indices, key=lambda x: (x.ndim if isinstance(x, ListIndex) else -1)).ndim
                         parsed_indices += (i.expand(largest_dim),)
                         first_list = False
 
@@ -126,7 +126,8 @@ class Selection:
         first_list_position = np.argmax(is_list) if any(is_list) else -1
 
         slice_indices_shape = tuple(len(s) for s in self._indices if isinstance(s, FullSlice))
-        list_indices_shape = np.broadcast_shapes(*(lst.shape for lst in self._indices if isinstance(lst, ListIndex)))
+        list_indices_shape = np.broadcast_shapes(*(lst.shape for lst in self._indices
+                                                   if isinstance(lst, ListIndex) and lst.ndim > 0))
 
         if first_list_position < last_slice_position:
             return list_indices_shape + slice_indices_shape

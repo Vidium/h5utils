@@ -18,11 +18,8 @@ def arange_nd(shape: tuple[int, ...],
               step: Number | None = None,
               dtype: npt.DTypeLike | None = None,
               like: npt.ArrayLike | None = None) -> npt.NDArray[Any]:
-    if start is None:
-        stop = np.product(shape)
+    start_ = 0 if start is None else start
+    stop = np.product(shape) + start_                                                      # type: ignore[call-overload]
 
-    else:
-        stop = np.product(shape) + start                                                   # type: ignore[call-overload]
-
-    return np.arange(start=start, stop=stop, step=step, dtype=dtype, like=like            # type: ignore[misc, arg-type]
+    return np.arange(start=start_, stop=stop, step=step, dtype=dtype, like=like           # type: ignore[misc, arg-type]
                      ).reshape(shape)

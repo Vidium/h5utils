@@ -28,10 +28,12 @@ def test_selection_should_have_largest_ndims_first():
 @pytest.mark.parametrize(
     'selection, expected_shape',
     [
+        [get_sel(0), (10,)],
         [get_sel([0]), (1, 10)],
         [get_sel([[0]], slice(0, 10, 1)), (1, 1, 10)],
         [get_sel([[0]]), (1, 1, 10)],
-        [get_sel(0, slice(0, 3)), (3,)]
+        [get_sel(0, slice(0, 3)), (3,)],
+        [get_sel(slice(0, 10), 0), (10,)]
     ]
 )
 def test_should_compute_shape_2d(selection: Selection, expected_shape):

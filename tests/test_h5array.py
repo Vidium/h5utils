@@ -143,6 +143,11 @@ def test_subset_1d(array):
     assert subset.ndim == 1
 
 
+def test_subset_1d_column(array):
+    subset = array[:, 0]
+    assert subset.shape == (10,)
+
+
 def test_subset_2d(array):
     subset = array[[0, 2], [[0]]]
     assert subset.ndim == 2
