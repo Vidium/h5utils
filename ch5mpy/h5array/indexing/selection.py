@@ -121,7 +121,7 @@ class Selection:
         first_list_position = np.argmax(is_list) if any(is_list) else -1
 
         slice_indices_shape = tuple(len(s) for s in self._indices if isinstance(s, FullSlice))
-        list_indices_shape = np.broadcast_shapes(*(l.shape for l in self._indices if isinstance(l, ListIndex)))
+        list_indices_shape = np.broadcast_shapes(*(lst.shape for lst in self._indices if isinstance(lst, ListIndex)))
 
         if first_list_position < last_slice_position:
             return list_indices_shape + slice_indices_shape
@@ -190,7 +190,7 @@ class Selection:
 
             current_work_index = other_indices.pop()
             current_sel = selection[current_work_index:]
-            nb_list_1d_plus = len([l for l in current_sel if isinstance(l, ListIndex) and l.ndim > 0])
+            nb_list_1d_plus = len([lst for lst in current_sel if isinstance(lst, ListIndex) and lst.ndim > 0])
 
             for sel_element in current_sel:
                 if isinstance(sel_element, FullSlice):
@@ -249,13 +249,14 @@ class Selection:
         # find the index of the first ListIndex in this selection
         list_indices = [i for i, x in enumerate(self._indices) if isinstance(x, ListIndex) and x.size > 1]
 
-        if len(list_indices) < 2:
+        if len(list_indices) == 0 or len(list_indices) == 1 and self._indices[list_indices[0]].ndim == 1:
             # make sure there are at least 2 ListIndex, over-wise the selection can simply be returned as is
             yield self.get(), ()
             return
 
         whole_lists = [a.flatten() for a in np.broadcast_arrays(*(self._indices[i] for i in list_indices))]
 
+        # noinspection PyTypeChecker
         for index_array, index_set in enumerate(map(iter, zip(*whole_lists))):
             dataset_sel: tuple[int | npt.NDArray[np.int_] | slice, ...] = \
                 tuple(next(index_set) if i in list_indices else _cast_h5(e)
