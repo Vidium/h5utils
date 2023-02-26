@@ -9,6 +9,8 @@ from itertools import islice
 
 import numpy.typing as npt
 from typing import Any
+from typing import TypeVar
+from typing import Generic
 from typing import Iterable
 from typing import Iterator
 from typing import overload
@@ -22,6 +24,9 @@ from ch5mpy.utils import is_sequence
 
 # ====================================================
 # code
+_T = TypeVar('_T')
+
+
 def _cast_h5(obj: ListIndex | FullSlice) -> int | npt.NDArray[np.int_] | slice:
     if isinstance(obj, FullSlice):
         return obj.as_slice()
@@ -210,17 +215,8 @@ class Selection:
                         current_work_index = other_indices.pop()
 
                     else:
-                        casted = sel_element[index]
-
-                        for _ in range(sel_element.ndim - 1):
-                            try:
-                                index = self_indices.pop()
-                            except RuntimeError:
-                                break
-                            else:
-                                casted = casted[index]
-
-                        casted_selection[current_work_index] = casted
+                        full_index = (index,) + self_indices.pop_at_most(sel_element.ndim - 1)
+                        casted_selection[current_work_index] = sel_element[full_index]
 
                         if sel_element.ndim == 1:
                             # propagate selection to other 1D+ list indices
@@ -271,10 +267,10 @@ class Selection:
     # endregion
 
 
-class Queue:
+class Queue(Generic[_T]):
 
     # region magic methods
-    def __init__(self, elements: Iterable[Any]):
+    def __init__(self, elements: Iterable[_T]):
         self._elements = tuple(elements)
         self._popped: list[int] = []
 
@@ -302,13 +298,23 @@ class Queue:
 
         return None
 
-    def pop(self) -> Any:
+    def pop(self) -> _T:
         i = self._next_index()
         if i is None:
             raise RuntimeError('Empty queue')
 
         self._popped.append(i)
         return self._elements[i]
+
+    def pop_at_most(self, n: int) -> tuple[_T, ...]:
+        popped_elements: tuple[_T, ...] = ()
+        for _ in range(n):
+            try:
+                popped_elements += (self.pop(),)
+            except RuntimeError:
+                break
+
+        return popped_elements
 
     def remove_at(self, index: int) -> None:
         if index in self._popped:

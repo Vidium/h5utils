@@ -30,12 +30,15 @@ if TYPE_CHECKING:
 WHERE_SELECTION = Union[npt.NDArray[np.bool_], tuple[()]]
 
 
-class Where:
+class MaskWhere:
     def __init__(self,
                  where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue,
                  shape: tuple[int, ...]):
         # TODO : make memory efficient (avoid broadcast and compute on the fly)
         self._where = None if where in (True, NoValue) else np.broadcast_to(where, shape)       # type: ignore[arg-type]
+
+    def __repr__(self) -> str:
+        return f"MaskWhere({self._where})"
 
     def __getitem__(self, item: tuple[Any, ...] | slice) -> WHERE_SELECTION:
         if self._where is None:
@@ -92,8 +95,8 @@ def _as_tuple(axis: int | Iterable[int] | tuple[int, ...] | None,
 
 def _get_indices(index: tuple[FullSlice, ...],
                  axis: tuple[int, ...],
-                 where_compute: Where,
-                 where_output: Where,
+                 where_compute: MaskWhere,
+                 where_output: MaskWhere,
                  output_ndim: int) -> tuple[WHERE_SELECTION, tuple[slice, ...] | tuple[()], WHERE_SELECTION]:
     # compute on whole array at once
     if len(index) == 1 and index[0].is_whole_axis():
@@ -166,8 +169,8 @@ def apply(func: partial[NP_FUNC],
     output_array = _get_output_array(out, a.shape, axis, func.keywords.get('keepdims', False), dtype, initial, None)
 
     if where is not False:
-        where_compute = Where(where, a.shape)
-        where_output = Where(where, output_array.shape)
+        where_compute = MaskWhere(where, a.shape)
+        where_output = MaskWhere(where, output_array.shape)
 
         for index, chunk in a.iter_chunks(keepdims=True):
             where_to_compute, chunk_selection, where_to_output = \
@@ -252,8 +255,8 @@ def apply_2(func: NP_FUNC,
     output_array = _get_output_array(out, a.shape, (), False, dtype, None, default)
 
     if where is not False:
-        where_compute = Where(where, a.shape)
-        where_output = Where(where, output_array.shape)
+        where_compute = MaskWhere(where, a.shape)
+        where_output = MaskWhere(where, output_array.shape)
 
         if not isinstance(b, (np.ndarray, ch5mpy.H5Array)):
             b = np.array(b)

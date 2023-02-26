@@ -30,7 +30,12 @@ class ListIndex:
         flat_elements_repr = str(self._elements).replace('\n', '')
         return f"ListIndex({flat_elements_repr} | ndim={self.ndim})"
 
-    def __getitem__(self, item: ListIndex | FullSlice) -> ListIndex:
+    def __getitem__(self, item: ListIndex | FullSlice | tuple[ListIndex | FullSlice, ...]) -> ListIndex:
+        if isinstance(item, tuple):
+            casted_items: tuple[slice | npt.NDArray[np.int_], ...] = \
+                tuple(i.as_array() if isinstance(i, ListIndex) else i.as_slice() for i in item)
+            return ListIndex(self._elements[casted_items])
+
         return ListIndex(self._elements[item])
 
     def __len__(self) -> int:

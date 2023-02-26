@@ -135,7 +135,7 @@ class ChunkIterator:
 
     def __iter__(self) -> Generator[tuple[tuple[FullSlice, ...], npt.NDArray[Any]], None, None]:
         for index in self._chunk_indices:
-            work_subset = map_slice(c.shift_to_zero() for c in index)
+            work_subset = map_slice(index, shift_to_zero=True)
             self._array.read_direct(self._work_array, source_sel=map_slice(index), dest_sel=work_subset)
 
             # cast to str if needed
@@ -185,7 +185,7 @@ class PairedChunkIterator:
 
     def __iter__(self) -> Generator[tuple[tuple[FullSlice, ...], npt.NDArray[Any], npt.NDArray[Any]], None, None]:
         for index in self._chunk_indices:
-            work_subset = map_slice(c.shift_to_zero() for c in index)
+            work_subset = map_slice(index, shift_to_zero=True)
             self._read_array(self._arr_1, self._work_array_1, map_slice(index), work_subset)
             self._read_array(self._arr_2, self._work_array_2, map_slice(index), work_subset)
 

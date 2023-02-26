@@ -18,6 +18,7 @@ from .write import (
     write_objects,
 )
 from .names import H5Mode
+from .np import *
 
 # ====================================================
 # code

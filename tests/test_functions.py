@@ -151,6 +151,11 @@ def test_equal(small_array):
     assert np.array_equal(np.equal(small_array, 2), [False, True, False, False, False])
 
 
+def test_equal_2d_array(array):
+    assert np.array_equal(array[[[0], [1], [2]], 0] == np.array([[0], [10], [20]]),
+                          np.array([[True], [True], [True]]))
+
+
 def test_equal_where(small_array):
     assert np.array_equal(np.equal(small_array, [1, 2, 3, 3, 3], where=[True, True, False, False, True]),
                           [True, True, False, False, False])

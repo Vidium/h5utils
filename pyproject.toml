@@ -3,5 +3,6 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.vulture]
+exclude = ["np.py"]
 ignore_decorators = ["@implements"]
 paths = ["ch5mpy", "vulture_whitelist.py"]

@@ -2,6 +2,8 @@
 
 # ====================================================
 # imports
+from __future__ import annotations
+
 import pytest
 import numpy as np
 
@@ -83,7 +85,9 @@ def test_should_compute_shape_3d(selection: Selection, expected_shape):
         [get_sel([[0], [2], [5]], [[0]]), get_sel(0),
          get_sel([0], [0])],
         [get_sel(0), get_sel(slice(0, 3)),
-         get_sel(0, slice(0, 3))]
+         get_sel(0, slice(0, 3))],
+        [get_sel([[0], [1], [2]], 0), get_sel(slice(0, 3), slice(0, 1)),
+         get_sel([[0], [1], [2]], 0)]
     ]
 )
 def test_should_cast_shape(previous_selection: Selection, selection: Selection, expected_selection: Selection):
