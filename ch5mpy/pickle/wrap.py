@@ -13,14 +13,10 @@ from __future__ import annotations
 import h5py
 
 from typing import Any
-from typing import TypeVar
 
 
 # ====================================================
 # code
-X = TypeVar("X")
-
-
 class PickleableH5PyObject(h5py.HLObject):
     """Save state required to pickle and unpickle h5py objects and groups.
     This class should not be used directly, but is here as a base for inheritance

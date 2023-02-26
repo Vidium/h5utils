@@ -103,8 +103,7 @@ def test_should_subset_from_boolean_array(array):
 def test_should_subset_from_2_boolean_arrays(array):
     subset = array[[True, False, True, False, False, False, False, False, False, False],
                    [True, False, True, False, False, False, False, False, False, False]]
-    assert np.array_equal(subset, np.array([[0, 2],
-                                            [20, 22]]))
+    assert np.array_equal(subset, np.array([0, 22]))
 
 
 def test_should_set_value_in_array(array):
@@ -159,10 +158,18 @@ def test_array_subset_ix(array):
 
 
 def test_array_subset_2d(array):
-    subarr = array[[[0]]]
+    subarr = array[[0]]
     assert subarr.ndim == 2
-    assert subarr[0].ndim == 1
     assert repr(subarr) == "H5Array([[0.0, 1.0, 2.0, ..., 7.0, 8.0, 9.0]], shape=(1, 10), dtype=float64)"
+    assert subarr[0].ndim == 1
+
+
+def test_array_subset_3d(array):
+    subarr = array[[[0]]]
+    assert subarr.ndim == 3
+    assert subarr[0].ndim == 2
+    assert subarr[0, 0].ndim == 1
+    assert repr(subarr) == "H5Array([[[0.0, 1.0, 2.0, ..., 7.0, 8.0, 9.0]]], shape=(1, 1, 10), dtype=float64)"
 
 
 def test_array_should_get_one_element(array):
@@ -182,9 +189,18 @@ def test_array_should_get_array_of_one_element_in_2d(array):
     assert subarr.shape == (1, 1)
 
 
+def test_array_should_get_array_of_multiple_elements_in_2d(array):
+    subarr = array[[[0], [2], [5]], [[0]]]
+    assert isinstance(subarr, ch5mpy.H5Array)
+    assert subarr.shape == (3, 1)
+    assert subarr[0].shape == (1,)
+    assert repr(subarr) == "H5Array([[0.0],\n" \
+                           "         [20.0],\n" \
+                           "         [50.0]], shape=(3, 1), dtype=float64)"
+
+
 def test_array_should_get_array_in_1d_from_slice(array):
     subarr = array[:3]
     subsubarr = subarr[0]
     assert isinstance(subsubarr, ch5mpy.H5Array)
     assert subsubarr.shape == (10,)
-

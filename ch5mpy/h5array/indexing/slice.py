@@ -100,6 +100,10 @@ class FullSlice:
     def ndim(self) -> Literal[1]:
         return 1
 
+    @property
+    def shape(self) -> tuple[int, ...]:
+        return len(self),
+
     # endregion
 
     # region predicates

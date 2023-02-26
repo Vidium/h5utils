@@ -4,11 +4,9 @@
 # imports
 from __future__ import annotations
 
-import numpy as np
 from numbers import Number
 
 from typing import Any
-from typing import cast
 from typing import overload
 from typing import TYPE_CHECKING
 
@@ -27,14 +25,11 @@ def _get3(arr: H5Array[Any] | Number | str | None) -> list[Any] | None:
     if arr is None:
         return None
 
-    if np.isscalar(arr):
+    elif isinstance(arr, (Number, str)):
         return [arr]
 
-    if TYPE_CHECKING:
-        arr = cast(H5Array[Any], arr)
-
-    if len(arr) <= 6:
-        return list(arr[:])
+    elif len(arr) <= 6:
+        return list(arr)
 
     return list(arr[:3]) + [None] + list(arr[-3:])
 
@@ -76,14 +71,13 @@ def _print_dataset_core(
 
     # recursive calls
     rows = _get3(arr)
-
     spacer = "," + "\n" * (arr.ndim - 1)
 
     return spacer.join([
         _print_dataset_core(
             rows[0],
             padding=padding,
-            padding_skip_first=False,
+            padding_skip_first=True,
             before=_get_padding(padding, before, padding_skip_first) + before + "[",
             end="",
             sep=sep)] + [

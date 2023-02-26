@@ -4,8 +4,6 @@
 # imports
 from __future__ import annotations
 
-from typing import Generator
-
 import numpy as np
 
 import numpy.typing as npt
@@ -17,8 +15,6 @@ from ch5mpy._typing import NP_FUNC
 import ch5mpy
 from ch5mpy import Dataset
 from ch5mpy.h5array.indexing.selection import Selection
-from ch5mpy.h5array.indexing.shape import DimShape
-from ch5mpy.h5array.io import parse_selector
 from ch5mpy.h5array.io import read_from_dataset
 from ch5mpy.h5array.io import read_one_from_dataset
 from ch5mpy.h5array.io import write_to_dataset
@@ -42,21 +38,20 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
         self._selection = sel
 
     def __getitem__(self, index: SELECTOR | tuple[SELECTOR, ...]) -> _T | H5ArrayView[_T]:
-        selection, nb_elements = parse_selector(DimShape.from_selection(self._selection), index)
+        selection = Selection.from_selector(index, self.shape)
 
-        if selection is None:
+        if selection.is_empty:
             return H5ArrayView(dset=self._dset, sel=self._selection)
 
         selection = selection.cast_on(self._selection)
 
-        if nb_elements == 1 and selection.max_ndim == 0:
+        if selection.compute_shape(self.shape) == ():
             return read_one_from_dataset(self._dset, selection, self.dtype)
 
         return H5ArrayView(dset=self._dset, sel=selection)
 
     def __setitem__(self, index: SELECTOR | tuple[SELECTOR, ...], value: Any) -> None:
-        selection, nb_elements = parse_selector(DimShape.from_selection(self._selection),
-                                                index)
+        selection = Selection.from_selector(index, self.shape)
 
         try:
             value_arr = np.array(value, dtype=self.dtype)
@@ -64,11 +59,11 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
         except ValueError:
             raise ValueError(f'Could set value of type {type(value)} in H5Array of type {self.dtype}.')
 
-        if nb_elements != value_arr.size:
-            raise ValueError(f"{' x '.join(map(str, self.shape if selection is None else map(len, selection)))} "
+        if np.product(selection.compute_shape(self.shape)) != value_arr.size:
+            raise ValueError(f"{' x '.join(map(str, self.shape if selection.is_empty else map(len, selection)))} "
                              f"values were selected but {' x '.join(map(str, value_arr.shape))} were given.")
 
-        if selection is None:
+        if selection.is_empty:
             self._dset[self._selection.get()] = value_arr
 
         else:
@@ -87,10 +82,7 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
 
     # region interface
     def __array__(self, dtype: npt.DTypeLike | None = None) -> npt.NDArray[Any]:
-        if dtype is None:
-            dtype = self.dtype
-
-        loading_array = np.empty(self.shape, dtype)
+        loading_array = np.empty(self.shape, dtype or self.dtype)
         read_from_dataset(self._dset, self._selection, loading_array)
 
         return loading_array
@@ -100,7 +92,7 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
     # region attributes
     @property
     def shape(self) -> tuple[int, ...]:
-        return self._selection.shape
+        return self._selection.compute_shape(self._dset.shape)
 
     # endregion
 
@@ -110,25 +102,8 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
                     source_sel: tuple[slice, ...],
                     dest_sel: tuple[slice, ...]) -> None:
         dset = self._dset.asstr() if np.issubdtype(self.dtype, str) else self._dset
-        source_sel_expanded = Selection(_expanded_selection(source_sel, self._selection.full_shape))
         read_from_dataset(dset,
-                          source_sel_expanded.cast_on(self._selection),
+                          Selection((FullSlice.from_slice(s) for s in source_sel)).cast_on(self._selection),
                           dest[dest_sel])
 
     # endregion
-
-
-def _expanded_selection(selection: tuple[slice, ...],
-                        shape: tuple[int, ...]) -> Generator[FullSlice, None, None]:
-    sel_index = 0
-
-    for s in shape:
-        if s == 1:
-            yield FullSlice.whole_axis(1)
-
-        elif sel_index >= len(selection):
-            yield FullSlice.whole_axis(s)
-
-        else:
-            yield FullSlice.from_slice(selection[sel_index])
-            sel_index += 1

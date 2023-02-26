@@ -3,12 +3,12 @@
 # ====================================================
 # imports
 from typing import Any
-from typing import Sequence
+from typing import Sequence                                                                     # noqa: F401
 from typing import Collection
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing_extensions import TypeGuard
+    from typing_extensions import TypeGuard                                                     # noqa: F401
 
 
 # ====================================================

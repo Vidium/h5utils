@@ -8,7 +8,6 @@ import numpy as np
 
 import numpy.typing as npt
 from typing import Any
-from typing import cast
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -21,33 +20,43 @@ class ListIndex:
 
     # region magic methods
     def __init__(self,
-                 elements: npt.NDArray[np.int_ | np.bool_]):
-        self._elements = cast(npt.NDArray[np.int_],
-                              np.where(elements.flatten())[0] if elements.dtype == bool else elements.flatten())
+                 elements: npt.NDArray[np.int_]):
+        if elements.dtype != int:
+            raise RuntimeError
 
-        self._ndim = 1 if elements.dtype == bool else elements.ndim
+        self._elements = elements
 
     def __repr__(self) -> str:
-        return f"ListIndex({self._elements} | ndim={self._ndim})"
+        flat_elements_repr = str(self._elements).replace('\n', '')
+        return f"ListIndex({flat_elements_repr} | ndim={self.ndim})"
 
     def __getitem__(self, item: ListIndex | FullSlice) -> ListIndex:
         return ListIndex(self._elements[item])
 
     def __len__(self) -> int:
+        if self._elements.ndim == 0:
+            return 1
+
         return len(self._elements)
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, ListIndex):
+            return False
+
+        return np.array_equal(self._elements, other._elements)
 
     def __array__(self, dtype: npt.DTypeLike | None = None) -> npt.NDArray[Any]:
         if dtype is None:
-            return self._elements.reshape(self.shape)
+            return self._elements
 
-        return self._elements.reshape(self.shape).astype(dtype)
+        return self._elements.astype(dtype)
 
     # endregion
 
     # region attributes
     @property
     def ndim(self) -> int:
-        return self._ndim
+        return self._elements.ndim
 
     @property
     def min(self) -> int:
@@ -59,15 +68,26 @@ class ListIndex:
 
     @property
     def shape(self) -> tuple[int, ...]:
-        if self.ndim == 0:
-            return ()
+        return self._elements.shape
 
-        return (1,) * (self._ndim - 1) + (len(self._elements),)
+    @property
+    def size(self) -> int:
+        return self._elements.size
 
     # endregion
 
     # region methods
     def as_array(self) -> npt.NDArray[np.int_]:
         return self._elements
+
+    def squeeze(self) -> ListIndex:
+        return ListIndex(np.squeeze(self._elements))
+
+    def expand(self, n: int) -> ListIndex:
+        if n < self.ndim:
+            raise RuntimeError
+
+        expanded_shape = (1,) * (n - self.ndim) + self.shape
+        return ListIndex(self._elements.reshape(expanded_shape))
 
     # endregion

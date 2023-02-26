@@ -20,12 +20,11 @@ from ch5mpy._typing import SELECTOR
 from ch5mpy import Dataset
 from ch5mpy.h5array.chunks import ChunkIterator
 from ch5mpy.h5array.chunks import PairedChunkIterator
-from ch5mpy.h5array.indexing.shape import DimShape
+from ch5mpy.h5array.indexing.selection import Selection
 from ch5mpy.h5array.io import read_one_from_dataset
 from ch5mpy.objects.dataset import DatasetWrapper
 from ch5mpy.h5array import repr
 from ch5mpy.h5array.functions import HANDLED_FUNCTIONS
-from ch5mpy.h5array.io import parse_selector
 from ch5mpy.h5array.io import write_to_dataset
 from ch5mpy.h5array.indexing.slice import map_slice
 
@@ -66,19 +65,19 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     def __getitem__(self, index: SELECTOR | tuple[SELECTOR, ...]) -> _T | H5Array[_T] | H5ArrayView[_T]:
         from ch5mpy.h5array.subset import H5ArrayView
 
-        selection, nb_elements = parse_selector(DimShape.from_shape(self.shape), index)
+        selection = Selection.from_selector(index, self.shape)
 
-        if selection is None:
+        if selection.is_empty:
             return H5Array(dset=self._dset)
 
-        elif nb_elements == 1 and selection.max_ndim == 0:
+        elif selection.compute_shape(self.shape) == ():
             return read_one_from_dataset(self._dset, selection, self.dtype)
 
         else:
             return H5ArrayView(dset=self._dset, sel=selection)
 
     def __setitem__(self, index: SELECTOR | tuple[SELECTOR, ...], value: Any) -> None:
-        selection, nb_elements = parse_selector(DimShape.from_shape(self.shape), index)
+        selection = Selection.from_selector(index, self.shape)
 
         try:
             value_arr = np.array(value, dtype=self.dtype)
@@ -86,11 +85,11 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
         except ValueError:
             raise ValueError(f'Could set value of type {type(value)} in H5Array of type {self.dtype}.')
 
-        if nb_elements != value_arr.size:
-            raise ValueError(f"{' x '.join(map(str, self.shape if selection is None else map(len, selection)))} "
+        if np.product(selection.compute_shape(self.shape)) != value_arr.size:
+            raise ValueError(f"{' x '.join(map(str, self.shape if selection.is_empty else map(len, selection)))} "
                              f"values were selected but {' x '.join(map(str, value_arr.shape))} were given.")
 
-        if selection is None:
+        if selection.is_empty:
             self._dset[()] = value_arr
 
         else:
@@ -214,6 +213,8 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
         args: tuple[Any, ...],
         kwargs: dict[str, Any],
     ) -> Any:
+        del types
+
         if func not in HANDLED_FUNCTIONS:
             return NotImplemented
 

@@ -8,7 +8,7 @@ from .objects.group import File
 from .objects.group import Group
 from .objects.dataset import Dataset
 from .h5dict import H5Dict
-from .h5array.h5array import H5Array
+from .h5array.array import H5Array
 from .write import (
     write_attribute,
     write_attributes,

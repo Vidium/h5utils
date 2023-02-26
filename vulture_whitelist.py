@@ -1,0 +1,5 @@
+READ  # unused variable (ch5mpy/names.py:11)
+READ_WRITE  # unused variable (ch5mpy/names.py:12)
+WRITE_TRUNCATE  # unused variable (ch5mpy/names.py:13)
+WRITE  # unused variable (ch5mpy/names.py:14)
+READ_WRITE_CREATE  # unused variable (ch5mpy/names.py:15)

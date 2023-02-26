@@ -181,6 +181,9 @@ class Dataset(Generic[_T], PickleableH5PyObject, h5py.Dataset):
         If ``encoding`` is unspecified, it will use the encoding in the HDF5
         datatype (either ascii or utf-8).
         """
+        del encoding
+        del errors
+
         string_info = check_string_dtype(self.dtype)
         if string_info is None:
             raise TypeError("dset.asstr() can only be used on datasets with an HDF5 string datatype")
