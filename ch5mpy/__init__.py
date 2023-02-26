@@ -36,3 +36,5 @@ __all__ = [
     "write_objects",
     "H5Mode",
 ]
+
+__version__ = '0.1.3'
