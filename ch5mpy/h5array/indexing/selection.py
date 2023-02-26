@@ -252,16 +252,15 @@ class Selection:
             return
 
         whole_lists = [a.flatten() for a in np.broadcast_arrays(*(self._indices[i] for i in list_indices))]
+        whole_lists_loading = [np.unique(arr, return_inverse=True)[1] for arr in whole_lists]
 
         # noinspection PyTypeChecker
-        for index_array, index_set in enumerate(map(iter, zip(*whole_lists))):
-            dataset_sel: tuple[int | npt.NDArray[np.int_] | slice, ...] = \
-                tuple(next(index_set) if i in list_indices else _cast_h5(e)
-                      for i, e in enumerate(self))
+        for index_dataset, index_array in zip(map(iter, zip(*whole_lists)), map(iter, zip(*whole_lists_loading))):
+            dataset_sel = tuple(next(index_dataset) if i in list_indices else _cast_h5(e)
+                                for i, e in enumerate(self))
 
-            loading_sel: tuple[int | slice, ...] = \
-                tuple(index_array if i in list_indices else slice(None)
-                      for i, e in enumerate(islice(self, 0, array_ndim)))
+            loading_sel = tuple(next(index_array) if i in list_indices else slice(None)
+                                for i, e in enumerate(islice(self, 0, array_ndim)))
 
             yield dataset_sel, loading_sel
 
