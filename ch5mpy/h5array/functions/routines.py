@@ -207,7 +207,11 @@ def hstack(tup: Iterable[H5Array[Any] | npt.NDArray[Any]],
            *,
            dtype: npt.DTypeLike | None = None,
            casting: str = "same_kind") -> npt.NDArray[Any]:
-    return np.hstack(map(np.array, tup), dtype=dtype, casting=casting)      # type: ignore[no-any-return, call-overload]
+    # FIXME : had to downgrade to numpy 1.23 for compatibility with numpy_indexed
+    del dtype
+    del casting
+    # return np.hstack(map(np.array, tup), dtype=dtype, casting=casting)    # type: ignore[no-any-return, call-overload]
+    return np.hstack(map(np.array, tup))                                    # type: ignore[no-any-return, call-overload]
 
 
 @implements(np.vstack)
@@ -215,4 +219,8 @@ def vstack(tup: Iterable[H5Array[Any] | npt.NDArray[Any]],
            *,
            dtype: npt.DTypeLike | None = None,
            casting: str = "same_kind") -> npt.NDArray[Any]:
-    return np.vstack(map(np.array, tup), dtype=dtype, casting=casting)      # type: ignore[no-any-return, call-overload]
+    del dtype
+    del casting
+    # FIXME : had to downgrade to numpy 1.23 for compatibility with numpy_indexed
+    # return np.vstack(map(np.array, tup), dtype=dtype, casting=casting)    # type: ignore[no-any-return, call-overload]
+    return np.vstack(map(np.array, tup))                                    # type: ignore[no-any-return, call-overload]
