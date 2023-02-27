@@ -8,7 +8,6 @@ import h5py
 import numpy as np
 from abc import ABC
 from abc import abstractmethod
-from numbers import Number
 from h5py.h5t import check_string_dtype
 
 import numpy.typing as npt
@@ -99,6 +98,9 @@ class AsStrWrapper(DatasetWrapper[str]):
 
         return np.array(subset, dtype=str)
 
+    def __repr__(self) -> str:
+        return f'<HDF5 AsStrWrapper "{self._dset.name[1:]}": shape {self._dset.shape}">'
+
     # endregion
 
     # region attributes
@@ -114,6 +116,40 @@ class AsStrWrapper(DatasetWrapper[str]):
     # endregion
 
 
+class AsDtypeWrapper(DatasetWrapper[_WT]):
+    """Wrapper to cast elements in a dataset as another numpy dtype."""
+
+    # region magic methods
+    def __init__(self, dset: Dataset[Any], dtype: npt.DTypeLike):
+        super().__init__(dset)
+        self._dtype = np.dtype(dtype)
+
+    def __repr__(self) -> str:
+        return f'<HDF5 AsDtypeWrapper "{self._dset.name[1:]}": shape {self._dset.shape}, ' \
+               f'dtype "{self._dtype}">'
+
+    def __getitem__(self, args: SELECTOR | tuple[SELECTOR, ...]) -> npt.NDArray[Any] | Any:
+        subset = self._dset[args]
+
+        if np.isscalar(subset):
+            return self._dtype.type(subset)                                                     # type: ignore[arg-type]
+
+        return np.array(subset, dtype=self._dtype)
+
+    # endregion
+
+    # region attributes
+    @property
+    def dtype(self) -> np.dtype[Any]:
+        if np.issubdtype(self._dtype, str):
+            # special case of str casting (todo: should find a better way of finding out the dtype)
+            return self._dset[:].astype(str).dtype
+
+        return self._dtype
+
+    # endregion
+
+
 class AsObjectWrapper(DatasetWrapper[_WT]):
     """Wrapper to map any object type to elements in a dataset."""
 
@@ -123,14 +159,14 @@ class AsObjectWrapper(DatasetWrapper[_WT]):
         self._otype = otype
 
     def __repr__(self) -> str:
-        return f'<HDF5 dataset wrapper "{self._dset.name[1:]}": shape {self._dset.shape}, ' \
+        return f'<HDF5 AsObjectWrapper "{self._dset.name[1:]}": shape {self._dset.shape}, ' \
                f'otype "{self._otype.__name__}">'
 
     def __getitem__(self, args: SELECTOR | tuple[SELECTOR, ...]) -> npt.NDArray[np.object_] | _WT:
         subset = self._dset[args]
 
         if np.isscalar(subset):
-            return self._otype(subset)                                                         # type: ignore [call-arg]
+            return self._otype(subset)                                                          # type: ignore[call-arg]
 
         subset = cast(npt.NDArray[Any], subset)
         return np.array(list(map(self._otype, subset.flat)), dtype=np.object_).reshape(subset.shape)
@@ -155,7 +191,7 @@ class Dataset(Generic[_T], PickleableH5PyObject, h5py.Dataset):
     # region magic methods
     def __getitem__(self,                                                                       # type: ignore[override]
                     arg: SELECTOR | tuple[SELECTOR, ...],
-                    new_dtype: npt.DTypeLike | None = None) -> Number | str | npt.NDArray[_T]:
+                    new_dtype: npt.DTypeLike | None = None) -> np.generic | npt.NDArray[_T]:
         return super().__getitem__(arg, new_dtype)
 
     def __setitem__(self, arg: SELECTOR | tuple[SELECTOR, ...], val: Any) -> None:
@@ -188,9 +224,14 @@ class Dataset(Generic[_T], PickleableH5PyObject, h5py.Dataset):
         if string_info is None:
             raise TypeError("dset.asstr() can only be used on datasets with an HDF5 string datatype")
 
-        return AsStrWrapper(cast(Dataset[np.bytes_], self))
+        self_ = cast(Dataset[np.bytes_], self)
+        return AsStrWrapper(self_)
 
-    def maptype(self, otype: type[_WT]) -> AsObjectWrapper[_WT]:
+    def astype(self, dtype: npt.DTypeLike) -> AsDtypeWrapper[np.generic]:                       # type: ignore[override]
+        return AsDtypeWrapper(self, dtype)
+
+    def maptype(self, otype: type[Any]) -> AsObjectWrapper[Any]:
+        # noinspection PyTypeChecker
         return AsObjectWrapper(self, otype)
 
     # endregion

@@ -24,7 +24,7 @@ from ch5mpy.objects.dataset import DatasetWrapper
 # ====================================================
 # code
 _T = TypeVar("_T", bound=np.generic)
-_DT = TypeVar("_DT", bound=np.generic)
+_OT = TypeVar("_OT")
 
 
 class H5ArrayView(ch5mpy.H5Array[_T]):
@@ -97,6 +97,24 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
     # endregion
 
     # region methods
+    def astype(self, dtype: npt.DTypeLike) -> H5ArrayView[Any]:
+        """
+        Cast an H5Array to a specified dtype.
+        This does not perform a copy, it returns a wrapper around the underlying H5 dataset.
+        """
+        if np.issubdtype(dtype, str) and (np.issubdtype(self._dset.dtype, str) or self._dset.dtype == object):
+            return H5ArrayView(self._dset.asstr(), sel=self._selection)
+
+        return H5ArrayView(self._dset.astype(dtype), sel=self._selection)
+
+    def maptype(self, otype: type[Any]) -> H5ArrayView[Any]:
+        """
+        Cast an H5Array to any object type.
+        This extends H5Array.astype() to any type <T>, where it is required that an object <T> can be constructed as
+        T(v) for any value <v> in the dataset.
+        """
+        return H5ArrayView(self._dset.maptype(otype), sel=self._selection)
+
     def read_direct(self,
                     dest: npt.NDArray[_T],
                     source_sel: tuple[slice, ...],

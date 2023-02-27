@@ -47,7 +47,7 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
         if not isinstance(dset, (Dataset, DatasetWrapper)):
             raise TypeError(f"Object of type '{type(dset)}' is not supported by H5Array.")
 
-        if np.issubdtype(np.dtype(str(dset.attrs.get('dtype', 'O'))), str):
+        if isinstance(dset, Dataset) and np.issubdtype(np.dtype(str(dset.attrs.get('dtype', 'O'))), str):
             self._dset: Dataset[_T] | DatasetWrapper[_T] = dset.asstr()                       # type: ignore[assignment]
 
         else:
@@ -246,10 +246,22 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     # endregion
 
     # region methods
-    def astype(self, dtype: npt.DTypeLike) -> npt.NDArray[Any]:
-        return np.array(self, dtype=dtype)
+    def astype(self, dtype: npt.DTypeLike) -> H5Array[Any]:
+        """
+        Cast an H5Array to a specified dtype.
+        This does not perform a copy, it returns a wrapper around the underlying H5 dataset.
+        """
+        if np.issubdtype(dtype, str) and (np.issubdtype(self._dset.dtype, str) or self._dset.dtype == object):
+            return H5Array(self._dset.asstr())
+
+        return H5Array(self._dset.astype(dtype))
 
     def maptype(self, otype: type[Any]) -> H5Array[Any]:
+        """
+        Cast an H5Array to any object type.
+        This extends H5Array.astype() to any type <T>, where it is required that an object <T> can be constructed as
+        T(v) for any value <v> in the dataset.
+        """
         return H5Array(self._dset.maptype(otype))
 
     def iter_chunks(self, keepdims: bool = False) -> ChunkIterator:

@@ -3,6 +3,7 @@
 # ====================================================
 # imports
 import numpy as np
+import pytest
 
 import ch5mpy
 
@@ -209,3 +210,22 @@ def test_array_should_get_array_in_1d_from_slice(array):
     subsubarr = subarr[0]
     assert isinstance(subsubarr, ch5mpy.H5Array)
     assert subsubarr.shape == (10,)
+
+
+def test_array_type_casting(array):
+    assert array.astype(int).dtype == np.int64
+
+
+def test_array_str_type_casting(str_array, array):
+    assert str_array.astype(str).dtype == np.dtype('<U3')
+    assert array.astype(str).dtype == np.dtype('<U32')
+
+
+@pytest.mark.xfail
+def test_array_str_cast_int_should_fail(str_array):
+    _ = str_array.astype(int)[:]
+
+
+def test_view_type_casting(array):
+    subarr = array[:5, :5]
+    assert subarr.astype(int).shape == (5, 5)
