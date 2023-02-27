@@ -52,7 +52,7 @@ def _get_output_array(out: H5Array[Any] | npt.NDArray[Any] | None,
                       axis: tuple[int, ...],
                       keepdims: bool,
                       dtype: npt.DTypeLike | None,
-                      initial: int | float | complex | None,
+                      initial: int | float | complex | NoValue,
                       default: Any) -> H5Array[Any] | npt.NDArray[Any]:
     if keepdims:
         expected_shape = tuple(s if i not in axis else 1 for i, s in enumerate(shape))
@@ -75,7 +75,7 @@ def _get_output_array(out: H5Array[Any] | npt.NDArray[Any] | None,
         if out.shape != expected_shape:
             raise ValueError(f'Output array has the wrong shape: Found {out.shape} but expected {expected_shape}')
 
-    if initial is not None:
+    if initial is not NoValue:
         out[()] = initial
 
     return out
@@ -122,7 +122,11 @@ def _apply_operation(operation: str,
     # getattr(..., operation)(...) because dest does not get modified in that way
 
     if operation == '__set__':
-        dest[chunk_selection][where_to_output] = values[where_to_output]
+        if dest.ndim == 0:
+            dest[()] = values
+
+        else:
+            dest[chunk_selection][where_to_output] = values[where_to_output]
 
     elif operation == '__iadd__':
         if dest.ndim == 0:
@@ -162,7 +166,7 @@ def apply(func: partial[NP_FUNC],
           out: H5Array[Any] | npt.NDArray[Any] | None,
           *,
           dtype: npt.DTypeLike | None,
-          initial: int | float | complex | None,
+          initial: int | float | complex | NoValue,
           where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue,
           default_0D_output: bool = True) -> Any:
     axis = _as_tuple(func.keywords.get('axis', None), a.ndim, default_0D_output)
@@ -252,7 +256,7 @@ def apply_2(func: NP_FUNC,
         return str_apply_2(num_to_str_ufunc[func], a, b)
 
     # operation on regular H5Arrays
-    output_array = _get_output_array(out, a.shape, (), False, dtype, None, default)
+    output_array = _get_output_array(out, a.shape, (), False, dtype, NoValue, default)
 
     if where is not False:
         where_compute = MaskWhere(where, a.shape)

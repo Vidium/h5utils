@@ -290,3 +290,9 @@ def test_isin_h5_in_h5(array, small_array):
     expected = np.zeros((10, 10), dtype=bool)
     expected[0, [1, 2, 3, 4, 5]] = True
     assert np.array_equal(res, expected)
+
+
+def test_amax(array):
+    assert np.amax(array) == 99
+    assert np.array_equal(np.amax(array, axis=1),
+                          np.array([9, 19, 29, 39, 49, 59, 69, 79, 89, 99]))

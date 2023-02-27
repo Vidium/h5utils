@@ -247,11 +247,11 @@ Mathematical functions
 - [ ] np.conjugate
 - [x] np.maximum
 - [x] np.fmax
-- [ ] np.amax
+- [x] np.amax
 - [ ] np.nanmax
 - [x] np.minimum
 - [x] np.fmin
-- [ ] np.amin
+- [x] np.amin
 - [ ] np.nanmin
 - [ ] np.convolve
 - [ ] np.clip

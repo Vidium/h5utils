@@ -5,8 +5,9 @@
 from __future__ import annotations
 
 import numpy as np
-from numpy import _NoValue as NoValue                                                       # type: ignore[attr-defined]
+from numbers import Number
 from functools import partial
+from numpy import _NoValue as NoValue                                                       # type: ignore[attr-defined]
 
 import numpy.typing as npt
 from typing import Any
@@ -41,7 +42,7 @@ class H5_ufunc:
                      a,
                      out=None if out is None else out[0],
                      dtype=dtype,
-                     initial=None,
+                     initial=NoValue,
                      where=where,
                      default_0D_output=False)
 
@@ -75,7 +76,7 @@ def isfinite(a: H5Array[Any],
                  a,
                  out=None if out is None else out[0],
                  dtype=bool,
-                 initial=None,
+                 initial=NoValue,
                  where=where,
                  default_0D_output=False)
 
@@ -90,7 +91,7 @@ def isinf(a: H5Array[Any],
                  a,
                  out=None if out is None else out[0],
                  dtype=bool,
-                 initial=None,
+                 initial=NoValue,
                  where=where,
                  default_0D_output=False)
 
@@ -105,7 +106,7 @@ def isnan(a: H5Array[Any],
                  a,
                  out=None if out is None else out[0],
                  dtype=bool,
-                 initial=None,
+                 initial=NoValue,
                  where=where,
                  default_0D_output=False)
 
@@ -118,7 +119,7 @@ def isneginf(a: H5Array[Any],
                  a,
                  out=None if out is None else out[0],
                  dtype=bool,
-                 initial=None,
+                 initial=NoValue,
                  where=NoValue,
                  default_0D_output=False)
 
@@ -131,7 +132,7 @@ def isposinf(a: H5Array[Any],
                  a,
                  out=None if out is None else out[0],
                  dtype=bool,
-                 initial=None,
+                 initial=NoValue,
                  where=NoValue,
                  default_0D_output=False)
 
@@ -143,9 +144,9 @@ def prod(a: H5Array[Any],
          dtype: npt.DTypeLike | None = None,
          out: H5Array[Any] | npt.NDArray[Any] | None = None,
          keepdims: bool = False,
-         initial: int | float | complex | None = None,
+         initial: int | float | complex | NoValue = NoValue,
          where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue) -> Any:
-    initial = 1 if initial is None else initial
+    initial = 1 if initial is NoValue else initial
 
     return apply(partial(np.prod, keepdims=keepdims, dtype=dtype, axis=axis), '__imul__', a, out,
                  dtype=dtype, initial=initial, where=where)
@@ -157,12 +158,36 @@ def sum_(a: H5Array[Any],
          dtype: npt.DTypeLike | None = None,
          out: H5Array[Any] | npt.NDArray[Any] | None = None,
          keepdims: bool = False,
-         initial: int | float | complex | None = None,
+         initial: int | float | complex | NoValue = NoValue,
          where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue) -> Any:
-    initial = 0 if initial is None else initial
+    initial = 0 if initial is NoValue else initial
 
     return apply(partial(np.sum, keepdims=keepdims, dtype=dtype, axis=axis), '__iadd__', a, out,
                  dtype=dtype, initial=initial, where=where)
+
+
+@implements(np.amax)
+def amax(a: H5Array[Any],
+         axis: int | Iterable[Any] | tuple[int] | None = None,
+         out: H5Array[Any] | npt.NDArray[Any] | None = None,
+         keepdims: bool = False,
+         initial: Number | NoValue = NoValue,
+         where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue) \
+        -> npt.NDArray[np.number[Any]] | np.number[Any]:
+    return apply(partial(np.amax, keepdims=keepdims, axis=axis), '__set__', a, out,  # type: ignore[no-any-return]
+                 dtype=None, initial=initial, where=where)
+
+
+@implements(np.amin)
+def amin(a: H5Array[Any],
+         axis: int | Iterable[Any] | tuple[int] | None = None,
+         out: H5Array[Any] | npt.NDArray[Any] | None = None,
+         keepdims: bool = False,
+         initial: Number | NoValue = NoValue,
+         where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue) \
+        -> npt.NDArray[np.number[Any]] | np.number[Any]:
+    return apply(partial(np.amin, keepdims=keepdims, axis=axis), '__set__', a, out,  # type: ignore[no-any-return]
+                 dtype=None, initial=initial, where=where)
 
 
 @implements(np.all)
