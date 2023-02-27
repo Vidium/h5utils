@@ -28,7 +28,7 @@ class FullSlice:
     ):
         self._start = start or 0
         self._step = step or 1
-        self._stop = stop or max_
+        self._stop = min(stop or max_, max_)
         self._max = max_
 
         if self._start < 0:
@@ -129,7 +129,7 @@ class FullSlice:
         return FullSlice(element, element+1, 1, max_)
 
     @classmethod
-    def from_slice(cls, s: slice) -> FullSlice:
+    def from_slice(cls, s: slice | range) -> FullSlice:
         return FullSlice(s.start, s.stop, s.step, s.stop)
 
     def as_slice(self) -> slice:
