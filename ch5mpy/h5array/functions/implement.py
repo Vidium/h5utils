@@ -28,6 +28,10 @@ def implements(*np_functions: NP_FUNC | NP_FUNC) -> Callable[[H5_FUNC], H5_FUNC]
     return decorator
 
 
+def register(function: H5_FUNC, implements: NP_FUNC) -> None:
+    HANDLED_FUNCTIONS[implements] = function
+
+
 # manually import function implementations otherwise they are never imported
 importlib.__import__("ch5mpy.h5array.functions.routines")
 importlib.__import__("ch5mpy.h5array.functions.creation_routines")

@@ -29,7 +29,7 @@ from ch5mpy.h5array.io import write_to_dataset
 from ch5mpy.h5array.indexing.slice import map_slice
 
 if TYPE_CHECKING:
-    from ch5mpy.h5array.subset import H5ArrayView
+    from ch5mpy.h5array.view import H5ArrayView
 
 
 # ====================================================
@@ -63,7 +63,7 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
         return repr.print_dataset(self, sep="")
 
     def __getitem__(self, index: SELECTOR | tuple[SELECTOR, ...]) -> _T | H5Array[_T] | H5ArrayView[_T]:
-        from ch5mpy.h5array.subset import H5ArrayView
+        from ch5mpy.h5array.view import H5ArrayView
 
         selection = Selection.from_selector(index, self.shape)
 
