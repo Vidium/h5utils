@@ -10,6 +10,7 @@ import numpy as np
 
 import numpy.typing as npt
 from typing import Any
+from typing import Iterable
 from typing import TYPE_CHECKING
 
 import ch5mpy
@@ -189,7 +190,7 @@ def isin(element: Any,
 def concatenate(arrays: H5Array[Any] | tuple[H5Array[Any] | npt.NDArray[Any], ...],
                 axis: int | None = 0,
                 out: H5Array[Any] | npt.NDArray[Any] | None = None,
-                dtype: npt.DTypeLike | None = None) -> H5Array[Any] | npt.NDArray[Any]:
+                dtype: npt.DTypeLike | None = None) -> npt.NDArray[Any]:
     if out is None:
         if isinstance(arrays, ch5mpy.H5Array):
             return np.concatenate(np.array(arrays), axis=axis, dtype=dtype)
@@ -199,3 +200,19 @@ def concatenate(arrays: H5Array[Any] | tuple[H5Array[Any] | npt.NDArray[Any], ..
 
     else:
         raise NotImplementedError
+
+
+@implements(np.hstack)
+def hstack(tup: Iterable[H5Array[Any] | npt.NDArray[Any]],
+           *,
+           dtype: npt.DTypeLike | None = None,
+           casting: str = "same_kind") -> npt.NDArray[Any]:
+    return np.hstack(map(np.array, tup), dtype=dtype, casting=casting)      # type: ignore[no-any-return, call-overload]
+
+
+@implements(np.vstack)
+def vstack(tup: Iterable[H5Array[Any] | npt.NDArray[Any]],
+           *,
+           dtype: npt.DTypeLike | None = None,
+           casting: str = "same_kind") -> npt.NDArray[Any]:
+    return np.vstack(map(np.array, tup), dtype=dtype, casting=casting)      # type: ignore[no-any-return, call-overload]

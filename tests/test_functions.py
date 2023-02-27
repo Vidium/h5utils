@@ -6,6 +6,7 @@ import pytest
 import numpy as np
 from pathlib import Path
 
+import ch5mpy
 from ch5mpy import File
 from ch5mpy import H5Mode
 from ch5mpy import H5Array
@@ -296,3 +297,7 @@ def test_amax(array):
     assert np.amax(array) == 99
     assert np.array_equal(np.amax(array, axis=1),
                           np.array([9, 19, 29, 39, 49, 59, 69, 79, 89, 99]))
+
+
+def test_hstack(array):
+    assert np.hstack((array, ch5mpy.arange_nd((10, 10)))).shape == (10, 20)
