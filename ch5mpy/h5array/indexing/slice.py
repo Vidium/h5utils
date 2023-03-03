@@ -10,8 +10,12 @@ import numpy.typing as npt
 from typing import Any
 from typing import Literal
 from typing import Iterable
+from typing import TYPE_CHECKING
 
 from ch5mpy.h5array.indexing.list import ListIndex
+
+if TYPE_CHECKING:
+    from ch5mpy.h5array.indexing._typing import SELECTION_ELEMENT
 
 
 # ====================================================
@@ -56,12 +60,17 @@ class FullSlice:
     def __len__(self) -> int:
         return (self.true_stop - self._start) // self._step + 1
 
-    def __getitem__(self, item: ListIndex | FullSlice) -> ListIndex | FullSlice:
+    def __getitem__(self, item: SELECTION_ELEMENT) -> ListIndex | FullSlice:
+        from ch5mpy.h5array.indexing.special import NewAxisType
+
         if isinstance(item, FullSlice):
             return FullSlice(start=self._start + item.start * self._step,
                              stop=self._start + item.true_stop * self._step + 1,
                              step=self._step,
                              max_=self._max)
+
+        if isinstance(item, NewAxisType):
+            raise RuntimeError
 
         return ListIndex(np.array(self)[item])
 

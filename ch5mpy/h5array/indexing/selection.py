@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import numpy as np
 from itertools import islice
+from itertools import dropwhile
+from itertools import takewhile
 
 import numpy.typing as npt
 from typing import Any
@@ -17,8 +19,12 @@ from typing import overload
 from typing import Generator
 
 from ch5mpy._typing import SELECTOR
+from ch5mpy.h5array.indexing._typing import SELECTION_ELEMENT
 from ch5mpy.h5array.indexing.list import ListIndex
 from ch5mpy.h5array.indexing.slice import FullSlice
+from ch5mpy.h5array.indexing.special import NewAxis
+from ch5mpy.h5array.indexing.special import NewAxisType
+from ch5mpy.h5array.indexing.special import Placeholder
 from ch5mpy.utils import is_sequence
 
 
@@ -48,7 +54,7 @@ def _within_bounds(obj: ListIndex | FullSlice, shape: tuple[int, ...], shape_ind
     max_ = shape[shape_index]
 
     if (isinstance(obj, FullSlice) and (obj.start < -max_ or obj.true_stop > max_)) or \
-            (isinstance(obj, ListIndex) and (obj.min < -max_ or obj.max > max_)):
+            (isinstance(obj, ListIndex) and obj.size and (obj.min < -max_ or obj.max > max_)):
         raise IndexError(f"Selection {obj} is out of bounds for axis {shape_index} with size {max_}.")
 
     return obj,
@@ -58,38 +64,37 @@ class Selection:
 
     # region magic methods
     def __init__(self,
-                 indices: Iterable[ListIndex | FullSlice] | None = None):
+                 indices: Iterable[SELECTION_ELEMENT] | None = None):
         if indices is None:
-            self._indices: tuple[ListIndex | FullSlice, ...] = ()
+            self._indices: tuple[SELECTION_ELEMENT, ...] = ()
 
         else:
             indices = tuple(indices)
-            parsed_indices: tuple[ListIndex | FullSlice, ...] = ()
+            self._indices = ()
+
             first_list = True
 
             for i in indices:
                 if isinstance(i, ListIndex):
                     if first_list:
                         largest_dim = max(indices, key=lambda x: (x.ndim if isinstance(x, ListIndex) else -1)).ndim
-                        parsed_indices += (i.expand(largest_dim),)
+                        self._indices += (i.expand(largest_dim),)
                         first_list = False
 
                     else:
-                        parsed_indices += (i.squeeze(),)
+                        self._indices += (i.squeeze(),)
 
                 else:
-                    parsed_indices += (i,)
-
-            self._indices = parsed_indices
+                    self._indices += (i,)
 
     def __repr__(self) -> str:
         return f"Selection{self._indices}"
 
     @overload
-    def __getitem__(self, item: int) -> ListIndex | FullSlice: ...
+    def __getitem__(self, item: int) -> SELECTION_ELEMENT: ...
     @overload
     def __getitem__(self, item: slice | Iterable[int]) -> Selection: ...
-    def __getitem__(self, item: int | slice | Iterable[int]) -> ListIndex | FullSlice | Selection:
+    def __getitem__(self, item: int | slice | Iterable[int]) -> SELECTION_ELEMENT | Selection:
         if isinstance(item, int):
             return self._indices[item]
 
@@ -99,7 +104,7 @@ class Selection:
         else:
             return Selection([e for i, e in enumerate(self._indices) if i in item])
 
-    def __iter__(self) -> Iterator[ListIndex | FullSlice]:
+    def __iter__(self) -> Iterator[SELECTION_ELEMENT]:
         return iter(self._indices)
 
     def __len__(self) -> int:
@@ -119,21 +124,8 @@ class Selection:
         return len(self._indices) == 0
 
     @property
-    def min_shape(self) -> tuple[int, ...]:
-        is_slice = list(map(lambda x: isinstance(x, FullSlice), self._indices))
-        last_slice_position = np.argwhere(is_slice)[-1, 0] if any(is_slice) else np.inf
-        is_list = list(map(lambda x: isinstance(x, ListIndex), self._indices))
-        first_list_position = np.argmax(is_list) if any(is_list) else -1
-
-        slice_indices_shape = tuple(len(s) for s in self._indices if isinstance(s, FullSlice))
-        list_indices_shape = np.broadcast_shapes(*(lst.shape for lst in self._indices
-                                                   if isinstance(lst, ListIndex) and lst.ndim > 0))
-
-        if first_list_position < last_slice_position:
-            return list_indices_shape + slice_indices_shape
-
-        else:
-            return slice_indices_shape + list_indices_shape
+    def is_newaxis(self) -> npt.NDArray[np.bool_]:
+        return np.array([x is NewAxis for x in self._indices])
 
     # endregion
 
@@ -148,11 +140,15 @@ class Selection:
         if not isinstance(index, tuple):
             index = (index,)
 
-        sel: tuple[ListIndex | FullSlice, ...] = ()
+        sel: tuple[SELECTION_ELEMENT, ...] = ()
         shape_index = 0
 
         for i, axis_index in enumerate(index):
-            if isinstance(axis_index, (slice, range)):
+            if axis_index is None:
+                sel += (NewAxis,)
+                shape_index += 1
+
+            elif isinstance(axis_index, (slice, range)):
                 sel += _within_bounds(
                     FullSlice(axis_index.start, axis_index.stop, axis_index.step, shape[shape_index]),
                     shape, shape_index
@@ -177,13 +173,44 @@ class Selection:
         return Selection(sel)
 
     def get(self) -> tuple[int | npt.NDArray[np.int_] | slice, ...]:
-        return tuple(_cast_h5(i) for i in self._indices)
+        return tuple(_cast_h5(i) for i in self._indices if not isinstance(i, NewAxisType))
 
-    def compute_shape(self, arr_shape: tuple[int, ...]) -> tuple[int, ...]:
-        return self.min_shape + arr_shape[len(self._indices):]
+    def _min_shape(self, new_axes: bool) -> tuple[int, ...]:
+        is_slice = list(map(lambda x: isinstance(x, FullSlice), self._indices))
+        last_slice_position = np.argwhere(is_slice)[-1, 0] if any(is_slice) else np.inf
+        is_list = list(map(lambda x: isinstance(x, ListIndex), self._indices))
+        first_list_position = np.argmax(is_list) if any(is_list) else -1
+
+        slice_indices_shape = tuple(len(s) for s in self._indices if isinstance(s, FullSlice))
+        list_indices_shape = np.broadcast_shapes(*(lst.shape for lst in self._indices
+                                                   if isinstance(lst, ListIndex) and lst.ndim > 0))
+
+        if first_list_position < last_slice_position:
+            min_shape = list_indices_shape + slice_indices_shape
+
+        else:
+            min_shape = slice_indices_shape + list_indices_shape
+
+        if new_axes:
+            if any(dropwhile(lambda x: x, reversed(list(dropwhile(lambda x: x, self.is_newaxis))))):
+                raise NotImplementedError('Cannot have new axis besides first and last indices yet.')
+
+            new_axes_before = tuple(1 for _ in takewhile(lambda x: x, self.is_newaxis))
+            new_axes_after = tuple(1 for _ in takewhile(lambda x: x, reversed(self.is_newaxis[len(new_axes_before):])))
+
+            return new_axes_before + min_shape + new_axes_after
+
+        else:
+            return min_shape
+
+    def compute_shape(self,
+                      arr_shape: tuple[int, ...],
+                      new_axes: bool = True) -> tuple[int, ...]:
+        len_end_shape = len(self._indices) - sum(self.is_newaxis)
+        return self._min_shape(new_axes=new_axes) + arr_shape[len_end_shape:]
 
     def cast_on(self, selection: Selection) -> Selection:
-        casted_selection: list[ListIndex | FullSlice | None] = [None for _ in enumerate(selection)]
+        casted_selection: list[SELECTION_ELEMENT | object] = [Placeholder for _ in enumerate(selection)]
         self_indices = Queue(self._indices)
         other_indices = Queue(list(range(len(selection))))
 
@@ -199,13 +226,14 @@ class Selection:
             nb_list_1d_plus = len([lst for lst in current_sel if isinstance(lst, ListIndex) and lst.ndim > 0])
 
             for sel_element in current_sel:
-                if isinstance(sel_element, FullSlice):
+                if isinstance(sel_element, (FullSlice, NewAxisType)):
                     casted_selection[current_work_index] = sel_element[index]
                     break
 
                 else:
                     if sel_element.shape == () \
-                            or sel_element.shape == (1,) and len(current_sel.min_shape) < nb_list_1d_plus:
+                            or sel_element.shape == (1,) and len(current_sel._min_shape(new_axes=True)) < \
+                            nb_list_1d_plus:
                         # if only one element of the axis is selected, skip this sel element from the casting
                         casted_selection[current_work_index] = sel_element.squeeze()
 
@@ -232,10 +260,10 @@ class Selection:
         for i in other_indices.indices_not_popped:
             casted_selection[i] = selection[i]
 
-        if any([s is None for s in casted_selection]):
+        if any(e is Placeholder for e in casted_selection):
             raise RuntimeError
 
-        return Selection(casted_selection)                                                      # type: ignore[arg-type]
+        return Selection([s for s in casted_selection if s is not None])                            # type: ignore[misc]
 
     def iter_h5(self, array_ndim: int) -> Generator[
         tuple[tuple[int | npt.NDArray[np.int_] | slice, ...],
@@ -251,13 +279,14 @@ class Selection:
             yield self.get(), ()
             return
 
-        whole_lists = [a.flatten() for a in np.broadcast_arrays(*(self._indices[i] for i in list_indices))]
+        whole_lists = [a.flatten() for a in np.broadcast_arrays(*(i for i in self._indices
+                                                                  if isinstance(i, ListIndex) and i.size > 1))]
         whole_lists_loading = [np.unique(arr, return_inverse=True)[1] for arr in whole_lists]
 
         # noinspection PyTypeChecker
         for index_dataset, index_array in zip(map(iter, zip(*whole_lists)), map(iter, zip(*whole_lists_loading))):
             dataset_sel = tuple(next(index_dataset) if i in list_indices else _cast_h5(e)
-                                for i, e in enumerate(self))
+                                for i, e in enumerate(self) if not isinstance(e, NewAxisType))
 
             loading_sel = tuple(next(index_array) if i in list_indices else slice(None)
                                 for i, e in enumerate(islice(self, 0, array_ndim)))

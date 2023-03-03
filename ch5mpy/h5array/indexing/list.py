@@ -11,7 +11,7 @@ from typing import Any
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ch5mpy.h5array.indexing.slice import FullSlice
+    from ch5mpy.h5array.indexing._typing import SELECTION_ELEMENT
 
 
 # ====================================================
@@ -30,11 +30,21 @@ class ListIndex:
         flat_elements_repr = str(self._elements).replace('\n', '')
         return f"ListIndex({flat_elements_repr} | ndim={self.ndim})"
 
-    def __getitem__(self, item: ListIndex | FullSlice | tuple[ListIndex | FullSlice, ...]) -> ListIndex:
+    def __getitem__(self, item: SELECTION_ELEMENT | tuple[SELECTION_ELEMENT, ...]) -> ListIndex:
+        from ch5mpy.h5array.indexing.special import NewAxisType
+
         if isinstance(item, tuple):
+            if any(isinstance(e, NewAxisType) for e in item):
+                raise RuntimeError
+
             casted_items: tuple[slice | npt.NDArray[np.int_], ...] = \
-                tuple(i.as_array() if isinstance(i, ListIndex) else i.as_slice() for i in item)
+                tuple(i.as_array() if isinstance(i, ListIndex) else i.as_slice()             # type: ignore[union-attr]
+                      for i in item)
+
             return ListIndex(self._elements[casted_items])
+
+        if isinstance(item, NewAxisType):
+            raise RuntimeError
 
         return ListIndex(self._elements[item])
 
@@ -78,6 +88,11 @@ class ListIndex:
     @property
     def size(self) -> int:
         return self._elements.size
+
+    @property
+    def is_zero(self) -> bool:
+        return (self._elements.ndim == 0 and self._elements == 0) or \
+            (self._elements.shape == (1,) and all(self._elements == 0))
 
     # endregion
 

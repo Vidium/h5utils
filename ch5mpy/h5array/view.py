@@ -14,6 +14,7 @@ from ch5mpy._typing import NP_FUNC
 
 import ch5mpy
 from ch5mpy import Dataset
+from ch5mpy.h5array.array import as_array
 from ch5mpy.h5array.indexing.selection import Selection
 from ch5mpy.h5array.io import read_from_dataset
 from ch5mpy.h5array.io import read_one_from_dataset
@@ -52,22 +53,7 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
 
     def __setitem__(self, index: SELECTOR | tuple[SELECTOR, ...], value: Any) -> None:
         selection = Selection.from_selector(index, self.shape)
-
-        try:
-            value_arr = np.array(value, dtype=self.dtype)
-
-        except ValueError:
-            raise ValueError(f'Could set value of type {type(value)} in H5Array of type {self.dtype}.')
-
-        if np.product(selection.compute_shape(self.shape)) != value_arr.size:
-            raise ValueError(f"{' x '.join(map(str, self.shape if selection.is_empty else map(len, selection)))} "
-                             f"values were selected but {' x '.join(map(str, value_arr.shape))} were given.")
-
-        if selection.is_empty:
-            self._dset[self._selection.get()] = value_arr
-
-        else:
-            write_to_dataset(self._dset, value_arr,  selection.cast_on(self._selection))
+        write_to_dataset(self._dset, as_array(value, self.dtype),  selection.cast_on(self._selection))
 
     def __len__(self) -> int:
         return self.shape[0]
@@ -82,10 +68,11 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
 
     # region interface
     def __array__(self, dtype: npt.DTypeLike | None = None) -> npt.NDArray[Any]:
-        loading_array = np.empty(self.shape, dtype or self.dtype)
+        loading_array = np.empty(self._selection.compute_shape(self._dset.shape, new_axes=False),
+                                 dtype or self.dtype)
         read_from_dataset(self._dset, self._selection, loading_array)
 
-        return loading_array
+        return loading_array.reshape(self.shape)
 
     # endregion
 

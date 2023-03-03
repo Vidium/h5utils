@@ -229,3 +229,45 @@ def test_array_str_cast_int_should_fail(str_array):
 def test_view_type_casting(array):
     subarr = array[:5, :5]
     assert subarr.astype(int).shape == (5, 5)
+
+
+def test_subset_newaxis(small_array):
+    new_array = small_array[:, None]
+    assert new_array.shape == (5, 1)
+
+
+def test_subset_newaxis_shape(small_array):
+    new_array = small_array[:, None]
+
+    subarr = new_array[0]
+    assert subarr.shape == (1,)
+
+    subsubarr = subarr[0]
+    assert isinstance(subsubarr, np.float_)
+
+
+def test_subset_multiple_newaxis_repr(small_array):
+    new_array = small_array[None, None]
+
+    assert new_array.shape == (1, 1, 5)
+    assert repr(new_array) == "H5Array([[[1.0, 2.0, 3.0, 4.0, 5.0]]], shape=(1, 1, 5), dtype=float64)"
+
+
+def test_newaxis_to_numpy_array(small_array):
+    new_array = small_array[:, None]
+    assert np.array(new_array).shape == (5, 1)
+
+
+def test_setitem(array):
+    array[0, [0, 1]] = np.array([[-1, -2]])
+
+    ref = np.arange(100.).reshape((10, 10))
+    ref[0, [0, 1]] = [-1, -2]
+
+    assert np.array_equal(array, ref)
+
+
+def test_setitem_str(str_array):
+    str_array[[0, 1]] = np.array(['A', 'BBBB'])
+    assert np.array_equal(str_array, ['A', 'BBBB', 'd', 'efg', 'h'])
+    assert str_array.dtype == np.dtype('<U4')

@@ -11,13 +11,17 @@ from typing import Any
 
 from ch5mpy.h5array.indexing.list import ListIndex
 from ch5mpy.h5array.indexing.slice import FullSlice
+from ch5mpy.h5array.indexing.selection import NewAxis
 from ch5mpy.h5array.indexing.selection import Selection
 
 
 # ====================================================
 # code
-def get_sel(*sel: int | list[Any] | slice) -> Selection:
-    return Selection((FullSlice.from_slice(s) if isinstance(s, slice) else ListIndex(np.array(s)) for s in sel))
+def get_sel(*sel: int | list[Any] | slice | None) -> Selection:
+    return Selection((FullSlice.from_slice(s) if isinstance(s, slice) else
+                      NewAxis if s is None else
+                      ListIndex(np.array(s))
+                      for s in sel))
 
 
 def test_selection_should_have_largest_ndims_first():
@@ -89,7 +93,11 @@ def test_should_compute_shape_3d(selection: Selection, expected_shape):
         [get_sel(0), get_sel(slice(0, 3)),
          get_sel(0, slice(0, 3))],
         [get_sel([[0], [1], [2]], 0), get_sel(slice(0, 3), slice(0, 1)),
-         get_sel([[0], [1], [2]], 0)]
+         get_sel([[0], [1], [2]], 0)],
+        [get_sel(slice(0, 5), None), get_sel(0),
+         get_sel(0, None)],
+        [get_sel(slice(0, 5), None), get_sel(0, 0),
+         get_sel(0)]
     ]
 )
 def test_should_cast_shape(previous_selection: Selection, selection: Selection, expected_selection: Selection):

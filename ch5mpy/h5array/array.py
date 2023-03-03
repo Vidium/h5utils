@@ -37,6 +37,17 @@ if TYPE_CHECKING:
 _T = TypeVar("_T", bound=np.generic)
 
 
+def as_array(values: Any, dtype: np.dtype[Any]) -> npt.NDArray[Any]:
+    if np.issubdtype(dtype, str):
+        return np.array(values, dtype=bytes)
+
+    try:
+        return np.array(values, dtype=dtype)
+
+    except ValueError:
+        raise ValueError(f"Couldn't set value of type {type(values)} in H5Array of type {dtype}.")
+
+
 class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     """Wrapper around Dataset objects to interface with numpy's API."""
 
@@ -78,22 +89,7 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
     def __setitem__(self, index: SELECTOR | tuple[SELECTOR, ...], value: Any) -> None:
         selection = Selection.from_selector(index, self.shape)
-
-        try:
-            value_arr = np.array(value, dtype=self.dtype)
-
-        except ValueError:
-            raise ValueError(f'Could set value of type {type(value)} in H5Array of type {self.dtype}.')
-
-        if np.product(selection.compute_shape(self.shape)) != value_arr.size:
-            raise ValueError(f"{' x '.join(map(str, self.shape if selection.is_empty else map(len, selection)))} "
-                             f"values were selected but {' x '.join(map(str, value_arr.shape))} were given.")
-
-        if selection.is_empty:
-            self._dset[()] = value_arr
-
-        else:
-            write_to_dataset(self._dset, value_arr, selection)
+        write_to_dataset(self._dset, as_array(value, self.dtype), selection)
 
     def __len__(self) -> int:
         return len(self._dset)
