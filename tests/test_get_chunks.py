@@ -2,7 +2,7 @@
 
 # ====================================================
 # imports
-from ch5mpy.h5array.chunks import _get_chunk_indices
+from ch5mpy.h5array.chunks.iter import _get_chunk_indices
 from ch5mpy.h5array.indexing.slice import FullSlice
 
 

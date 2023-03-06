@@ -46,7 +46,7 @@ def _cast_h5(obj: ListIndex | FullSlice) -> int | npt.NDArray[np.int_] | slice:
 def _gets_whole_dataset(index: SELECTOR | tuple[SELECTOR, ...]) -> bool:
     return (isinstance(index, tuple) and index == ()) or \
         (isinstance(index, slice) and index == slice(None)) or \
-        (is_sequence(index) and all((e is True for e in index)))
+        (is_sequence(index) and len(index) > 0 and all((e is True for e in index)))
 
 
 def _within_bounds(obj: ListIndex | FullSlice, shape: tuple[int, ...], shape_index: int) \
@@ -164,7 +164,7 @@ class Selection:
                         shape_index += 1
 
                 else:
-                    sel += _within_bounds(ListIndex(axis_index), shape, shape_index)
+                    sel += _within_bounds(ListIndex(axis_index.astype(np.int64)), shape, shape_index)
                     shape_index += 1
 
             else:
@@ -265,7 +265,7 @@ class Selection:
 
         return Selection([s for s in casted_selection if s is not None])                            # type: ignore[misc]
 
-    def iter_h5(self, array_ndim: int) -> Generator[
+    def iter_h5(self, array_shape: tuple[int, ...]) -> Generator[
         tuple[tuple[int | npt.NDArray[np.int_] | slice, ...],
               tuple[int | slice, ...]],
         None,
@@ -276,7 +276,10 @@ class Selection:
 
         if len(list_indices) == 0 or len(list_indices) == 1 and self._indices[list_indices[0]].ndim == 1:
             # make sure there are at least 2 ListIndex, over-wise the selection can simply be returned as is
-            yield self.get(), ()
+            dataset_sel = self.get()
+            loading_sel = tuple(0 for _ in takewhile(lambda x: x == 1, array_shape))
+
+            yield dataset_sel, loading_sel
             return
 
         whole_lists = [a.flatten() for a in np.broadcast_arrays(*(i for i in self._indices
@@ -289,7 +292,7 @@ class Selection:
                                 for i, e in enumerate(self) if not isinstance(e, NewAxisType))
 
             loading_sel = tuple(next(index_array) if i in list_indices else slice(None)
-                                for i, e in enumerate(islice(self, 0, array_ndim)))
+                                for i, e in enumerate(islice(self, 0, len(array_shape))))
 
             yield dataset_sel, loading_sel
 

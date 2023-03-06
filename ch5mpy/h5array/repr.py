@@ -107,7 +107,10 @@ def print_dataset(
     end: str = "\n",
     sep: str = ",",
 ) -> str:
-    if arr.ndim == 0:
+    if arr.size == 0:
+        array_repr = "[]"
+
+    elif arr.ndim == 0:
         array_repr = f"{arr[()]}"
 
     else:

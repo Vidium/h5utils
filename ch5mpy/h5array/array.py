@@ -18,8 +18,8 @@ from ch5mpy._typing import NP_FUNC
 from ch5mpy._typing import SELECTOR
 
 from ch5mpy import Dataset
-from ch5mpy.h5array.chunks import ChunkIterator
-from ch5mpy.h5array.chunks import PairedChunkIterator
+from ch5mpy.h5array.chunks.iter import ChunkIterator
+from ch5mpy.h5array.chunks.iter import PairedChunkIterator
 from ch5mpy.h5array.indexing.selection import Selection
 from ch5mpy.h5array.io import read_one_from_dataset
 from ch5mpy.objects.dataset import DatasetWrapper
@@ -237,7 +237,7 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
     @property
     def size(self) -> int:
-        return self._dset.size
+        return int(np.prod(self.shape))
 
     # endregion
 

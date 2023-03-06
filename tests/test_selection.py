@@ -115,4 +115,4 @@ def test_should_cast_shape(previous_selection: Selection, selection: Selection, 
     ]
 )
 def test_should_iter(selection: Selection, expected):
-    assert tuple(selection.iter_h5(2)) == expected
+    assert tuple(selection.iter_h5((3, 3))) == expected

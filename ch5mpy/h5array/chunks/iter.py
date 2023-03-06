@@ -15,6 +15,8 @@ from typing import Generator
 from typing import TYPE_CHECKING
 
 import ch5mpy
+from ch5mpy.h5array.chunks.repeated_array import RepeatedArray
+from ch5mpy.h5array.chunks.utils import _as_valid_dtype
 from ch5mpy.h5array.indexing.slice import FullSlice
 from ch5mpy.h5array.indexing.slice import map_slice
 
@@ -113,13 +115,6 @@ def _get_chunk_indices(max_memory_usage: int | str,
     )
 
 
-def _valid_dtype(arr: npt.NDArray[Any], dtype: np.dtype[Any]) -> npt.NDArray[Any]:
-    if np.issubdtype(dtype, str):
-        return arr.astype(str)
-
-    return arr
-
-
 class ChunkIterator:
     def __init__(self,
                  array: H5Array[Any],
@@ -139,7 +134,7 @@ class ChunkIterator:
             self._array.read_direct(self._work_array, source_sel=map_slice(index), dest_sel=work_subset)
 
             # cast to str if needed
-            res = _valid_dtype(self._work_array, self._array.dtype)[work_subset]
+            res = _as_valid_dtype(self._work_array, self._array.dtype)[work_subset]
 
             # reshape to keep dimensions if needed
             if self._keepdims:
@@ -153,11 +148,10 @@ class PairedChunkIterator:
                  arr_1: H5Array[Any] | npt.NDArray[Any],
                  arr_2: H5Array[Any] | npt.NDArray[Any],
                  keepdims: bool = False):
-        if arr_1.shape != arr_2.shape:
-            raise ValueError(f'Cannot iterate chunks of arrays with different shapes: {arr_1.shape} != {arr_2.shape}')
+        broadcasted_shape = np.broadcast_shapes(arr_1.shape, arr_2.shape)
+        self._arr_1 = RepeatedArray(arr_1, broadcasted_shape)
+        self._arr_2 = RepeatedArray(arr_2, broadcasted_shape)
 
-        self._arr_1 = arr_1
-        self._arr_2 = arr_2
         self._keepdims = keepdims
 
         max_mem_1 = get_size(arr_1.MAX_MEM_USAGE) if isinstance(arr_1, ch5mpy.H5Array) else INF
@@ -166,31 +160,17 @@ class PairedChunkIterator:
         self._chunk_indices = _get_chunk_indices(min(max_mem_1, max_mem_2),
                                                  shape=arr_1.shape,
                                                  itemsize=max(arr_1.dtype.itemsize, arr_1.dtype.itemsize))
-        self._work_array_1 = get_work_array(arr_1.shape, self._chunk_indices[0], dtype=arr_1.dtype)
-        self._work_array_2 = get_work_array(arr_1.shape, self._chunk_indices[0], dtype=arr_2.dtype)
+        self._work_array_1 = get_work_array(broadcasted_shape, self._chunk_indices[0], dtype=arr_1.dtype)
+        self._work_array_2 = get_work_array(broadcasted_shape, self._chunk_indices[0], dtype=arr_2.dtype)
 
     def __repr__(self) -> str:
         return f"<PairedChunkIterator over 2 {self._arr_1.shape} H5Arrays>"
 
-    @staticmethod
-    def _read_array(arr: npt.NDArray[Any] | H5Array[Any],
-                    out: npt.NDArray[Any],
-                    source_sel: tuple[slice, ...],
-                    dest_sel: tuple[slice, ...]) -> None:
-        if isinstance(arr, ch5mpy.H5Array):
-            arr.read_direct(out, source_sel=source_sel, dest_sel=dest_sel)
-
-        else:
-            out[dest_sel] = arr[source_sel]
-
     def __iter__(self) -> Generator[tuple[tuple[FullSlice, ...], npt.NDArray[Any], npt.NDArray[Any]], None, None]:
         for index in self._chunk_indices:
             work_subset = map_slice(index, shift_to_zero=True)
-            self._read_array(self._arr_1, self._work_array_1, map_slice(index), work_subset)
-            self._read_array(self._arr_2, self._work_array_2, map_slice(index), work_subset)
-
-            res_1 = _valid_dtype(self._work_array_1, self._arr_1.dtype)[work_subset]
-            res_2 = _valid_dtype(self._work_array_2, self._arr_2.dtype)[work_subset]
+            res_1 = self._arr_1.read(self._work_array_1, map_slice(index), work_subset)
+            res_2 = self._arr_2.read(self._work_array_2, map_slice(index), work_subset)
 
             if self._keepdims:
                 res_1 = res_1.reshape((1,) * (self._arr_1.ndim - res_1.ndim) + res_1.shape)

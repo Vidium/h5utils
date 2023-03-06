@@ -139,6 +139,19 @@ def test_should_not_find_missing_value_in_array(small_large_array):
     assert 1000 not in small_large_array
 
 
+def test_subset_0d(array):
+    subset = array[[]]
+    assert subset.shape == (0, 10)
+    assert repr(subset) == "H5Array([], shape=(0, 10), dtype=float64)"
+
+
+def test_subset_1d_0d(array):
+    subset = array[np.ix_([0, 1, 2], [])]
+    assert subset.shape == (3, 0)
+    assert subset.size == 0
+    assert repr(subset) == "H5Array([], shape=(3, 0), dtype=float64)"
+
+
 def test_subset_1d(array):
     subset = array[0]
     assert subset.ndim == 1
@@ -265,6 +278,16 @@ def test_setitem(array):
     ref[0, [0, 1]] = [-1, -2]
 
     assert np.array_equal(array, ref)
+
+
+def test_setitem_row(array):
+    v = np.array([[-1, -2]])
+    array[[[1]], [[0, 1]]] = v
+
+
+def test_setitem_column(array):
+    v = -1 * np.ones(5)[:, None]
+    array[[[0], [1], [2], [3], [4]], [[0]]] = v
 
 
 def test_setitem_str(str_array):

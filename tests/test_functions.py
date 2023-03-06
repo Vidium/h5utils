@@ -169,6 +169,21 @@ def test_equal_where(small_array):
                           [True, True, False, False, False])
 
 
+def test_equal_with_broadcast():
+    data = np.ones((10, 2))
+
+    with File("h5_equal_array", H5Mode.WRITE_TRUNCATE) as h5_file:
+        write_object(h5_file, "data", data)
+
+    arr = H5Array(File("h5_equal_array", H5Mode.READ_WRITE)["data"])
+
+    # -----------------------------------------------------
+    assert np.all(arr == [1, 1])
+
+    # -----------------------------------------------------
+    Path("h5_equal_array").unlink()
+
+
 def test_greater_element(small_array):
     assert np.array_equal(np.greater(small_array, 3), [False, False, False, True, True])
 

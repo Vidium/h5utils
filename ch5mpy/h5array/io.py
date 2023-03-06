@@ -22,7 +22,7 @@ _DT = TypeVar("_DT", bound=np.generic)
 def read_from_dataset(dataset: Dataset[_DT] | DatasetWrapper[_DT],
                       selection: Selection,
                       loading_array: npt.NDArray[_DT]) -> None:
-    for dataset_idx, array_idx in selection.iter_h5(loading_array.ndim):
+    for dataset_idx, array_idx in selection.iter_h5(loading_array.shape):
         dataset.read_direct(loading_array, source_sel=dataset_idx, dest_sel=array_idx)
 
 
@@ -45,5 +45,5 @@ def write_to_dataset(dataset: Dataset[_DT] | DatasetWrapper[_DT],
     # we must make a copy here to ensure 'C' order
     values = values.copy()
 
-    for dataset_idx, array_idx in selection.iter_h5(values.ndim):
-        dataset.write_direct(values.squeeze(), source_sel=array_idx, dest_sel=dataset_idx)
+    for dataset_idx, array_idx in selection.iter_h5(values.shape):
+        dataset.write_direct(values, source_sel=array_idx, dest_sel=dataset_idx)
