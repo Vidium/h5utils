@@ -26,25 +26,20 @@ if TYPE_CHECKING:
 # ====================================================
 # code
 # ufuncs ----------------------------------------------------------------------
-class H5_ufunc:
-    def __init__(self,
-                 np_ufunc: NP_FUNC):
-        self._ufunc = np_ufunc
-
-    def __call__(self,
-                 a: H5Array[Any],
-                 out: tuple[H5Array[Any] | npt.NDArray[Any]] | None = None,
-                 *,
-                 where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue,
-                 dtype: npt.DTypeLike | None = None) -> Any:
-        return apply(partial(self._ufunc, dtype=dtype),
-                     '__set__',
-                     a,
-                     out=None if out is None else out[0],
-                     dtype=dtype,
-                     initial=NoValue,
-                     where=where,
-                     default_0D_output=False)
+def H5_ufunc(a: H5Array[Any],
+             out: tuple[H5Array[Any] | npt.NDArray[Any]] | None = None,
+             *,
+             where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue,
+             dtype: npt.DTypeLike | None = None,
+             np_ufunc: NP_FUNC) -> Any:
+    return apply(partial(np_ufunc, dtype=dtype),
+                 '__set__',
+                 a,
+                 out=None if out is None else out[0],
+                 dtype=dtype,
+                 initial=NoValue,
+                 where=where,
+                 default_0D_output=False)
 
 
 _IMPLEMENTED_UFUNCS: tuple[NP_FUNC, ...] = (
@@ -63,7 +58,7 @@ _IMPLEMENTED_UFUNCS: tuple[NP_FUNC, ...] = (
 )
 
 for ufunc in _IMPLEMENTED_UFUNCS:
-    register(H5_ufunc(ufunc), ufunc)
+    register(partial(H5_ufunc, np_ufunc=ufunc), ufunc)
 
 
 @implements(np.isfinite)

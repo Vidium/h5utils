@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import importlib
+from functools import partial
 
 from typing import Callable
 
@@ -28,7 +29,7 @@ def implements(*np_functions: NP_FUNC | NP_FUNC) -> Callable[[H5_FUNC], H5_FUNC]
     return decorator
 
 
-def register(function: H5_FUNC, implements: NP_FUNC) -> None:
+def register(function: partial[H5_FUNC], implements: NP_FUNC) -> None:
     HANDLED_FUNCTIONS[implements] = function
 
 
