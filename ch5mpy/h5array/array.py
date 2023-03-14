@@ -218,6 +218,13 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
     # endregion
 
+    # region predicates
+    @property
+    def is_chunked(self) -> bool:
+        return self._dset.chunks is not None
+
+    # endregion
+
     # region attributes
     @property
     def dset(self) -> Dataset[_T] | DatasetWrapper[_T]:

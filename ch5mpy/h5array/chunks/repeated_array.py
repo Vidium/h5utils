@@ -93,6 +93,13 @@ class RepeatedArray:
     def dtype(self) -> np.dtype[Any]:
         return self._array.dtype
 
+    @property
+    def chunks(self) -> tuple[int, ...] | None:
+        if isinstance(self._array, np.ndarray):
+            return None
+
+        return self._array.dset.chunks
+
     # endregion
 
     # region methods

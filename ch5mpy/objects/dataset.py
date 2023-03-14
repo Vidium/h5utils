@@ -234,4 +234,14 @@ class Dataset(Generic[_T], PickleableH5PyObject, h5py.Dataset):
         # noinspection PyTypeChecker
         return AsObjectWrapper(self, otype)
 
+    def write_direct(self,
+                     source: npt.NDArray[Any],
+                     source_sel: tuple[int | slice | Collection[int], ...] | None = None,
+                     dest_sel: tuple[int | slice | Collection[int], ...] | None = None) -> None:
+        if not source.flags.carray:
+            # ensure 'C' memory layout
+            source = source.copy()
+
+        super().write_direct(source, source_sel=source_sel, dest_sel=dest_sel)
+
     # endregion

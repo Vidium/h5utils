@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import pickle
+
 import numpy as np
 from h5py import string_dtype
 from numbers import Number
@@ -24,7 +25,9 @@ if TYPE_CHECKING:
 
 # ====================================================
 # code
-def write_attribute(group: Group, name: str, obj: Any) -> None:
+def write_attribute(group: Group,
+                    name: str,
+                    obj: Any) -> None:
     """Write a simple object as a H5 group attribute."""
     try:
         group.attrs[name] = "None" if obj is None else obj
@@ -35,73 +38,91 @@ def write_attribute(group: Group, name: str, obj: Any) -> None:
         group.attrs[name] = np.void(pickle.dumps(obj, protocol=pickle.HIGHEST_PROTOCOL))
 
 
-def write_attributes(group: Group, **kwargs: Any) -> None:
+def write_attributes(group: Group,
+                     **kwargs: Any) -> None:
     """Write multiple object as h5 group attributes."""
     for name, obj in kwargs.items():
         write_attribute(group, name, obj)
 
 
-def _store_dataset(
-    loc: Group | File, name: str, array: npt.NDArray[Any] | H5Array[Any]
-) -> None:
+def _store_dataset(loc: Group | File,
+                   name: str,
+                   array: npt.NDArray[Any] | H5Array[Any],
+                   chunks: bool | tuple[int, ...] | None,
+                   maxshape: tuple[int, ...] | None) -> None:
     """Store a dataset."""
     if np.issubdtype(array.dtype, np.str_):
-        loc.create_dataset(name, data=array.astype(object), dtype=string_dtype())
+        loc.create_dataset(name, data=array.astype(object), dtype=string_dtype(),
+                           chunks=chunks, maxshape=maxshape)
 
     else:
-        loc.create_dataset(name, data=array)
+        loc.create_dataset(name, data=array,
+                           chunks=chunks, maxshape=maxshape)
 
     loc[name].attrs['dtype'] = str(array.dtype)
 
 
-def write_dataset(loc: Group | File, name: str, obj: Any) -> None:
+def write_dataset(loc: Group | File,
+                  name: str,
+                  obj: Any,
+                  chunks: bool | tuple[int, ...] | None = None,
+                  maxshape: tuple[int, ...] | None = None) -> None:
     """Write an array-like object to a H5 dataset."""
     if isinstance(obj, Mapping):
         group = loc.create_group(name)
         write_datasets(group, **obj)
+        return
 
-    else:
-        # cast to np.array if needed (to get shape and dtype)
-        array = np.array(obj) if not hasattr(obj, "shape") else obj
+    # cast to np.array if needed (to get shape and dtype)
+    array = np.array(obj) if not hasattr(obj, "shape") else obj
 
-        if name in loc.keys():
-            if loc[name] is array:
-                # this exact dataset is already stored, do nothing
-                return
+    if name in loc.keys():
+        if loc[name] is array:
+            # this exact dataset is already stored > do nothing
+            return
 
-            elif loc[name].shape == array.shape and loc[name].dtype == array.dtype:
-                # a similar array already exists, simply copy the data
-                loc[name][()] = array
+        if loc[name].shape == array.shape and loc[name].dtype == array.dtype:
+            # a similar array already exists > simply copy the data
+            loc[name][()] = array
+            return
 
-            else:
-                # a different array was stored, delete it before storing the new array
-                del loc[name]
-                _store_dataset(loc, name, array)
+        # a different array was stored, delete it before storing the new array
+        del loc[name]
 
-        else:
-            _store_dataset(loc, name, array)
+    _store_dataset(loc, name, array, chunks=chunks, maxshape=maxshape)
 
 
-def write_datasets(loc: Group | File, **kwargs: Any) -> None:
+def write_datasets(loc: Group | File,
+                   chunks: bool | tuple[int, ...] | None = None,
+                   maxshape: tuple[int, ...] | None = None,
+                   **kwargs: Any) -> None:
     """Write multiple array-like objects to H5 datasets."""
     for name, obj in kwargs.items():
-        write_dataset(loc, name, obj)
+        write_dataset(loc, name, obj, chunks=chunks, maxshape=maxshape)
 
 
-def write_object(loc: Group | File, name: str, obj: Any) -> None:
+def write_object(loc: Group | File,
+                 name: str,
+                 obj: Any,
+                 chunks: bool | tuple[int, ...] | None = None,
+                 maxshape: tuple[int, ...] | None = None) -> None:
     """Write any object to a H5 file."""
     if isinstance(obj, Mapping):
         group = loc.create_group(name)
-        write_objects(group, **obj)
+        write_objects(group, **obj, chunks=chunks, maxshape=maxshape)
+        return
 
-    elif is_sequence(obj) or isinstance(obj, (Number, str)):
-        write_dataset(loc, name, obj)
+    if is_sequence(obj) or isinstance(obj, (Number, str)):
+        write_dataset(loc, name, obj, chunks=chunks, maxshape=maxshape)
+        return
 
-    else:
-        raise NotImplementedError
+    raise NotImplementedError
 
 
-def write_objects(loc: Group | File, **kwargs: Any) -> None:
+def write_objects(loc: Group | File,
+                  chunks: bool | tuple[int, ...] | None = None,
+                  maxshape: tuple[int, ...] | None = None,
+                  **kwargs: Any) -> None:
     """Write multiple objects of any type to a H5 file."""
     for name, obj in kwargs.items():
-        write_object(loc, name, obj)
+        write_object(loc, name, obj, chunks=chunks, maxshape=maxshape)

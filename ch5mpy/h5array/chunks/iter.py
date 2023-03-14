@@ -122,7 +122,14 @@ class ChunkIterator:
         self._array = array
         self._keepdims = keepdims
 
-        self._chunk_indices = _get_chunk_indices(array.MAX_MEM_USAGE, array.shape, array.dtype.itemsize)
+        if array.is_chunked:
+            self._chunk_indices = tuple(
+                tuple(FullSlice.from_slice(c) for c in chunk)
+                for chunk in array.dset.iter_chunks()
+            )
+        else:
+            self._chunk_indices = _get_chunk_indices(array.MAX_MEM_USAGE, array.shape, array.dtype.itemsize)
+
         self._work_array = get_work_array(array.shape, self._chunk_indices[0], dtype=array.dtype)
 
     def __repr__(self) -> str:
@@ -154,12 +161,26 @@ class PairedChunkIterator:
 
         self._keepdims = keepdims
 
-        max_mem_1 = get_size(arr_1.MAX_MEM_USAGE) if isinstance(arr_1, ch5mpy.H5Array) else INF
-        max_mem_2 = get_size(arr_2.MAX_MEM_USAGE) if isinstance(arr_2, ch5mpy.H5Array) else INF
+        if self._arr_1.chunks:
+            self._chunk_indices = tuple(
+                tuple(FullSlice.from_slice(c) for c in chunk)
+                for chunk in arr_1.dset.iter_chunks()                                         # type: ignore[union-attr]
+            )
 
-        self._chunk_indices = _get_chunk_indices(min(max_mem_1, max_mem_2),
-                                                 shape=arr_1.shape,
-                                                 itemsize=max(arr_1.dtype.itemsize, arr_1.dtype.itemsize))
+        elif self._arr_2.chunks:
+            self._chunk_indices = tuple(
+                tuple(FullSlice.from_slice(c) for c in chunk)
+                for chunk in arr_2.dset.iter_chunks()                                         # type: ignore[union-attr]
+            )
+
+        else:
+            max_mem_1 = get_size(arr_1.MAX_MEM_USAGE) if isinstance(arr_1, ch5mpy.H5Array) else INF
+            max_mem_2 = get_size(arr_2.MAX_MEM_USAGE) if isinstance(arr_2, ch5mpy.H5Array) else INF
+
+            self._chunk_indices = _get_chunk_indices(min(max_mem_1, max_mem_2),
+                                                     shape=arr_1.shape,
+                                                     itemsize=max(arr_1.dtype.itemsize, arr_1.dtype.itemsize))
+
         self._work_array_1 = get_work_array(broadcasted_shape, self._chunk_indices[0], dtype=arr_1.dtype)
         self._work_array_2 = get_work_array(broadcasted_shape, self._chunk_indices[0], dtype=arr_2.dtype)
 

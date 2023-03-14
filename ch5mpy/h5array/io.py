@@ -42,8 +42,5 @@ def write_to_dataset(dataset: Dataset[_DT] | DatasetWrapper[_DT],
     if values.size == np.prod(selection_shape) and values.shape != selection_shape:
         values = values.reshape(selection_shape)
 
-    # we must make a copy here to ensure 'C' order
-    values = values.copy()
-
     for dataset_idx, array_idx in selection.iter_h5(values.shape):
         dataset.write_direct(values, source_sel=array_idx, dest_sel=dataset_idx)

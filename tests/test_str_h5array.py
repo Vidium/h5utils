@@ -1,36 +1,19 @@
 # coding: utf-8
-import numpy as np
+
 # ====================================================
 # imports
 import pytest
-from pathlib import Path
-
-from ch5mpy import File
-from ch5mpy import H5Mode
-from ch5mpy import H5Array
-from ch5mpy import write_object
+import numpy as np
 
 
 # ====================================================
 # code
-@pytest.fixture
-def str_array() -> H5Array:
-    data = ['a', 'b', 'c', 'd', 'e']
-
-    with File("h5_str_array", H5Mode.WRITE_TRUNCATE) as h5_file:
-        write_object(h5_file, "data", data)
-
-    yield H5Array(File("h5_str_array", H5Mode.READ_WRITE)["data"])
-
-    Path("h5_str_array").unlink()
-
-
 def test_str_array_dtype(str_array):
-    assert str_array.dtype == np.dtype('<U1')
+    assert str_array.dtype == np.dtype('<U3')
 
 
 def test_str_array_equals(str_array):
-    assert np.array_equal(str_array, ['a', 'b', 'c', 'd', 'e'])
+    assert np.array_equal(str_array, ['a', 'bc', 'd', 'efg', 'h'])
 
 
 def test_str_array_should_convert_to_numpy_array(str_array):
@@ -39,4 +22,25 @@ def test_str_array_should_convert_to_numpy_array(str_array):
 
 
 def test_str_array_repr(str_array):
-    assert repr(str_array) == "H5Array(['a', 'b', 'c', 'd', 'e'], shape=(5,), dtype=<U1)"
+    assert repr(str_array) == "H5Array(['a', 'bc', 'd', 'efg', 'h'], shape=(5,), dtype=<U3)"
+
+
+def test_setitem_str(str_array):
+    str_array[[0, 1]] = np.array(['A', 'BBBB'])
+    assert np.array_equal(str_array, ['A', 'BBBB', 'd', 'efg', 'h'])
+    assert str_array.dtype == np.dtype('<U4')
+
+
+def test_array_str_type_casting(str_array, array):
+    assert str_array.astype(str).dtype == np.dtype('<U3')
+    assert array.astype(str).dtype == np.dtype('<U32')
+
+
+@pytest.mark.xfail
+def test_array_str_cast_int_should_fail(str_array):
+    _ = str_array.astype(int)[:]
+
+
+def test_iter_chunks_str_array(str_array):
+    _, chunk = list(str_array.iter_chunks())[0]
+    assert np.issubdtype(chunk.dtype, str)

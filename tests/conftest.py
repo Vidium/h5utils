@@ -42,6 +42,18 @@ def array() -> H5Array:
 
 
 @pytest.fixture
+def chunked_array() -> H5Array:
+    data = np.arange(100.).reshape((10, 10))
+
+    with File("h5_array", H5Mode.WRITE_TRUNCATE) as h5_file:
+        write_object(h5_file, "data", data, chunks=(3, 3))
+
+    yield H5Array(File("h5_array", H5Mode.READ_WRITE)["data"])
+
+    Path("h5_array").unlink()
+
+
+@pytest.fixture
 def small_large_array() -> H5Array:
     data = np.arange(3 * 4 * 5).reshape((3, 4, 5))
 

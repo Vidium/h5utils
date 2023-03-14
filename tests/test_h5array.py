@@ -3,7 +3,6 @@
 # ====================================================
 # imports
 import numpy as np
-import pytest
 
 import ch5mpy
 
@@ -167,11 +166,6 @@ def test_subset_2d(array):
     assert subset.ndim == 2
 
 
-def test_iter_chunks_str_array(str_array):
-    _, chunk = list(str_array.iter_chunks())[0]
-    assert np.issubdtype(chunk.dtype, str)
-
-
 def test_array_subset_ix(array):
     assert array[np.ix_([5], [5])] == 55
 
@@ -229,16 +223,6 @@ def test_array_type_casting(array):
     assert array.astype(int).dtype == np.int64
 
 
-def test_array_str_type_casting(str_array, array):
-    assert str_array.astype(str).dtype == np.dtype('<U3')
-    assert array.astype(str).dtype == np.dtype('<U32')
-
-
-@pytest.mark.xfail
-def test_array_str_cast_int_should_fail(str_array):
-    _ = str_array.astype(int)[:]
-
-
 def test_view_type_casting(array):
     subarr = array[:5, :5]
     assert subarr.astype(int).shape == (5, 5)
@@ -288,9 +272,3 @@ def test_setitem_row(array):
 def test_setitem_column(array):
     v = -1 * np.ones(5)[:, None]
     array[[[0], [1], [2], [3], [4]], [[0]]] = v
-
-
-def test_setitem_str(str_array):
-    str_array[[0, 1]] = np.array(['A', 'BBBB'])
-    assert np.array_equal(str_array, ['A', 'BBBB', 'd', 'efg', 'h'])
-    assert str_array.dtype == np.dtype('<U4')
