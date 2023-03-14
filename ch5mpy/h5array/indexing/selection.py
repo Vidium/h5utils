@@ -155,7 +155,7 @@ class Selection:
                 )
                 shape_index += 1
 
-            elif is_sequence(axis_index) or isinstance(axis_index, int):
+            elif is_sequence(axis_index) or isinstance(axis_index, (int, np.int_)):
                 axis_index = np.array(axis_index)
 
                 if axis_index.dtype == bool:
