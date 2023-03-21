@@ -75,11 +75,8 @@ class DatasetWrapper(ABC, Generic[_WT]):
                     dest: npt.NDArray[Any],
                     source_sel: tuple[int | slice | Collection[int], ...] | None = None,
                     dest_sel: tuple[int | slice | Collection[int], ...] | None = None) -> None:
-        if source_sel is None:
-            source_sel = ()
-
-        if dest_sel is None:
-            dest_sel = ()
+        source_sel = () if source_sel is None else source_sel
+        dest_sel = () if dest_sel is None else dest_sel
 
         dest[dest_sel] = self[source_sel]
 
@@ -112,6 +109,23 @@ class AsStrWrapper(DatasetWrapper[str]):
             return str_dset.dtype
 
         return np.dtype(f'<U{len(str_dset)}')
+
+    # endregion
+
+    # region methods
+    def read_direct(self,
+                    dest: npt.NDArray[Any],
+                    source_sel: tuple[int | slice | Collection[int], ...] | None = None,
+                    dest_sel: tuple[int | slice | Collection[int], ...] | None = None) -> None:
+        source_sel = () if source_sel is None else source_sel
+        dest_sel = () if dest_sel is None else dest_sel
+
+        values = self[source_sel]
+
+        if isinstance(values, np.ndarray) and values.size == 1:
+            values = values.flatten()[0]
+
+        dest[dest_sel] = values
 
     # endregion
 

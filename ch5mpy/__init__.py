@@ -7,7 +7,7 @@
 from .objects.group import File
 from .objects.group import Group
 from .objects.dataset import Dataset
-from .h5dict import H5Dict
+from .dict import H5Dict
 from .h5array.array import H5Array
 from .write import (
     write_attribute,
@@ -18,7 +18,9 @@ from .write import (
     write_objects,
 )
 from .names import H5Mode
+
 from .np import *
+from .h5array.creation_routines import *
 
 # ====================================================
 # code

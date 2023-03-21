@@ -22,7 +22,7 @@ def test_str_array_should_convert_to_numpy_array(str_array):
 
 
 def test_str_array_repr(str_array):
-    assert repr(str_array) == "H5Array(['a', 'bc', 'd', 'efg', 'h'], shape=(5,), dtype=<U3)"
+    assert repr(str_array) == "H5Array(['a', 'bc', 'd', 'efg', 'h'], shape=(5,), dtype='<U3')"
 
 
 def test_setitem_str(str_array):
@@ -44,3 +44,8 @@ def test_array_str_cast_int_should_fail(str_array):
 def test_iter_chunks_str_array(str_array):
     _, chunk = list(str_array.iter_chunks())[0]
     assert np.issubdtype(chunk.dtype, str)
+
+
+def test_str_array_should_convert_to_numpy(str_array):
+    assert isinstance(np.array(str_array), np.ndarray)
+    assert isinstance(np.array(str_array[0:1]), np.ndarray)

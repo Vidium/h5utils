@@ -15,9 +15,12 @@ from typing import Any
 from typing import Mapping
 from typing import TYPE_CHECKING
 
+import ch5mpy
 from ch5mpy import File
 from ch5mpy import Group
+from ch5mpy import Dataset
 from ch5mpy.utils import is_sequence
+from ch5mpy.h5array.array import get_size
 
 if TYPE_CHECKING:
     from ch5mpy import H5Array
@@ -47,19 +50,49 @@ def write_attributes(group: Group,
 
 def _store_dataset(loc: Group | File,
                    name: str,
-                   array: npt.NDArray[Any] | H5Array[Any],
-                   chunks: bool | tuple[int, ...] | None,
-                   maxshape: tuple[int, ...] | None) -> None:
+                   array: npt.NDArray[Any] | H5Array[Any] | None = None,
+                   shape: tuple[int, ...] | None = None,
+                   dtype: npt.DTypeLike | None = None,
+                   chunks: bool | tuple[int, ...] | None = None,
+                   maxshape: int | tuple[int | None, ...] | None = None,
+                   fill_value: Any = None) -> Dataset[Any]:
     """Store a dataset."""
-    if np.issubdtype(array.dtype, np.str_):
-        loc.create_dataset(name, data=array.astype(object), dtype=string_dtype(),
-                           chunks=chunks, maxshape=maxshape)
+    if dtype is None:
+        if array is not None:
+            dtype = array.dtype
 
+    if isinstance(dtype, type):
+        str_dtype = str(dtype().dtype)
     else:
-        loc.create_dataset(name, data=array,
-                           chunks=chunks, maxshape=maxshape)
+        str_dtype = str(dtype)
 
-    loc[name].attrs['dtype'] = str(array.dtype)
+    if np.issubdtype(dtype, np.str_):
+        array = None if array is None else array.astype(object)
+        dtype = string_dtype()
+
+    if array is not None:
+        if shape is None:
+            shape = array.shape
+
+        elif shape != array.shape:
+            raise ValueError("array's shape does not match the shape parameter.")
+
+    elif shape is None:
+        raise ValueError("At least one of `array` or `shape` must be provided.")
+
+    if chunks:
+        if chunks is True:      # literally `True`, not a tuple
+            chunks = (get_size(ch5mpy.H5Array.MAX_MEM_USAGE),) + (1,) * (len(shape) - 1)
+
+        if maxshape is None:
+            maxshape = (None,) * len(shape)
+
+    dset = loc.create_dataset(name, data=array, shape=shape, dtype=dtype,
+                              chunks=chunks, maxshape=maxshape,
+                              fillvalue=fill_value)
+    dset.attrs['dtype'] = str_dtype
+
+    return dset
 
 
 def write_dataset(loc: Group | File,

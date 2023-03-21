@@ -6,6 +6,7 @@ from typing import Any
 from typing import Union
 from typing import Literal
 from typing import Iterable
+from typing import overload
 from typing import Collection
 
 from .base import HLObject
@@ -37,6 +38,10 @@ class ChunkIterator:
 
 class Dataset(HLObject):
     def __init__(self, bind: DatasetID, *, readonly: bool = False): ...
+    @overload
+    def resize(self, size: int, axis: int) -> None: ...
+    @overload
+    def resize(self, size: Collection[int], axis: None = None) -> None: ...
     def __getitem__(self, args: SELECTOR | tuple[SELECTOR, ...], new_dtype: npt.DTypeLike | None = None) \
             -> npt.NDArray[Any]: ...
     def __setitem__(self, args: SELECTOR | tuple[SELECTOR, ...], val: npt.NDArray[Any] | Number | str) -> None: ...

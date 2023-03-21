@@ -61,8 +61,28 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
     def __contains__(self, item: Any) -> bool:
         raise NotImplementedError
 
-    def _inplace_operation(self, func: NP_FUNC, value: Any) -> H5ArrayView[_T]:
-        raise NotImplementedError
+    def _inplace(self, func: NP_FUNC, value: Any) -> H5ArrayView[_T]:
+        if np.issubdtype(self.dtype, str):
+            raise TypeError('Cannot perform inplace operation on str H5Array.')
+
+        # special case : 0D array
+        if self.shape == ():
+            self._dset[:] = func(self._dset[:], value)
+            return self
+
+        # general case : 1D+ array
+        for index, chunk in self.iter_chunks():
+            func(chunk, value, out=chunk)
+
+            for dest_sel, source_sel in Selection(index)\
+                    .cast_on(self._selection)\
+                    .iter_h5(self.shape):
+                # FIXME : can be slow in some cases (e.g. index is [column vector, 0] --> we loop over all pairs
+                #  (c, 0) for c in column vector / instead we could flatten the column vector and pass it as is)
+                # write back result into array
+                self._dset.write_direct(chunk, source_sel=source_sel, dest_sel=dest_sel)
+
+        return self
 
     # endregion
 

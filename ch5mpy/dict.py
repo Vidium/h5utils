@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import numpy as np
 from numbers import Number
+from pathlib import Path
 from collections.abc import KeysView
 from collections.abc import Iterable
 from collections.abc import Collection
@@ -17,7 +18,7 @@ from typing import cast
 from typing import Union
 from typing import Iterator
 
-import ch5mpy as ch
+import ch5mpy
 from ch5mpy import File
 from ch5mpy import Group
 from ch5mpy import Dataset
@@ -26,7 +27,7 @@ from ch5mpy.objects.dataset import AsStrWrapper
 
 # ====================================================
 # code
-H5DICT_CONTENT = Union["H5Dict", "ch.H5Array[Any]", Number, str]
+H5DICT_CONTENT = Union["H5Dict", "ch5mpy.H5Array[Any]", Number, str]
 
 
 def _get_in_memory(value: Any) -> Any:
@@ -63,7 +64,11 @@ class H5Dict(MutableMapping[str, 'H5DICT_CONTENT']):
         return f"H5Dict{'{' + _get_repr(self._file.items()) + '}'}"
 
     def __setitem__(self, key: str, value: Any) -> None:
-        write_object(self._file, key, value)
+        if callable(value):
+            value(name=key, loc=self._file)
+
+        else:
+            write_object(self._file, key, value)
 
     def __delitem__(self, key: str) -> None:
         del self._file[key]
@@ -86,6 +91,13 @@ class H5Dict(MutableMapping[str, 'H5DICT_CONTENT']):
     @property
     def is_closed(self) -> bool:
         return not self._file.id.valid
+
+    # endregion
+
+    # region class methods
+    @classmethod
+    def from_file(cls, path: str | Path, mode: 'ch5mpy.H5Mode') -> H5Dict:
+        return H5Dict(File(path, mode=mode))
 
     # endregion
 
@@ -130,7 +142,7 @@ def _parse_value(obj: Group | Dataset[Any]) -> H5DICT_CONTENT:
                 return cast(str, obj.asstr()[()])
 
         # return dataset as H5Array
-        return ch.H5Array(obj)
+        return ch5mpy.H5Array(obj)
 
     else:
         raise ValueError(

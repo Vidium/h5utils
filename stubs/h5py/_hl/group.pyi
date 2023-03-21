@@ -1,5 +1,6 @@
 import numpy as np
 
+import numpy.typing as npt
 from typing import Any
 from typing import Iterator
 from typing import Collection
@@ -25,9 +26,9 @@ class Group(HLObject, MutableMappingHDF5[str, Group | Dataset | Datatype]):
     def create_group(self, name: str, track_order: bool | None = None) -> Group: ...
     def create_dataset(
         self,
-        name: str,
-        shape: tuple[()] | tuple[int, ...] | None = None,
-        dtype: str | np.dtype[Any] | None = None,
+        name: str | None,
+        shape: int | tuple[()] | tuple[int | None, ...] | None = None,
+        dtype: npt.DTypeLike | None = None,
         data: Collection[Any] | None = None,
         **kwds: Any
     ) -> Dataset: ...

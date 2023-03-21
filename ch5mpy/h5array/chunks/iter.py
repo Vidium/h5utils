@@ -28,30 +28,6 @@ if TYPE_CHECKING:
 # code
 _DT = TypeVar("_DT", bound=np.generic)
 INF = np.iinfo(int).max
-SIZES = {"K": 1024,
-         "M": 1024 * 1024,
-         "G": 1024 * 1024 * 1024}
-
-
-def get_size(s: int | str) -> int:
-    value: int | None = None
-
-    if isinstance(s, int):
-        value = s
-
-    elif s[-1] in SIZES and s[:-1].lstrip("-").isdigit():
-        value = int(s[:-1]) * SIZES[s[-1]]
-
-    elif s.isdigit():
-        value = int(s)
-
-    if value is None:
-        raise ValueError(f"Unrecognized size '{s}'")
-
-    if value <= 0:
-        raise ValueError(f"Got invalid size ({value} <= 0).")
-
-    return value
 
 
 def get_work_array(shape: tuple[int, ...],
@@ -64,27 +40,25 @@ def get_work_array(shape: tuple[int, ...],
     return np.empty(slicer_shape, dtype=object if np.issubdtype(dtype, str) else dtype)
 
 
-def _get_chunk_indices(max_memory_usage: int | str,
-                       shape: tuple[int, ...],
-                       itemsize: int) -> tuple[tuple[FullSlice, ...], ...]:
+def _get_chunk_indices(chunk_size: int,
+                       shape: tuple[int, ...]) -> tuple[tuple[FullSlice, ...], ...]:
     # special case of 0D arrays
     if len(shape) == 0:
         raise ValueError("0D array")
 
     rev_shape = tuple(reversed(shape))
-    nb_elements_chunk = int(get_size(max_memory_usage) / itemsize)
 
     # not enough max mem
-    if nb_elements_chunk <= 1:
+    if chunk_size <= 1:
         raise ValueError(
             "Slicing is impossible because of insufficient allowed memory usage."
         )
 
-    block_axes = int(np.argmax(~(np.cumprod(rev_shape + (np.inf,)) <= nb_elements_chunk)))
+    block_axes = int(np.argmax(~(np.cumprod(rev_shape + (np.inf,)) <= chunk_size)))
     size_block = (
-        nb_elements_chunk // np.cumprod(rev_shape)[block_axes - 1]
+        chunk_size // np.cumprod(rev_shape)[block_axes - 1]
         if block_axes
-        else min(rev_shape[0], nb_elements_chunk)
+        else min(rev_shape[0], chunk_size)
     )
 
     if size_block == 0:
@@ -122,13 +96,7 @@ class ChunkIterator:
         self._array = array
         self._keepdims = keepdims
 
-        if array.is_chunked:
-            self._chunk_indices = tuple(
-                tuple(FullSlice.from_slice(c) for c in chunk)
-                for chunk in array.dset.iter_chunks()
-            )
-        else:
-            self._chunk_indices = _get_chunk_indices(array.MAX_MEM_USAGE, array.shape, array.dtype.itemsize)
+        self._chunk_indices = _get_chunk_indices(array.chunk_size, array.shape)
 
         self._work_array = get_work_array(array.shape, self._chunk_indices[0], dtype=array.dtype)
 
@@ -161,31 +129,16 @@ class PairedChunkIterator:
 
         self._keepdims = keepdims
 
-        if self._arr_1.chunks:
-            self._chunk_indices = tuple(
-                tuple(FullSlice.from_slice(c) for c in chunk)
-                for chunk in arr_1.dset.iter_chunks()                                         # type: ignore[union-attr]
-            )
+        chunk_size = min(arr_1.chunk_size if isinstance(arr_1, ch5mpy.H5Array) else INF,
+                         arr_2.chunk_size if isinstance(arr_2, ch5mpy.H5Array) else INF)
 
-        elif self._arr_2.chunks:
-            self._chunk_indices = tuple(
-                tuple(FullSlice.from_slice(c) for c in chunk)
-                for chunk in arr_2.dset.iter_chunks()                                         # type: ignore[union-attr]
-            )
-
-        else:
-            max_mem_1 = get_size(arr_1.MAX_MEM_USAGE) if isinstance(arr_1, ch5mpy.H5Array) else INF
-            max_mem_2 = get_size(arr_2.MAX_MEM_USAGE) if isinstance(arr_2, ch5mpy.H5Array) else INF
-
-            self._chunk_indices = _get_chunk_indices(min(max_mem_1, max_mem_2),
-                                                     shape=arr_1.shape,
-                                                     itemsize=max(arr_1.dtype.itemsize, arr_1.dtype.itemsize))
+        self._chunk_indices = _get_chunk_indices(chunk_size, shape=arr_1.shape)
 
         self._work_array_1 = get_work_array(broadcasted_shape, self._chunk_indices[0], dtype=arr_1.dtype)
         self._work_array_2 = get_work_array(broadcasted_shape, self._chunk_indices[0], dtype=arr_2.dtype)
 
     def __repr__(self) -> str:
-        return f"<PairedChunkIterator over 2 {self._arr_1.shape} H5Arrays>"
+        return f"<PairedChunkIterator over 2 {self._arr_1.shape} arrays>"
 
     def __iter__(self) -> Generator[tuple[tuple[FullSlice, ...], npt.NDArray[Any], npt.NDArray[Any]], None, None]:
         for index in self._chunk_indices:

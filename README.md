@@ -277,14 +277,18 @@ Set routines
 
 Array creation routines
 - [ ] np.empty
+  - [x] ch5mpy.empty
 - [ ] np.empty_like
 - [ ] np.eye
 - [ ] np.identity
 - [ ] np.ones
+  - [x] ch5mpy.ones
 - [x] np.ones_like
 - [ ] np.zeros
+  - [x] ch5mpy.zeros
 - [x] np.zeros_like
 - [ ] np.full
+  - [x] ch5mpy.full
 - [ ] np.full_like
 - [x] np.array
 - [x] np.asarray

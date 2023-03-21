@@ -10,8 +10,10 @@ from abc import abstractmethod
 from h5py._hl.base import ValuesViewHDF5
 from h5py._hl.base import ItemsViewHDF5
 
+import numpy.typing as npt
 from typing import Any
 from typing import cast
+from typing import Collection
 
 from ch5mpy.objects.dataset import Dataset
 from ch5mpy.pickle.wrap import PickleableH5PyObject
@@ -60,8 +62,27 @@ class _GroupManagerMixin(h5py.Group, ABC):
             default h5.get_config().track_order.
         """
         group = super().create_group(name, track_order=track_order)
-
         return cast(Group, self._wrap(group))
+
+    def create_dataset(self,
+                       name: str | None,
+                       shape: int | tuple[()] | tuple[int | None, ...] | None = None,
+                       dtype: npt.DTypeLike | None = None,
+                       data: Collection[Any] | None = None,
+                       **kwds: Any) -> Dataset[Any]:
+        """
+        Create and return a new Dataset.
+
+        Args:
+            name: Name of the dataset (absolute or relative). Provide None to make an anonymous dataset.
+            shape: Dataset shape. Use "()" for scalar datasets. Required if "data" isn't provided.
+            dtype: Numpy dtype or string. If omitted, dtype('f') will be used. Required if "data" isn't provided;
+                otherwise, overrides data array's dtype.
+            data: Provide data to initialize the dataset. If used, you can omit shape and dtype arguments.
+            kwds: other arguments to pass to the dataset creation function.
+        """
+        group = super().create_dataset(name, shape=shape, dtype=dtype, data=data, **kwds)
+        return cast(Dataset[Any], self._wrap(group))
 
 
 class Group(PickleableH5PyObject, _GroupManagerMixin):

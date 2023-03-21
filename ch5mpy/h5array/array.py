@@ -35,9 +35,34 @@ if TYPE_CHECKING:
 # ====================================================
 # code
 _T = TypeVar("_T", bound=np.generic)
+SIZES = {"K": 1024,
+         "M": 1024 * 1024,
+         "G": 1024 * 1024 * 1024}
+
+
+def get_size(s: int | str) -> int:
+    value: int | None = None
+
+    if isinstance(s, int):
+        value = s
+
+    elif s[-1] in SIZES and s[:-1].lstrip("-").isdigit():
+        value = int(s[:-1]) * SIZES[s[-1]]
+
+    elif s.isdigit():
+        value = int(s)
+
+    if value is None:
+        raise ValueError(f"Unrecognized size '{s}'")
+
+    if value <= 0:
+        raise ValueError(f"Got invalid size ({value} <= 0).")
+
+    return value
 
 
 def as_array(values: Any, dtype: np.dtype[Any]) -> npt.NDArray[Any]:
+    # FIXME : work on H5Arrays directly instead of converting to np.array
     if np.issubdtype(dtype, str):
         return np.array(values, dtype=bytes)
 
@@ -46,6 +71,13 @@ def as_array(values: Any, dtype: np.dtype[Any]) -> npt.NDArray[Any]:
 
     except ValueError:
         raise ValueError(f"Couldn't set value of type {type(values)} in H5Array of type {dtype}.")
+
+
+def _dtype_repr(dset: Dataset[Any] | DatasetWrapper[Any]) -> str:
+    if np.issubdtype(dset.dtype, np.str_):
+        return f"'{dset.dtype}'"
+
+    return str(dset.dtype)
 
 
 class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
@@ -67,7 +99,7 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     def __repr__(self) -> str:
         return (
             f"H5Array({repr.print_dataset(self, end='', padding=8, padding_skip_first=True)}, "
-            f"shape={self.shape}, dtype={self._dset.dtype})"
+            f"shape={self.shape}, dtype={_dtype_repr(self._dset)})"
         )
 
     def __str__(self) -> str:
@@ -105,7 +137,10 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
         return False
 
-    def _inplace_operation(self, func: NP_FUNC, value: Any) -> H5Array[_T]:
+    def _inplace(self,
+                 func: NP_FUNC,
+                 value: Any) \
+            -> H5Array[_T]:
         if np.issubdtype(self.dtype, str):
             raise TypeError('Cannot perform inplace operation on str H5Array.')
 
@@ -119,66 +154,67 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
             func(chunk, value, out=chunk)
 
             # write back result into array
-            self._dset.write_direct(chunk, source_sel=map_slice(index, shift_to_zero=True), dest_sel=map_slice(index))
+            self.dset.write_direct(chunk, source_sel=map_slice(index, shift_to_zero=True),
+                                   dest_sel=map_slice(index))
 
         return self
 
     def __add__(self, other: Any) -> Number | str | npt.NDArray[Any]:
-        return self._dset[()] + other                                                      # type: ignore[no-any-return]
+        return np.array(self) + other                                                      # type: ignore[no-any-return]
 
     def __iadd__(self, other: Any) -> H5Array[_T]:
-        return self._inplace_operation(np.add, other)
+        return self._inplace(np.add, other)
 
     def __sub__(self, other: Any) -> Number | str | npt.NDArray[Any]:
-        return self._dset[()] - other                                                      # type: ignore[no-any-return]
+        return np.array(self) - other                                                      # type: ignore[no-any-return]
 
     def __isub__(self, other: Any) -> H5Array[_T]:
-        return self._inplace_operation(np.subtract, other)
+        return self._inplace(np.subtract, other)
 
     def __mul__(self, other: Any) -> Number | str | npt.NDArray[Any]:
-        return self._dset[()] * other                                                      # type: ignore[no-any-return]
+        return np.array(self) * other                                                      # type: ignore[no-any-return]
 
     def __imul__(self, other: Any) -> H5Array[_T]:
-        return self._inplace_operation(np.multiply, other)
+        return self._inplace(np.multiply, other)
 
     def __truediv__(self, other: Any) -> Number | str | npt.NDArray[Any]:
-        return self._dset[()] / other                                                      # type: ignore[no-any-return]
+        return np.array(self) / other                                                      # type: ignore[no-any-return]
 
     def __itruediv__(self, other: Any) -> H5Array[_T]:
-        return self._inplace_operation(np.divide, other)
+        return self._inplace(np.divide, other)
 
     def __mod__(self, other: Any) -> Number | str | npt.NDArray[Any]:
-        return self._dset[()] % other                                                      # type: ignore[no-any-return]
+        return np.array(self) % other                                                      # type: ignore[no-any-return]
 
     def __imod__(self, other: Any) -> H5Array[_T]:
-        return self._inplace_operation(np.mod, other)
+        return self._inplace(np.mod, other)
 
     def __pow__(self, other: Any) -> Number | str | npt.NDArray[Any]:
-        return self._dset[()] ** other                                                     # type: ignore[no-any-return]
+        return np.array(self) ** other                                                     # type: ignore[no-any-return]
 
     def __ipow__(self, other: Any) -> H5Array[_T]:
-        return self._inplace_operation(np.power, other)
+        return self._inplace(np.power, other)
 
     def __or__(self, other: Any) -> Number | npt.NDArray[Any]:
-        return self._dset[()] | other                                                      # type: ignore[no-any-return]
+        return np.array(self) | other                                                      # type: ignore[no-any-return]
 
     def __ior__(self, other: Any) -> H5Array[_T]:
-        return self._inplace_operation(np.logical_or, other)
+        return self._inplace(np.logical_or, other)
 
     def __and__(self, other: Any) -> Number | npt.NDArray[Any]:
-        return self._dset[()] & other                                                      # type: ignore[no-any-return]
+        return np.array(self) & other                                                      # type: ignore[no-any-return]
 
     def __iand__(self, other: Any) -> H5Array[_T]:
-        return self._inplace_operation(np.logical_and, other)
+        return self._inplace(np.logical_and, other)
 
     def __invert__(self) -> Number | npt.NDArray[Any]:
-        return ~self._dset[()]                                                                  # type: ignore[operator]
+        return ~np.array(self)
 
     def __xor__(self, other: Any) -> Number | npt.NDArray[Any]:
-        return self._dset[()] ^ other                                                      # type: ignore[no-any-return]
+        return np.array(self) ^ other                                                      # type: ignore[no-any-return]
 
     def __ixor__(self, other: Any) -> H5Array[_T]:
-        return self._inplace_operation(np.logical_xor, other)
+        return self._inplace(np.logical_xor, other)
 
     # endregion
 
@@ -231,6 +267,11 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
         return self._dset
 
     @property
+    def chunk_size(self) -> int:
+        """Get the size of a chunk (i.e. the nb of elements that can be read/written at a time)."""
+        return get_size(self.MAX_MEM_USAGE) // self._dset.dtype.itemsize
+
+    @property
     def shape(self) -> tuple[int, ...]:
         return self._dset.shape
 
@@ -249,6 +290,34 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     # endregion
 
     # region methods
+    def _resize(self, amount: int, axis: int | tuple[int, ...] | None = None) -> None:
+        if axis is None:
+            axis = 0
+
+        if isinstance(axis, int):
+            self._dset.resize(self.shape[axis] + amount, axis=axis)
+
+        else:
+            self._dset.resize([s + amount if i in axis else s for i, s in enumerate(self.shape)])
+
+    def expand(self, amount: int, axis: int | tuple[int, ...] | None = None) -> None:
+        """
+        Resize an H5Array by adding `amount` elements along the selected axis.
+
+        Raises:
+            TypeError: if the H5Array does not wrap a chunked Dataset.
+        """
+        self._resize(amount, axis)
+
+    def contract(self, amount: int, axis: int | tuple[int, ...] | None = None) -> None:
+        """
+        Resize an H5Array by removing `amount` elements along the selected axis.
+
+        Raises:
+            TypeError: if the H5Array does not wrap a chunked Dataset.
+        """
+        self._resize(-amount, axis)
+
     def astype(self, dtype: npt.DTypeLike) -> H5Array[Any]:
         """
         Cast an H5Array to a specified dtype.
