@@ -21,7 +21,6 @@ if TYPE_CHECKING:
 # ====================================================
 # code
 class FullSlice:
-
     # region magic methods
     def __init__(
         self,
@@ -51,8 +50,12 @@ class FullSlice:
         if not isinstance(other, FullSlice):
             raise NotImplementedError
 
-        if self._start == other.start and self._stop == other.stop and self._step == other.step \
-                and self._max == other.max:
+        if (
+            self._start == other.start
+            and self._stop == other.stop
+            and self._step == other.step
+            and self._max == other.max
+        ):
             return True
 
         return False
@@ -64,10 +67,12 @@ class FullSlice:
         from ch5mpy.h5array.indexing.special import NewAxisType
 
         if isinstance(item, FullSlice):
-            return FullSlice(start=self._start + item.start * self._step,
-                             stop=self._start + item.true_stop * self._step + 1,
-                             step=self._step,
-                             max_=self._max)
+            return FullSlice(
+                start=self._start + item.start * self._step,
+                stop=self._start + item.true_stop * self._step + 1,
+                step=self._step,
+                max_=self._max,
+            )
 
         if isinstance(item, NewAxisType):
             raise RuntimeError
@@ -111,7 +116,7 @@ class FullSlice:
 
     @property
     def shape(self) -> tuple[int, ...]:
-        return len(self),
+        return (len(self),)
 
     # endregion
 
@@ -131,11 +136,9 @@ class FullSlice:
         return FullSlice(0, max_, 1, max_)
 
     @classmethod
-    def one(cls,
-            element: int,
-            max_: int | None = None) -> FullSlice:
+    def one(cls, element: int, max_: int | None = None) -> FullSlice:
         max_ = element + 1 if max_ is None else max_
-        return FullSlice(element, element+1, 1, max_)
+        return FullSlice(element, element + 1, 1, max_)
 
     @classmethod
     def from_slice(cls, s: slice | range) -> FullSlice:
@@ -150,8 +153,7 @@ class FullSlice:
     # endregion
 
 
-def map_slice(index: Iterable[FullSlice],
-              shift_to_zero: bool = False) -> tuple[slice, ...]:
+def map_slice(index: Iterable[FullSlice], shift_to_zero: bool = False) -> tuple[slice, ...]:
     if shift_to_zero:
         return tuple(fs.shift_to_zero().as_slice() for fs in index)
 

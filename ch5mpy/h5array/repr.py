@@ -17,9 +17,15 @@ if TYPE_CHECKING:
 # ====================================================
 # code
 @overload
-def _get3(arr: None) -> None: ...
+def _get3(arr: None) -> None:
+    ...
+
+
 @overload
-def _get3(arr: H5Array[Any] | Number | str) -> list[Any]: ...
+def _get3(arr: H5Array[Any] | Number | str) -> list[Any]:
+    ...
+
+
 def _get3(arr: H5Array[Any] | Number | str | None) -> list[Any] | None:
     """Get the first (and last) 3 elements in a set <arr>."""
     if arr is None:
@@ -34,9 +40,7 @@ def _get3(arr: H5Array[Any] | Number | str | None) -> list[Any] | None:
     return list(arr[:3]) + [None] + list(arr[-3:])
 
 
-def _print3(
-    lst: list[Any | None] | None, end: str = "\n", before: str = "", sep: str = ","
-) -> str:
+def _print3(lst: list[Any | None] | None, end: str = "\n", before: str = "", sep: str = ",") -> str:
     """Print the first (and last) 3 elements in"""
     if lst is None:
         return f"{before}...{end}"
@@ -44,9 +48,7 @@ def _print3(
     return f"{before}[{(sep + ' ').join(['...' if e is None else repr(e) for e in lst])}]{end}"
 
 
-def _get_padding(
-    padding: int, before: str | None = None, padding_skip_first: bool = False
-) -> str:
+def _get_padding(padding: int, before: str | None = None, padding_skip_first: bool = False) -> str:
     """Get the actual needed amount of padding, given that head strings might have been pasted before."""
     if padding_skip_first:
         return ""
@@ -73,29 +75,46 @@ def _print_dataset_core(
     rows = _get3(arr)
     spacer = "," + "\n" * (arr.ndim - 1)
 
-    return spacer.join([
-        _print_dataset_core(
-            rows[0],
-            padding=padding,
-            padding_skip_first=True,
-            before=_get_padding(padding, before, padding_skip_first) + before + "[",
-            end="",
-            sep=sep)] + [
-        _print_dataset_core(
-            sub_arr,
-            padding=padding,
-            padding_skip_first=False,
-            before=_get_padding(padding + len(before) + 1),
-            end="",
-            sep=sep) for sub_arr in rows[1:-1]] + ([
-        _print_dataset_core(
-            rows[-1],
-            padding=padding,
-            padding_skip_first=False,
-            before=_get_padding(padding + len(before) + 1),
-            end="",
-            sep=sep)
-    ] if len(rows) > 1 else [])) + "]"
+    return (
+        spacer.join(
+            [
+                _print_dataset_core(
+                    rows[0],
+                    padding=padding,
+                    padding_skip_first=True,
+                    before=_get_padding(padding, before, padding_skip_first) + before + "[",
+                    end="",
+                    sep=sep,
+                )
+            ]
+            + [
+                _print_dataset_core(
+                    sub_arr,
+                    padding=padding,
+                    padding_skip_first=False,
+                    before=_get_padding(padding + len(before) + 1),
+                    end="",
+                    sep=sep,
+                )
+                for sub_arr in rows[1:-1]
+            ]
+            + (
+                [
+                    _print_dataset_core(
+                        rows[-1],
+                        padding=padding,
+                        padding_skip_first=False,
+                        before=_get_padding(padding + len(before) + 1),
+                        end="",
+                        sep=sep,
+                    )
+                ]
+                if len(rows) > 1
+                else []
+            )
+        )
+        + "]"
+    )
 
 
 def print_dataset(

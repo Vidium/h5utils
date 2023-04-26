@@ -2,7 +2,10 @@
 
 # ====================================================
 # imports
+from pathlib import Path
+
 import numpy as np
+import pytest
 
 import ch5mpy
 
@@ -51,9 +54,7 @@ def test_should_sum_all_values(array):
 
 def test_should_sum_along_axis(array):
     s = np.sum(array, axis=0)
-    assert np.array_equal(
-        s, np.array([450, 460, 470, 480, 490, 500, 510, 520, 530, 540])
-    )
+    assert np.array_equal(s, np.array([450, 460, 470, 480, 490, 500, 510, 520, 530, 540]))
 
 
 def test_should_add_inplace(array):
@@ -70,35 +71,48 @@ def test_should_add_to_view(array):
 
 
 def test_should_add_inplace_to_view(array):
-    array[1:3, 5:8] += 1
+    v = array[1:3, 5:8]
+    v += 1
 
-    assert np.array_equal(array,
-                          np.array([[ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9],
-                                    [10, 11, 12, 13, 14, 16, 17, 18, 18, 19],
-                                    [20, 21, 22, 23, 24, 26, 27, 28, 28, 29],
-                                    [30, 31, 32, 33, 34, 35, 36, 37, 38, 39],
-                                    [40, 41, 42, 43, 44, 45, 46, 47, 48, 49],
-                                    [50, 51, 52, 53, 54, 55, 56, 57, 58, 59],
-                                    [60, 61, 62, 63, 64, 65, 66, 67, 68, 69],
-                                    [70, 71, 72, 73, 74, 75, 76, 77, 78, 79],
-                                    [80, 81, 82, 83, 84, 85, 86, 87, 88, 89],
-                                    [90, 91, 92, 93, 94, 95, 96, 97, 98, 99]]))
+    assert np.array_equal(
+        array,
+        np.array(
+            [
+                [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                [10, 11, 12, 13, 14, 16, 17, 18, 18, 19],
+                [20, 21, 22, 23, 24, 26, 27, 28, 28, 29],
+                [30, 31, 32, 33, 34, 35, 36, 37, 38, 39],
+                [40, 41, 42, 43, 44, 45, 46, 47, 48, 49],
+                [50, 51, 52, 53, 54, 55, 56, 57, 58, 59],
+                [60, 61, 62, 63, 64, 65, 66, 67, 68, 69],
+                [70, 71, 72, 73, 74, 75, 76, 77, 78, 79],
+                [80, 81, 82, 83, 84, 85, 86, 87, 88, 89],
+                [90, 91, 92, 93, 94, 95, 96, 97, 98, 99],
+            ]
+        ),
+    )
 
 
 def test_should_add_inplace_to_view_2(array):
     array[[0, 2, 3], 5:7] += 1
 
-    assert np.array_equal(array,
-                          np.array([[ 0,  1,  2,  3,  4,  6,  7,  7,  8,  9],
-                                    [10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
-                                    [20, 21, 22, 23, 24, 26, 27, 27, 28, 29],
-                                    [30, 31, 32, 33, 34, 36, 37, 37, 38, 39],
-                                    [40, 41, 42, 43, 44, 45, 46, 47, 48, 49],
-                                    [50, 51, 52, 53, 54, 55, 56, 57, 58, 59],
-                                    [60, 61, 62, 63, 64, 65, 66, 67, 68, 69],
-                                    [70, 71, 72, 73, 74, 75, 76, 77, 78, 79],
-                                    [80, 81, 82, 83, 84, 85, 86, 87, 88, 89],
-                                    [90, 91, 92, 93, 94, 95, 96, 97, 98, 99]]))
+    assert np.array_equal(
+        array,
+        np.array(
+            [
+                [0, 1, 2, 3, 4, 6, 7, 7, 8, 9],
+                [10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+                [20, 21, 22, 23, 24, 26, 27, 27, 28, 29],
+                [30, 31, 32, 33, 34, 36, 37, 37, 38, 39],
+                [40, 41, 42, 43, 44, 45, 46, 47, 48, 49],
+                [50, 51, 52, 53, 54, 55, 56, 57, 58, 59],
+                [60, 61, 62, 63, 64, 65, 66, 67, 68, 69],
+                [70, 71, 72, 73, 74, 75, 76, 77, 78, 79],
+                [80, 81, 82, 83, 84, 85, 86, 87, 88, 89],
+                [90, 91, 92, 93, 94, 95, 96, 97, 98, 99],
+            ]
+        ),
+    )
 
 
 # def test_large_array(large_array):
@@ -136,13 +150,14 @@ def test_should_get_single_value_from_view(array):
 
 def test_should_subset_from_boolean_array(array):
     subset = array[np.array([True, False, True, False, False, False, False, False, False, False])]
-    assert np.array_equal(subset, np.array([[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-                                            [20, 21, 22, 23, 24, 25, 26, 27, 28, 29]]))
+    assert np.array_equal(subset, np.array([[0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [20, 21, 22, 23, 24, 25, 26, 27, 28, 29]]))
 
 
 def test_should_subset_from_2_boolean_arrays(array):
-    subset = array[[True, False, True, False, False, False, False, False, False, False],
-                   [True, False, True, False, False, False, False, False, False, False]]
+    subset = array[
+        [True, False, True, False, False, False, False, False, False, False],
+        [True, False, True, False, False, False, False, False, False, False],
+    ]
     assert np.array_equal(subset, np.array([0, 22]))
 
 
@@ -247,9 +262,7 @@ def test_array_should_get_array_of_multiple_elements_in_2d(array):
     assert isinstance(subarr, ch5mpy.H5Array)
     assert subarr.shape == (3, 1)
     assert subarr[0].shape == (1,)
-    assert repr(subarr) == "H5Array([[0.0],\n" \
-                           "         [20.0],\n" \
-                           "         [50.0]], shape=(3, 1), dtype=float64)"
+    assert repr(subarr) == "H5Array([[0.0],\n" "         [20.0],\n" "         [50.0]], shape=(3, 1), dtype=float64)"
 
 
 def test_array_should_get_array_in_1d_from_slice(array):
@@ -298,7 +311,7 @@ def test_newaxis_to_numpy_array(small_array):
 def test_setitem(array):
     array[0, [0, 1]] = np.array([[-1, -2]])
 
-    ref = np.arange(100.).reshape((10, 10))
+    ref = np.arange(100.0).reshape((10, 10))
     ref[0, [0, 1]] = [-1, -2]
 
     assert np.array_equal(array, ref)
@@ -312,3 +325,95 @@ def test_setitem_row(array):
 def test_setitem_column(array):
     v = -1 * np.ones(5)[:, None]
     array[[[0], [1], [2], [3], [4]], [[0]]] = v
+
+
+def test_get_in_random_order(array):
+    v = array[np.ix_([5, 1, 2], [9, 8, 7])]
+    a = np.array(v)
+    assert np.array_equal(a, [[59, 58, 57], [19, 18, 17], [29, 28, 27]])
+
+
+def test_get_in_random_order_1d(small_array):
+    v = small_array[[1, 3, 4, 0, 2]]
+    a = np.array(v)
+    assert np.array_equal(a, [2, 4, 5, 1, 3])
+
+
+def test_get_in_random_order_2d(array):
+    v = array[np.ix_([1, 4, 1, 3, 1, 2], [2, 1, 0])]
+    a = np.array(v)
+    assert np.array_equal(
+        a,
+        np.array(
+            [
+                [12.0, 11.0, 10.0],
+                [42.0, 41.0, 40.0],
+                [12.0, 11.0, 10.0],
+                [32.0, 31.0, 30.0],
+                [12.0, 11.0, 10.0],
+                [22.0, 21.0, 20.0],
+            ]
+        ),
+    )
+
+
+# FIXME
+@pytest.mark.xfail
+def test_repr_3d_array():
+    path = Path("f.h5")
+    if path.exists():
+        path.unlink()
+
+    array = ch5mpy.ones((10, 10, 10), "array", "f.h5")
+    assert (
+        repr(array) == "H5Array([[[1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          ...,\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0]],\n"
+        "\n"
+        "         [[1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          ...,\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0]],\n"
+        "\n"
+        "         [[1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          ...,\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0]],\n"
+        "\n"
+        "         ...,\n"
+        "\n"
+        "         [[1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          ...,\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0]],\n"
+        "\n"
+        "         [[1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          ...,\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0]],\n"
+        "\n"
+        "         [[1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          ...,\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0],\n"
+        "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0]]], shape=(10, 10, 10), dtype=float64)"
+    )
+    path.unlink()

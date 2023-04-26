@@ -4,11 +4,10 @@
 # imports
 from __future__ import annotations
 
-import numpy as np
+from typing import TYPE_CHECKING, Any
 
+import numpy as np
 import numpy.typing as npt
-from typing import Any
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ch5mpy.h5array.indexing._typing import SELECTION_ELEMENT
@@ -17,17 +16,15 @@ if TYPE_CHECKING:
 # ====================================================
 # code
 class ListIndex:
-
     # region magic methods
-    def __init__(self,
-                 elements: npt.NDArray[np.int_]):
+    def __init__(self, elements: npt.NDArray[np.int_]):
         if elements.dtype != int:
             raise RuntimeError
 
         self._elements = elements
 
     def __repr__(self) -> str:
-        flat_elements_repr = str(self._elements).replace('\n', '')
+        flat_elements_repr = str(self._elements).replace("\n", "")
         return f"ListIndex({flat_elements_repr} | ndim={self.ndim})"
 
     def __getitem__(self, item: SELECTION_ELEMENT | tuple[SELECTION_ELEMENT, ...]) -> ListIndex:
@@ -37,9 +34,9 @@ class ListIndex:
             if any(isinstance(e, NewAxisType) for e in item):
                 raise RuntimeError
 
-            casted_items: tuple[slice | npt.NDArray[np.int_], ...] = \
-                tuple(i.as_array() if isinstance(i, ListIndex) else i.as_slice()             # type: ignore[union-attr]
-                      for i in item)
+            casted_items: tuple[slice | npt.NDArray[np.int_], ...] = tuple(
+                i.as_array() if isinstance(i, ListIndex) else i.as_slice() for i in item  # type: ignore[union-attr]
+            )
 
             return ListIndex(self._elements[casted_items])
 
@@ -91,13 +88,16 @@ class ListIndex:
 
     @property
     def is_zero(self) -> bool:
-        return (self._elements.ndim == 0 and self._elements == 0) or \
-            (self._elements.shape == (1,) and all(self._elements == 0))
+        return (self._elements.ndim == 0 and self._elements == 0) or (
+            self._elements.shape == (1,) and all(self._elements == 0)
+        )
 
     # endregion
 
     # region methods
-    def as_array(self) -> npt.NDArray[np.int_]:
+    def as_array(self, sorted: bool = False) -> npt.NDArray[np.int_]:
+        if sorted:
+            return np.sort(self._elements)
         return self._elements
 
     def squeeze(self) -> ListIndex:

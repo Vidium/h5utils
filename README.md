@@ -381,3 +381,24 @@ Array manipulation routines
 - [ ] np.reshape
 - [ ] np.roll
 - [ ] np.rot90
+
+Sorting, searching, and counting
+- [ ] np.sort
+- [ ] np.lexsort
+- [ ] np.argsort
+- [ ] np.ndarray.sort
+- [ ] np.sort_complex
+- [ ] np.partition
+- [ ] np.argpartition
+- [ ] np.argmax
+- [ ] np.nanargmax
+- [ ] np.argmin
+- [ ] np.nanargmin
+- [ ] np.argwhere
+- [ ] np.nonzero
+- [ ] np.flatnonzero
+- [ ] np.where
+- [ ] np.searchsorted
+- [ ] np.extract
+- [ ] np.count_nonzero
+

@@ -4,17 +4,14 @@
 # imports
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
+from typing import Any, Collection, cast
+
 import h5py
-from abc import ABC
-from abc import abstractmethod
-from h5py._hl.base import ValuesViewHDF5
-from h5py._hl.base import ItemsViewHDF5
-
 import numpy.typing as npt
-from typing import Any
-from typing import cast
-from typing import Collection
+from h5py._hl.base import ItemsViewHDF5, ValuesViewHDF5
 
+from ch5mpy.attributes import AttributeManager
 from ch5mpy.objects.dataset import Dataset
 from ch5mpy.pickle.wrap import PickleableH5PyObject
 
@@ -38,38 +35,68 @@ def _h5py_wrap_type(obj: Any) -> Any:
 class _GroupManagerMixin(h5py.Group, ABC):
     """Mixin for File and Group objects which can access and create groups on H5 files."""
 
+    # region magic methods
+    def __getitem__(self, name: str | bytes) -> Any:  # type: ignore[override]
+        return self._wrap(h5py.Group.__getitem__(self, name))  # type: ignore[index]
+
+    # endregion
+
+    # region attributes
+    @property
+    def attrs(self) -> AttributeManager:  # type: ignore[override]
+        return AttributeManager(super().attrs)
+
+    @property
+    def file(self) -> File:
+        return super().file  # type: ignore[return-value]
+
+    # endregion
+
+    # region methods
     @abstractmethod
     def _wrap(self, obj: Any) -> Any:
         """Wrap an object accessed in this group with our custom classes."""
         pass
 
-    def __getitem__(self, name: str | bytes) -> Any:                                        # type: ignore[override]
-        return self._wrap(h5py.Group.__getitem__(self, name))                               # type: ignore[index]
+    def require_group(self, name: str) -> Group:
+        """
+        Return a group, creating it if it doesn't exist.
 
-    def values(self) -> ValuesViewHDF5[Group | Dataset[Any]]:                               # type: ignore[override]
-        return super().values()                                                             # type: ignore[return-value]
+        TypeError is raised if something with that name already exists that
+        isn't a group.
+        """
+        return cast(Group, super().require_group(name))
 
-    def items(self) -> ItemsViewHDF5[str, Group | Dataset[Any]]:                            # type: ignore[override]
-        return super().items()                                                              # type: ignore[return-value]
+    def values(self) -> ValuesViewHDF5[Group | Dataset[Any]]:  # type: ignore[override]
+        return super().values()  # type: ignore[return-value]
 
-    def create_group(self, name: str, track_order: bool | None = None) -> Group:
+    def items(self) -> ItemsViewHDF5[str, Group | Dataset[Any]]:  # type: ignore[override]
+        return super().items()  # type: ignore[return-value]
+
+    def create_group(self, name: str, track_order: bool | None = None, overwrite: bool = False) -> Group:
         """
         Create and return a new subgroup.
 
         Args:
             name: may be absolute or relative. Fails if the target name already exists.
             track_order: Track dataset/group/attribute creation order under this group if True. If None use global
-            default h5.get_config().track_order.
+                default h5.get_config().track_order.
+            overwrite: overwrite group if it already exists ?
         """
+        if overwrite and name in self.keys():
+            del self[name]
+
         group = super().create_group(name, track_order=track_order)
         return cast(Group, self._wrap(group))
 
-    def create_dataset(self,
-                       name: str | None,
-                       shape: int | tuple[()] | tuple[int | None, ...] | None = None,
-                       dtype: npt.DTypeLike | None = None,
-                       data: Collection[Any] | None = None,
-                       **kwds: Any) -> Dataset[Any]:
+    def create_dataset(
+        self,
+        name: str | None,
+        shape: int | tuple[()] | tuple[int | None, ...] | None = None,
+        dtype: npt.DTypeLike | None = None,
+        data: Collection[Any] | None = None,
+        **kwds: Any,
+    ) -> Dataset[Any]:
         """
         Create and return a new Dataset.
 
@@ -84,12 +111,15 @@ class _GroupManagerMixin(h5py.Group, ABC):
         group = super().create_dataset(name, shape=shape, dtype=dtype, data=data, **kwds)
         return cast(Dataset[Any], self._wrap(group))
 
+    # endregion
+
 
 class Group(PickleableH5PyObject, _GroupManagerMixin):
     """Overwrite group to allow pickling, and to create new groups and datasets
     of the right type (i.e. the ones defined in this module).
     """
 
+    # region methods
     def _wrap(self, obj: Any) -> Any:
         obj = _h5py_wrap_type(obj)
 
@@ -99,6 +129,8 @@ class Group(PickleableH5PyObject, _GroupManagerMixin):
 
         return obj
 
+    # endregion
+
 
 class File(PickleableH5PyObject, _GroupManagerMixin, h5py.File):
     """A subclass of h5py.File that implements pickling.
@@ -106,7 +138,7 @@ class File(PickleableH5PyObject, _GroupManagerMixin, h5py.File):
     which produces the arguments to supply to the __new__ method.
     """
 
-    # noinspection PyMissingConstructor
+    # region magic methods
     def __init__(self, *args: Any, **kwargs: Any):
         # Store args and kwargs for pickling
         self.init_args = args
@@ -119,15 +151,6 @@ class File(PickleableH5PyObject, _GroupManagerMixin, h5py.File):
 
         return self
 
-    def _wrap(self, obj: Any) -> Any:
-        obj = _h5py_wrap_type(obj)
-
-        # If it is a group or dataset copy the current file info in
-        if isinstance(obj, Group) or isinstance(obj, Dataset):
-            obj.file_info = self
-
-        return obj
-
     def __getstate__(self) -> None:
         pass
 
@@ -138,3 +161,20 @@ class File(PickleableH5PyObject, _GroupManagerMixin, h5py.File):
             return (self.init_args[0], "r+", *self.init_args[2:]), kwargs
 
         return self.init_args, kwargs
+
+    def __enter__(self) -> File:
+        return super().__enter__()  # type: ignore[return-value]
+
+    # endregion
+
+    # region methods
+    def _wrap(self, obj: Any) -> Any:
+        obj = _h5py_wrap_type(obj)
+
+        # If it is a group or dataset copy the current file info in
+        if isinstance(obj, Group) or isinstance(obj, Dataset):
+            obj.file_info = self
+
+        return obj
+
+    # endregion

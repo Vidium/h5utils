@@ -4,14 +4,10 @@
 # imports
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, Any, Iterable, Literal, Sequence, cast
 
 import numpy as np
-
 import numpy.typing as npt
-from typing import Any
-from typing import Iterable
-from typing import TYPE_CHECKING
 
 import ch5mpy
 from ch5mpy._typing import NP_FUNC
@@ -27,17 +23,25 @@ _NAN_PLACEHOLDER = object()
 
 
 @implements(np.unique)
-def unique(ar: H5Array[Any],
-           return_index: bool = False,
-           return_inverse: bool = False,
-           return_counts: bool = False,
-           axis: int | None = None,
-           *,
-           equal_nan: bool = True) \
-        -> npt.NDArray[Any] | \
-        tuple[npt.NDArray[Any], npt.NDArray[np.int_]] | \
-        tuple[npt.NDArray[Any], npt.NDArray[np.int_], npt.NDArray[np.int_]] | \
-        tuple[npt.NDArray[Any], npt.NDArray[np.int_], npt.NDArray[np.int_], npt.NDArray[np.int_]]:
+def unique(
+    ar: H5Array[Any],
+    return_index: bool = False,
+    return_inverse: bool = False,
+    return_counts: bool = False,
+    axis: int | None = None,
+    *,
+    equal_nan: bool = True,
+) -> (
+    npt.NDArray[Any]
+    | tuple[npt.NDArray[Any], npt.NDArray[np.int_]]
+    | tuple[npt.NDArray[Any], npt.NDArray[np.int_], npt.NDArray[np.int_]]
+    | tuple[
+        npt.NDArray[Any],
+        npt.NDArray[np.int_],
+        npt.NDArray[np.int_],
+        npt.NDArray[np.int_],
+    ]
+):
     if return_inverse:
         raise NotImplementedError
 
@@ -50,8 +54,9 @@ def unique(ar: H5Array[Any],
     index_offset = 0
 
     for _, chunk in ar.iter_chunks():
-        unique_chunk, index_chunk, counts_chunk = \
-            np.unique(chunk, return_index=True, return_counts=True, equal_nan=equal_nan)
+        unique_chunk, index_chunk, counts_chunk = np.unique(
+            chunk, return_index=True, return_counts=True, equal_nan=equal_nan
+        )
 
         unique_concat = np.concatenate((unique, unique_chunk))
         index_concat = np.concatenate((index, index_chunk + index_offset))
@@ -76,17 +81,27 @@ def unique(ar: H5Array[Any],
                 counts_array = np.concatenate((counts_array, np.array([counts[_NAN_PLACEHOLDER]])))
 
             else:
-                counts_array = np.concatenate((counts_array, np.array([1 for _ in range(counts[_NAN_PLACEHOLDER])])))
+                counts_array = np.concatenate(
+                    (
+                        counts_array,
+                        np.array([1 for _ in range(counts[_NAN_PLACEHOLDER])]),
+                    )
+                )
 
         to_return += (counts_array,)
 
     if len(to_return) == 1:
         return to_return[0]
-    return to_return                                                                        # type: ignore[return-value]
+    return to_return  # type: ignore[return-value]
 
 
-def _in_chunk(chunk_1: npt.NDArray[Any], chunk_2: npt.NDArray[Any], res: npt.NDArray[Any], invert: bool,
-              func: NP_FUNC) -> npt.NDArray[np.bool_]:
+def _in_chunk(
+    chunk_1: npt.NDArray[Any],
+    chunk_2: npt.NDArray[Any],
+    res: npt.NDArray[Any],
+    invert: bool,
+    func: NP_FUNC,
+) -> npt.NDArray[np.bool_]:
     if invert:
         return np.logical_and(res, func(chunk_1, chunk_2, invert=True))
 
@@ -95,9 +110,7 @@ def _in_chunk(chunk_1: npt.NDArray[Any], chunk_2: npt.NDArray[Any], res: npt.NDA
 
 
 @implements(np.in1d)
-def in1d(ar1: Any,
-         ar2: Any,
-         invert: bool = False) -> npt.NDArray[np.bool_]:
+def in1d(ar1: Any, ar2: Any, invert: bool = False) -> npt.NDArray[np.bool_]:
     # cast arrays as either np.arrays or H5Arrays
     if not isinstance(ar1, (np.ndarray, ch5mpy.H5Array)):
         ar1 = np.array(ar1)
@@ -144,9 +157,7 @@ def in1d(ar1: Any,
 
 
 @implements(np.isin)
-def isin(element: Any,
-         test_elements: Any,
-         invert: bool = False) -> npt.NDArray[np.bool_]:
+def isin(element: Any, test_elements: Any, invert: bool = False) -> npt.NDArray[np.bool_]:
     # cast arrays as either np.arrays or H5Arrays
     if not isinstance(element, (np.ndarray, ch5mpy.H5Array)):
         element = np.array(element)
@@ -181,16 +192,24 @@ def isin(element: Any,
 
             for index_elem, chunk_elem in element.iter_chunks():
                 for _, chunk_test in test_elements.iter_chunks():
-                    res[index_elem] = _in_chunk(chunk_elem, chunk_test, res[index_elem], invert=invert, func=np.isin)
+                    res[index_elem] = _in_chunk(
+                        chunk_elem,
+                        chunk_test,
+                        res[index_elem],
+                        invert=invert,
+                        func=np.isin,
+                    )
 
     return res
 
 
 @implements(np.concatenate)
-def concatenate(arrays: H5Array[Any] | tuple[H5Array[Any] | npt.NDArray[Any], ...],
-                axis: int | None = 0,
-                out: H5Array[Any] | npt.NDArray[Any] | None = None,
-                dtype: npt.DTypeLike | None = None) -> npt.NDArray[Any]:
+def concatenate(
+    arrays: H5Array[Any] | tuple[H5Array[Any] | npt.NDArray[Any], ...],
+    axis: int | None = 0,
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    dtype: npt.DTypeLike | None = None,
+) -> npt.NDArray[Any]:
     if out is None:
         if isinstance(arrays, ch5mpy.H5Array):
             return np.concatenate(np.array(arrays), axis=axis, dtype=dtype)
@@ -203,24 +222,38 @@ def concatenate(arrays: H5Array[Any] | tuple[H5Array[Any] | npt.NDArray[Any], ..
 
 
 @implements(np.hstack)
-def hstack(tup: Iterable[H5Array[Any] | npt.NDArray[Any]],
-           *,
-           dtype: npt.DTypeLike | None = None,
-           casting: str = "same_kind") -> npt.NDArray[Any]:
+def hstack(
+    tup: Iterable[H5Array[Any] | npt.NDArray[Any]],
+    *,
+    dtype: npt.DTypeLike | None = None,
+    casting: str = "same_kind",
+) -> npt.NDArray[Any]:
     # FIXME : had to downgrade to numpy 1.23 for compatibility with numpy_indexed
     del dtype
     del casting
     # return np.hstack(map(np.array, tup), dtype=dtype, casting=casting)    # type: ignore[no-any-return, call-overload]
-    return np.hstack(map(np.array, tup))                                    # type: ignore[no-any-return, call-overload]
+    return np.hstack(map(np.array, tup))  # type: ignore[no-any-return, call-overload]
 
 
 @implements(np.vstack)
-def vstack(tup: Iterable[H5Array[Any] | npt.NDArray[Any]],
-           *,
-           dtype: npt.DTypeLike | None = None,
-           casting: str = "same_kind") -> npt.NDArray[Any]:
+def vstack(
+    tup: Iterable[H5Array[Any] | npt.NDArray[Any]],
+    *,
+    dtype: npt.DTypeLike | None = None,
+    casting: str = "same_kind",
+) -> npt.NDArray[Any]:
     del dtype
     del casting
     # FIXME : had to downgrade to numpy 1.23 for compatibility with numpy_indexed
     # return np.vstack(map(np.array, tup), dtype=dtype, casting=casting)    # type: ignore[no-any-return, call-overload]
-    return np.vstack(map(np.array, tup))                                    # type: ignore[no-any-return, call-overload]
+    return np.vstack(map(np.array, tup))  # type: ignore[no-any-return, call-overload]
+
+
+@implements(np.sort)
+def sort(
+    a: H5Array[Any],
+    axis: int | None = -1,
+    kind: Literal["quicksort", "mergesort", "heapsort", "stable"] | None = None,
+    order: str | Sequence[str] | None = None,
+) -> npt.NDArray[Any]:
+    return np.sort(np.array(a), axis, kind, order)

@@ -6,3 +6,6 @@ build-backend = "setuptools.build_meta"
 exclude = ["np.py"]
 ignore_decorators = ["@implements"]
 paths = ["ch5mpy", "vulture_whitelist.py"]
+
+[tool.ruff]
+line-length = 120

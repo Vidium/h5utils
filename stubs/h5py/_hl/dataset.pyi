@@ -1,24 +1,17 @@
+from numbers import Number
+from typing import Any, Collection, Iterable, Literal, Union, overload
+
 import numpy as np
 import numpy.typing as npt
-from numbers import Number
 
-from typing import Any
-from typing import Union
-from typing import Literal
-from typing import Iterable
-from typing import overload
-from typing import Collection
-
-from .base import HLObject
 from ..h5d import DatasetID
-
+from .base import HLObject
 
 SELECTOR = Union[int, bool, slice, range, Iterable[Any], tuple[()]]
 
-
 class AstypeWrapper:
-    """Wrapper to convert data on reading from a dataset.
-    """
+    """Wrapper to convert data on reading from a dataset."""
+
     def __init__(self, dset: Dataset, dtype: np.generic): ...
     def __getitem__(self, args: tuple[int, ...]) -> npt.NDArray[Any] | np.generic: ...
     def __enter__(self) -> AstypeWrapper: ...
@@ -27,8 +20,8 @@ class AstypeWrapper:
 
 class AsStrWrapper:
     """Wrapper to decode strings on reading the dataset"""
-    def __init__(self, dset: Dataset, encoding: Literal['ascii', 'utf-8'], errors: Literal['strict'] = 'strict'):
-        ...
+
+    def __init__(self, dset: Dataset, encoding: Literal["ascii", "utf-8"], errors: Literal["strict"] = "strict"): ...
     def __getitem__(self, args: tuple[int, ...]) -> npt.NDArray[np.object_]: ...
     def __len__(self) -> int: ...
 
@@ -42,8 +35,7 @@ class Dataset(HLObject):
     def resize(self, size: int, axis: int) -> None: ...
     @overload
     def resize(self, size: Collection[int], axis: None = None) -> None: ...
-    def __getitem__(self, args: SELECTOR | tuple[SELECTOR, ...], new_dtype: npt.DTypeLike | None = None) \
-            -> npt.NDArray[Any]: ...
+    def __getitem__(self, args: SELECTOR | tuple[SELECTOR, ...], new_dtype: npt.DTypeLike | None = None) -> Any: ...
     def __setitem__(self, args: SELECTOR | tuple[SELECTOR, ...], val: npt.NDArray[Any] | Number | str) -> None: ...
     @property
     def ndim(self) -> int: ...
@@ -58,11 +50,20 @@ class Dataset(HLObject):
     @property
     def size(self) -> int: ...
     def astype(self, dtype: npt.DTypeLike) -> AstypeWrapper: ...
-    def asstr(self, encoding: Literal['ascii', 'utf-8'] | None = None, errors: Literal['strict'] = 'strict') \
-            -> AsStrWrapper: ...
+    def asstr(
+        self, encoding: Literal["ascii", "utf-8"] | None = None, errors: Literal["strict"] = "strict"
+    ) -> AsStrWrapper: ...
     def __len__(self) -> int: ...
     def iter_chunks(self, sel: slice | tuple[slice, ...] | None = None) -> ChunkIterator: ...
-    def read_direct(self, dest: npt.NDArray[Any], source_sel: tuple[int | slice | Collection[int], ...] | None = None,
-                    dest_sel: tuple[int | slice | Collection[int], ...] | None=None) -> None: ...
-    def write_direct(self, source: npt.NDArray[Any], source_sel: tuple[int | slice | Collection[int], ...] | None = None,
-                     dest_sel: tuple[int | slice | Collection[int], ...] | None = None) -> None: ...
+    def read_direct(
+        self,
+        dest: npt.NDArray[Any],
+        source_sel: tuple[int | slice | Collection[int], ...] | None = None,
+        dest_sel: tuple[int | slice | Collection[int], ...] | None = None,
+    ) -> None: ...
+    def write_direct(
+        self,
+        source: npt.NDArray[Any],
+        source_sel: tuple[int | slice | Collection[int], ...] | None = None,
+        dest_sel: tuple[int | slice | Collection[int], ...] | None = None,
+    ) -> None: ...

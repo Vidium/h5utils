@@ -6,18 +6,14 @@
 # imports
 from __future__ import annotations
 
-import pickle
-import pytest
-import numpy as np
 from enum import Enum
-
 from typing import Any
 
-from ch5mpy.write import write_attribute
-from ch5mpy.write import write_dataset
-from ch5mpy.write import write_object
-from ch5mpy import File
-from ch5mpy import Group
+import numpy as np
+import pytest
+
+from ch5mpy import File, Group
+from ch5mpy.write import write_dataset, write_object
 
 
 # ====================================================
@@ -26,28 +22,26 @@ class State(Enum):
     RNA = "RNA"
 
 
-@pytest.mark.parametrize("obj, expected", [(1, 1), ("abc", "abc"), (None, "None")])
+@pytest.mark.parametrize("obj, expected", [(1, 1), ("abc", "abc"), (None, None)])
 def test_should_write_simple_attribute(obj, expected, group):
-    write_attribute(group, "something", obj)
+    group.attrs["something"] = obj
 
     assert "something" in group.attrs.keys()
     assert group.attrs["something"] == expected
 
 
 def test_should_write_list_attribute(group):
-    write_attribute(group, "something", [1, 2, 3])
+    group.attrs["something"] = [1, 2, 3]
 
     assert "something" in group.attrs.keys()
     assert np.all(group.attrs["something"] == [1, 2, 3])
 
 
 def test_should_write_complex_objects_as_strings_in_attributes(group):
-    write_attribute(group, "something", State.RNA)
+    group.attrs["something"] = State.RNA
 
     assert "something" in group.attrs.keys()
-    assert group.attrs["something"].tobytes() == pickle.dumps(
-        State.RNA, protocol=pickle.HIGHEST_PROTOCOL
-    )
+    assert group.attrs["something"] == State.RNA
 
 
 @pytest.mark.parametrize(

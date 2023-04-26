@@ -22,9 +22,7 @@ if TYPE_CHECKING:
 # ====================================================
 # code
 def _as_range(s: slice) -> range:
-    return range(s.start or 0,
-                 s.stop,
-                 s.step or 1)
+    return range(s.start or 0, s.stop, s.step or 1)
 
 
 def broadcastable(*shapes: tuple[int, ...]) -> bool:
@@ -37,9 +35,11 @@ def broadcastable(*shapes: tuple[int, ...]) -> bool:
     return True
 
 
-def parse_index(item: tuple[slice, ...],
-                base_shape: tuple[int, ...],
-                repeated_shape: tuple[int, ...]) -> Generator[list[int], None, None]:
+def parse_index(
+    item: tuple[slice, ...],
+    base_shape: tuple[int, ...],
+    repeated_shape: tuple[int, ...],
+) -> Generator[list[int], None, None]:
     for index_i, base_shape_i, repeated_shape_i in zip_longest(item, base_shape, repeated_shape, fillvalue=None):
         if repeated_shape_i is None:
             raise RuntimeError
@@ -55,16 +55,13 @@ def parse_index(item: tuple[slice, ...],
 
 
 class RepeatedArray:
-
     # region magic methods
-    def __init__(self,
-                 array: H5Array[Any] | npt.NDArray[Any],
-                 shape: tuple[int, ...]):
+    def __init__(self, array: H5Array[Any] | npt.NDArray[Any], shape: tuple[int, ...]):
         if not broadcastable(array.shape, shape):
-            raise ValueError(f'Cannot broadcast array with shape {array.shape} to {shape}.')
+            raise ValueError(f"Cannot broadcast array with shape {array.shape} to {shape}.")
 
         if len(shape) < array.ndim:
-            raise ValueError(f'Cannot reduce dimensions of {array.ndim}D array to {len(shape)}D.')
+            raise ValueError(f"Cannot reduce dimensions of {array.ndim}D array to {len(shape)}D.")
 
         self._array = array[(None,) * (len(shape) - array.ndim)]
         self._shape = shape
@@ -103,10 +100,12 @@ class RepeatedArray:
     # endregion
 
     # region methods
-    def read(self,
-             out: npt.NDArray[Any],
-             source_sel: tuple[slice, ...],
-             dest_sel: tuple[slice, ...]) -> npt.NDArray[Any]:
+    def read(
+        self,
+        out: npt.NDArray[Any],
+        source_sel: tuple[slice, ...],
+        dest_sel: tuple[slice, ...],
+    ) -> npt.NDArray[Any]:
         if isinstance(self._array, ch5mpy.H5Array):
             self._array.read_direct(out, source_sel=source_sel, dest_sel=dest_sel)
 

@@ -30,16 +30,20 @@ def copy(a: H5Array[_T]) -> npt.NDArray[_T]:
 
 
 @implements(np.zeros_like)
-def zeros_like(a: H5Array[Any],
-               dtype: npt.DTypeLike | None = None,
-               order: Literal['C', 'F'] | None = 'C',
-               shape: Iterable[int] | None = None) -> Any:
-    return np.zeros(shape=shape or a.shape, dtype=dtype or a.dtype, order=order)           # type: ignore[call-overload]
+def zeros_like(
+    a: H5Array[Any],
+    dtype: npt.DTypeLike | None = None,
+    order: Literal["C", "F"] | None = "C",
+    shape: Iterable[int] | None = None,
+) -> Any:
+    return np.zeros(shape=shape or a.shape, dtype=dtype or a.dtype, order=order)  # type: ignore[call-overload]
 
 
 @implements(np.ones_like)
-def ones_like(a: H5Array[Any],
-              dtype: npt.DTypeLike = None,
-              order: Literal['C', 'F'] | None = 'C',
-              shape: Iterable[int] | None = None) -> Any:
-    return np.ones(shape=shape or a.shape, dtype=dtype or a.dtype, order=order)            # type: ignore[call-overload]
+def ones_like(
+    a: H5Array[Any],
+    dtype: npt.DTypeLike = None,
+    order: Literal["C", "F"] | None = "C",
+    shape: Iterable[int] | None = None,
+) -> Any:
+    return np.ones(shape=shape or a.shape, dtype=dtype or a.dtype, order=order)  # type: ignore[call-overload]

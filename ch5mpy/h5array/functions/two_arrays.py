@@ -25,12 +25,13 @@ if TYPE_CHECKING:
 # ====================================================
 # code
 def _cast_H5Array(obj: Any) -> H5Array[Any]:
-    return obj                                                                             # type: ignore[no-any-return]
+    return obj  # type: ignore[no-any-return]
 
 
-def ensure_h5array_first(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-                         x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any]) \
-        -> tuple[H5Array[Any], npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any]]:
+def ensure_h5array_first(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+) -> tuple[H5Array[Any], npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any]]:
     if not isinstance(x1, ch5mpy.H5Array):
         return _cast_H5Array(x2), x1
 
@@ -38,9 +39,11 @@ def ensure_h5array_first(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array
 
 
 @implements(np.array_equal)
-def array_equal(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-                x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-                equal_nan: bool = False) -> bool:
+def array_equal(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    equal_nan: bool = False,
+) -> bool:
     x1, x2 = ensure_h5array_first(x1, x2)
 
     # case 0D
@@ -48,7 +51,7 @@ def array_equal(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
         if x1.ndim:
             return False
 
-        return np.array_equal(x1, x2, equal_nan=equal_nan)                                  # type: ignore[arg-type]
+        return np.array_equal(x1, x2, equal_nan=equal_nan)  # type: ignore[arg-type]
 
     # case nD
     if not isinstance(x2, (np.ndarray, ch5mpy.H5Array)):
@@ -65,301 +68,507 @@ def array_equal(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
 
 
 @implements(np.greater)
-def greater(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-            x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-            out: H5Array[Any] | npt.NDArray[Any] | None = None,
-            where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-            dtype: npt.DTypeLike | None = None) -> Any:
+def greater(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
     if dtype is None:
         dtype = bool
 
-    return apply_2(np.greater, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=False)
+    return apply_2(
+        np.greater,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=False,
+    )
 
 
 @implements(np.char.greater)
-def str_greater(x1: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_],
-                x2: Any) -> Any:
+def str_greater(x1: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_], x2: Any) -> Any:
     return str_apply_2(np.char.greater, x1, x2)
 
 
 @implements(np.greater_equal)
-def greater_equal(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-                  x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-                  out: H5Array[Any] | npt.NDArray[Any] | None = None,
-                  where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-                  dtype: npt.DTypeLike | None = None) -> Any:
+def greater_equal(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
     if dtype is None:
         dtype = bool
 
-    return apply_2(np.greater_equal, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=False)
+    return apply_2(
+        np.greater_equal,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=False,
+    )
 
 
 @implements(np.char.greater_equal)
-def str_greater_equal(x1: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_],
-                      x2: Any) -> Any:
+def str_greater_equal(x1: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_], x2: Any) -> Any:
     return str_apply_2(np.char.greater_equal, x1, x2)
 
 
 @implements(np.less)
-def less(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-         x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-         out: H5Array[Any] | npt.NDArray[Any] | None = None,
-         where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-         dtype: npt.DTypeLike | None = None) -> Any:
+def less(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
     if dtype is None:
         dtype = bool
 
-    return apply_2(np.less, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=False)
+    return apply_2(
+        np.less,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=False,
+    )
 
 
 @implements(np.char.less)
-def str_less(x1: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_],
-             x2: Any) -> Any:
+def str_less(x1: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_], x2: Any) -> Any:
     return str_apply_2(np.char.less, x1, x2)
 
 
 @implements(np.less_equal)
-def less_equal(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-               x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-               out: H5Array[Any] | npt.NDArray[Any] | None = None,
-               where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-               dtype: npt.DTypeLike | None = None) -> Any:
+def less_equal(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
     if dtype is None:
         dtype = bool
 
-    return apply_2(np.less_equal, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=False)
+    return apply_2(
+        np.less_equal,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=False,
+    )
 
 
 @implements(np.char.less_equal)
-def str_less_equal(x1: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_],
-                   x2: Any) -> Any:
+def str_less_equal(x1: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_], x2: Any) -> Any:
     return str_apply_2(np.char.less_equal, x1, x2)
 
 
 @implements(np.equal)
-def equal(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-          x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-          out: H5Array[Any] | npt.NDArray[Any] | None = None,
-          where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-          dtype: npt.DTypeLike | None = None) -> Any:
+def equal(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
     if dtype is None:
         dtype = bool
 
-    return apply_2(np.equal, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=False)
+    return apply_2(
+        np.equal,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=False,
+    )
 
 
 @implements(np.char.equal)
-def str_equal(x1: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_],
-              x2: Any) -> Any:
+def str_equal(x1: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_], x2: Any) -> Any:
     return str_apply_2(np.char.equal, x1, x2)
 
 
 @implements(np.not_equal)
-def not_equal(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-              x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-              out: H5Array[Any] | npt.NDArray[Any] | None = None,
-              where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-              dtype: npt.DTypeLike | None = None) -> Any:
+def not_equal(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
     if dtype is None:
         dtype = bool
 
-    return apply_2(np.not_equal, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=False)
+    return apply_2(
+        np.not_equal,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=False,
+    )
 
 
 @implements(np.char.not_equal)
-def str_not_equal(x1: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_],
-                  x2: Any) -> Any:
+def str_not_equal(x1: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_], x2: Any) -> Any:
     return str_apply_2(np.char.not_equal, x1, x2)
 
 
 @implements(np.add)
-def add(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-        x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-        out: H5Array[Any] | npt.NDArray[Any] | None = None,
-        where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-        dtype: npt.DTypeLike | None = None) -> Any:
-    return apply_2(np.add, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=x1)
+def add(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
+    return apply_2(
+        np.add,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=x1,
+    )
 
 
 @implements(np.char.add)
-def str_add(x1: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_],
-            x2: Any) -> Any:
+def str_add(x1: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_], x2: Any) -> Any:
     return str_apply_2(np.char.add, x1, x2)
 
 
 @implements(np.multiply)
-def multiply(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-             x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-             out: H5Array[Any] | npt.NDArray[Any] | None = None,
-             where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-             dtype: npt.DTypeLike | None = None) -> Any:
-    return apply_2(np.multiply, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=x1)
+def multiply(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
+    return apply_2(
+        np.multiply,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=x1,
+    )
 
 
 @implements(np.char.multiply)
-def str_multiply(x1: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_],
-                 x2: Any) -> Any:
+def str_multiply(x1: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_], x2: Any) -> Any:
     return str_apply_2(np.char.multiply, x1, x2)
 
 
 @implements(np.divide)
-def divide(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-           x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-           out: H5Array[Any] | npt.NDArray[Any] | None = None,
-           where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-           dtype: npt.DTypeLike | None = None) -> Any:
-    return apply_2(np.divide, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=x1)
+def divide(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
+    return apply_2(
+        np.divide,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=x1,
+    )
 
 
 @implements(np.power)
-def power(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-          x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-          out: H5Array[Any] | npt.NDArray[Any] | None = None,
-          where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-          dtype: npt.DTypeLike | None = None) -> Any:
-    return apply_2(np.power, *ensure_h5array_first(x1, x2),
-                   out=out, dtype=dtype, where=where, default=x1)
+def power(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
+    return apply_2(
+        np.power,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=x1,
+    )
 
 
 @implements(np.subtract)
-def subtract(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-             x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-             out: H5Array[Any] | npt.NDArray[Any] | None = None,
-             where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-             dtype: npt.DTypeLike | None = None) -> Any:
-    return apply_2(np.subtract, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=x1)
+def subtract(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
+    return apply_2(
+        np.subtract,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=x1,
+    )
 
 
 @implements(np.true_divide)
-def true_divide(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-                x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-                out: H5Array[Any] | npt.NDArray[Any] | None = None,
-                where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-                dtype: npt.DTypeLike | None = None) -> Any:
-    return apply_2(np.true_divide, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=x1)
+def true_divide(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
+    return apply_2(
+        np.true_divide,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=x1,
+    )
 
 
 @implements(np.floor_divide)
-def floor_divide(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-                 x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-                 out: H5Array[Any] | npt.NDArray[Any] | None = None,
-                 where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-                 dtype: npt.DTypeLike | None = None) -> Any:
-    return apply_2(np.floor_divide, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=x1)
+def floor_divide(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
+    return apply_2(
+        np.floor_divide,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=x1,
+    )
 
 
 @implements(np.float_power)
-def float_power(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-                x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-                out: H5Array[Any] | npt.NDArray[Any] | None = None,
-                where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-                dtype: npt.DTypeLike | None = None) -> Any:
-    return apply_2(np.float_power, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=x1)
+def float_power(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
+    return apply_2(
+        np.float_power,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=x1,
+    )
 
 
 @implements(np.fmod)
-def fmod(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-         x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-         out: H5Array[Any] | npt.NDArray[Any] | None = None,
-         where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-         dtype: npt.DTypeLike | None = None) -> Any:
-    return apply_2(np.fmod, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=x1)
+def fmod(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
+    return apply_2(
+        np.fmod,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=x1,
+    )
 
 
 @implements(np.mod)
-def mod(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-        x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-        out: H5Array[Any] | npt.NDArray[Any] | None = None,
-        where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-        dtype: npt.DTypeLike | None = None) -> Any:
-    return apply_2(np.mod, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=x1)
+def mod(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
+    return apply_2(
+        np.mod,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=x1,
+    )
 
 
 @implements(np.char.mod)
-def str_mod(x1: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_],
-            x2: Any) -> Any:
+def str_mod(x1: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_], x2: Any) -> Any:
     return str_apply_2(np.char.mod, x1, x2)
 
 
 @implements(np.maximum)
-def maximum(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-            x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-            out: H5Array[Any] | npt.NDArray[Any] | None = None,
-            where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-            dtype: npt.DTypeLike | None = None) -> Any:
-    return apply_2(np.maximum, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=x1)
+def maximum(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
+    return apply_2(
+        np.maximum,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=x1,
+    )
 
 
 @implements(np.fmax)
-def fmax(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-         x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-         out: H5Array[Any] | npt.NDArray[Any] | None = None,
-         where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-         dtype: npt.DTypeLike | None = None) -> Any:
-    return apply_2(np.fmax, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=x1)
+def fmax(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
+    return apply_2(
+        np.fmax,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=x1,
+    )
 
 
 @implements(np.minimum)
-def minimum(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-            x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-            out: H5Array[Any] | npt.NDArray[Any] | None = None,
-            where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-            dtype: npt.DTypeLike | None = None) -> Any:
-    return apply_2(np.minimum, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=x1)
+def minimum(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
+    return apply_2(
+        np.minimum,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=x1,
+    )
 
 
 @implements(np.fmin)
-def fmin(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-         x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-         out: H5Array[Any] | npt.NDArray[Any] | None = None,
-         where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-         dtype: npt.DTypeLike | None = None) -> Any:
-    return apply_2(np.fmin, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=x1)
+def fmin(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
+    return apply_2(
+        np.fmin,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=x1,
+    )
 
 
 @implements(np.logical_and)
-def logical_and(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-                x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-                out: H5Array[Any] | npt.NDArray[Any] | None = None,
-                where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-                dtype: npt.DTypeLike | None = None) -> Any:
+def logical_and(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
     if dtype is None:
         dtype = bool
 
-    return apply_2(np.logical_and, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=x1)
+    return apply_2(
+        np.logical_and,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=x1,
+    )
 
 
 @implements(np.logical_or)
-def logical_or(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-               x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-               out: H5Array[Any] | npt.NDArray[Any] | None = None,
-               where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-               dtype: npt.DTypeLike | None = None) -> Any:
+def logical_or(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
     if dtype is None:
         dtype = bool
 
-    return apply_2(np.logical_or, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=x1)
+    return apply_2(
+        np.logical_or,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=x1,
+    )
 
 
 @implements(np.logical_not)
-def logical_not(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-                x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-                out: H5Array[Any] | npt.NDArray[Any] | None = None,
-                where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-                dtype: npt.DTypeLike | None = None) -> Any:
+def logical_not(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
     if dtype is None:
         dtype = bool
 
-    return apply_2(np.logical_not, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=x1)
+    return apply_2(
+        np.logical_not,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=x1,
+    )
 
 
 @implements(np.logical_xor)
-def logical_xor(x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-                x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-                out: H5Array[Any] | npt.NDArray[Any] | None = None,
-                where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
-                dtype: npt.DTypeLike | None = None) -> Any:
+def logical_xor(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None = None,
+    where: npt.NDArray[np.bool_] | Iterable[bool] | bool | int = True,
+    dtype: npt.DTypeLike | None = None,
+) -> Any:
     if dtype is None:
         dtype = bool
 
-    return apply_2(np.logical_xor, *ensure_h5array_first(x1, x2), out=out, dtype=dtype, where=where, default=x1)
+    return apply_2(
+        np.logical_xor,
+        *ensure_h5array_first(x1, x2),
+        out=out,
+        dtype=dtype,
+        where=where,
+        default=x1,
+    )

@@ -2,21 +2,19 @@
 
 # ====================================================
 # imports
-import pytest
-import numpy as np
 from pathlib import Path
+from typing import Generator
 
-from ch5mpy import File
-from ch5mpy import H5Dict
-from ch5mpy import H5Mode
-from ch5mpy import H5Array
-from ch5mpy import write_object
+import numpy as np
+import pytest
+
+from ch5mpy import File, H5Array, H5Dict, H5Mode, write_object
 
 
 # ====================================================
 # code
 @pytest.fixture
-def backed_dict() -> H5Dict:
+def backed_dict() -> Generator[H5Dict, None, None]:
     data = {
         "a": 1,
         "b": [1, 2, 3],
@@ -68,9 +66,7 @@ def test_backed_dict_has_correct_values(backed_dict):
     values_list = list(backed_dict.values())
 
     assert (
-        values_list[0] == 1
-        and np.array_equal(values_list[1], [1, 2, 3])
-        and list(values_list[2].keys()) == ["d", "e"]
+        values_list[0] == 1 and np.array_equal(values_list[1], [1, 2, 3]) and list(values_list[2].keys()) == ["d", "e"]
     )
 
 
@@ -81,7 +77,7 @@ def test_backed_dict_has_correct_items(backed_dict):
 def test_backed_dict_can_set_regular_value(backed_dict):
     backed_dict["a"] = 5
 
-    assert np.all(backed_dict["a"] == 5)
+    assert backed_dict["a"] == 5
 
 
 def test_backed_dict_can_set_array_value(backed_dict):

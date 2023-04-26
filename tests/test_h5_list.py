@@ -1,0 +1,82 @@
+# coding: utf-8
+
+# ====================================================
+# imports
+from __future__ import annotations
+
+import pytest
+from pathlib import Path
+
+from typing import Any
+
+import ch5mpy as ch
+
+
+# ====================================================
+# code
+class O:
+    def __init__(self, v: float):
+        self._v = v
+
+    def __repr__(self) -> str:
+        return f"O({self._v})"
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, O):
+            return False
+
+        return self._v == other._v
+
+
+class C:
+    def __init__(self, l: list[int]):
+        self.l = l
+
+    def __repr__(self) -> str:
+        return f"C({self.l})"
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, C):
+            return False
+
+        return self.l == other.l
+
+    def __h5_write__(self, group: ch.Group) -> None:
+        group.create_dataset("l", data=self.l)
+
+    @classmethod
+    def __h5_read__(cls, group: ch.Group) -> C:
+        return C(list(group["l"]))
+
+
+@pytest.fixture
+def h5_list() -> ch.H5List:
+    data = [1.0, 2, C([1, 2, 3]), "4.", O(5.0)]
+
+    with ch.File("h5_list.h5", ch.H5Mode.WRITE_TRUNCATE) as h5_file:
+        ch.H5List.write(data, h5_file, "data")
+
+    yield ch.H5List.read("h5_list.h5", "data", mode=ch.H5Mode.READ_WRITE)
+
+    Path("h5_list.h5").unlink()
+
+
+def test_list_repr(h5_list):
+    assert repr(h5_list) == "H5List[1.0, 2, C([1, 2, 3]), '4.', O(5.0)]"
+
+
+def test_list_should_read_custom_object(h5_list):
+    assert isinstance(h5_list[4], O)
+
+
+def test_list_should_read_custom_object_with_method(h5_list):
+    assert isinstance(h5_list[2], C)
+
+
+def test_list_should_convert_to_regular_list(h5_list):
+    lst = h5_list.copy()
+    assert lst == [1.0, 2, C([1, 2, 3]), "4.", O(5.0)]
+
+
+def test_list_get_negative_index(h5_list):
+    assert h5_list[-2] == "4."

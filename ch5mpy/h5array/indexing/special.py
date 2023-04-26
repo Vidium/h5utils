@@ -17,7 +17,6 @@ if TYPE_CHECKING:
 # ====================================================
 # code
 class NewAxisType:
-
     # region magic methods
     def __new__(cls) -> NewAxisType:
         return NewAxis
