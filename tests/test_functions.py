@@ -366,3 +366,28 @@ def test_insert_3D(small_large_array):
             ],
         ],
     )
+
+
+def test_delete_1D(small_array):
+    np.delete(small_array, 2)
+    assert np.array_equal(small_array, [1, 2, 4, 5])
+
+
+def test_delete_3D(small_large_array):
+    np.delete(small_large_array, 1, axis=1)
+    assert np.array_equal(
+        small_large_array,
+        [
+            [[0, 1, 2, 3, 4], [10, 11, 12, 13, 14], [15, 16, 17, 18, 19]],
+            [
+                [20, 21, 22, 23, 24],
+                [30, 31, 32, 33, 34],
+                [35, 36, 37, 38, 39],
+            ],
+            [
+                [40, 41, 42, 43, 44],
+                [50, 51, 52, 53, 54],
+                [55, 56, 57, 58, 59],
+            ],
+        ],
+    )

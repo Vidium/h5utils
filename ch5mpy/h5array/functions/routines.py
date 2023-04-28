@@ -298,3 +298,37 @@ def insert(
     arr[prefix + (obj,)] = values
 
     return arr
+
+
+@implements(np.delete)
+def delete(arr: H5Array[Any], obj: int | slice | Sequence[int], axis: int | None = None) -> H5Array[Any]:
+    if arr.ndim > 1 and axis is None:
+        raise NotImplementedError
+
+    if axis is None:
+        axis = 0
+
+    if not isinstance(obj, int):
+        raise NotImplementedError
+
+    if obj > arr.shape[axis]:
+        raise IndexError(f"Index {obj} is out of bounds for axis {axis} with size {arr.shape[axis]}.")
+
+    elif obj < 0:
+        obj = obj + arr.shape[axis]
+
+    prefix = (slice(None),) * axis
+    if obj < (arr.shape[axis] - 1):
+        # transfer data one row to the left, starting from the column after the one to delete
+        # matrix | 0 1 2 3 4 | with index of the column to delete = 2
+        #   ==>  | 0 1 3 4 . |
+        index_dest = prefix + (slice(obj, -1),)
+        index_source = prefix + (slice(obj + 1, None),)
+        arr[index_dest] = arr[index_source]
+
+    # resize the arrays to drop the extra column at the end
+    # matrix | 0 1 3 4 . |
+    #   ==>  | 0 1 3 4 |
+    arr.contract(1, axis=axis)
+
+    return arr

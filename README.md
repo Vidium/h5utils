@@ -369,7 +369,7 @@ Array manipulation routines
 - [ ] np.vsplit
 - [ ] np.tile
 - [ ] np.repeat
-- [ ] np.delete
+- [x] np.delete
 - [x] np.insert
 - [ ] np.append
 - [ ] np.resize
