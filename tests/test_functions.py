@@ -322,3 +322,47 @@ def test_mean(array):
 
 def test_mean_on_columns(array):
     assert np.array_equal(np.mean(array, axis=1), [4.5, 14.5, 24.5, 34.5, 44.5, 54.5, 64.5, 74.5, 84.5, 94.5])
+
+
+def test_insert_1D(small_array):
+    np.insert(small_array, 2, 0)
+    assert np.array_equal(small_array, [1, 2, 0, 3, 4, 5])
+
+
+def test_insert_1D_start(small_array):
+    np.insert(small_array, 0, 0)
+    assert np.array_equal(small_array, [0, 1, 2, 3, 4, 5])
+
+
+def test_insert_1D_end(small_array):
+    np.insert(small_array, 5, 0)
+    assert np.array_equal(small_array, [1, 2, 3, 4, 5, 0])
+
+
+def test_insert_1D_negative(small_array):
+    np.insert(small_array, -1, 0)
+    assert np.array_equal(small_array, [1, 2, 3, 4, 0, 5])
+
+
+def test_insert_3D(small_large_array):
+    np.insert(small_large_array, 1, -1, axis=1)
+    assert np.array_equal(
+        small_large_array,
+        [
+            [[0, 1, 2, 3, 4], [-1, -1, -1, -1, -1], [5, 6, 7, 8, 9], [10, 11, 12, 13, 14], [15, 16, 17, 18, 19]],
+            [
+                [20, 21, 22, 23, 24],
+                [-1, -1, -1, -1, -1],
+                [25, 26, 27, 28, 29],
+                [30, 31, 32, 33, 34],
+                [35, 36, 37, 38, 39],
+            ],
+            [
+                [40, 41, 42, 43, 44],
+                [-1, -1, -1, -1, -1],
+                [45, 46, 47, 48, 49],
+                [50, 51, 52, 53, 54],
+                [55, 56, 57, 58, 59],
+            ],
+        ],
+    )

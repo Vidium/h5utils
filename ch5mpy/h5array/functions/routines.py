@@ -257,3 +257,44 @@ def sort(
     order: str | Sequence[str] | None = None,
 ) -> npt.NDArray[Any]:
     return np.sort(np.array(a), axis, kind, order)
+
+
+@implements(np.insert)
+def insert(
+    arr: H5Array[Any], obj: int | slice | Sequence[int], values: npt.ArrayLike, axis: int | None = None
+) -> H5Array[Any]:
+    """/!\ Happens `in place` !"""
+    if arr.ndim > 1 and axis is None:
+        raise NotImplementedError
+
+    if axis is None:
+        axis = 0
+
+    if not isinstance(obj, int):
+        raise NotImplementedError
+
+    if obj > arr.shape[axis]:
+        raise IndexError(f"Index {obj} is out of bounds for axis {axis} with size {arr.shape[axis]}.")
+
+    elif obj < 0:
+        obj = obj + arr.shape[axis]
+
+    # resize the array to insert an extra column at the end
+    # matrix | 0 1 2 3 4 |
+    #   ==>  | 0 1 2 3 4 . |
+    arr.expand(1, axis=axis)
+
+    prefix = (slice(None),) * axis
+    if obj < (arr.shape[axis] - 1):
+        # transfer data one row to the right, starting from the column after `obj` and insert values at `obj`
+        # matrix | 0 1 2 3 4 . | with `obj` = 2
+        #   ==>  | 0 1 . 2 3 4 |
+        index_dest = prefix + (slice(obj + 1, None),)
+        index_source = prefix + (slice(obj, -1),)
+        arr[index_dest] = arr[index_source]
+
+    # matrix | 0 1 . 2 3 4 |
+    #   ==>  | 0 1 v 2 3 4 |
+    arr[prefix + (obj,)] = values
+
+    return arr

@@ -370,7 +370,7 @@ Array manipulation routines
 - [ ] np.tile
 - [ ] np.repeat
 - [ ] np.delete
-- [ ] np.insert
+- [x] np.insert
 - [ ] np.append
 - [ ] np.resize
 - [ ] np.trim_zeros

@@ -12,8 +12,6 @@ import numpy as np
 import numpy.typing as npt
 from h5py import string_dtype
 
-import ch5mpy
-from ch5mpy.h5array.array import get_size
 from ch5mpy.objects.dataset import Dataset
 from ch5mpy.objects.group import File, Group
 from ch5mpy.utils import is_sequence
@@ -30,7 +28,7 @@ def _store_dataset(
     array: npt.NDArray[Any] | H5Array[Any] | None = None,
     shape: tuple[int, ...] | None = None,
     dtype: npt.DTypeLike | None = None,
-    chunks: bool | tuple[int, ...] | None = None,
+    chunks: bool | tuple[int, ...] = True,
     maxshape: int | tuple[int | None, ...] | None = None,
     fill_value: Any = None,
 ) -> Dataset[Any]:
@@ -60,17 +58,24 @@ def _store_dataset(
 
     if chunks:
         if chunks is True:  # literally `True`, not a tuple
-            chunks = (get_size(ch5mpy.H5Array.MAX_MEM_USAGE),) + (1,) * (len(shape) - 1)
+            # FIXME : causes huge lag
+            # parsed_chunks = (get_size(ch5mpy.H5Array.MAX_MEM_USAGE),) + (1,) * (len(shape) - 1)
+            pass
+
+        parsed_chunks = chunks
 
         if maxshape is None:
             maxshape = (None,) * len(shape)
+
+    else:
+        parsed_chunks = None
 
     dset = loc.create_dataset(
         name,
         data=array,
         shape=shape,
         dtype=dtype,
-        chunks=chunks,
+        chunks=parsed_chunks,
         maxshape=maxshape,
         fillvalue=fill_value,
     )
@@ -84,7 +89,7 @@ def write_dataset(
     name: str,
     obj: Any,
     *,
-    chunks: bool | tuple[int, ...] | None = None,
+    chunks: bool | tuple[int, ...] = True,
     maxshape: tuple[int, ...] | None = None,
 ) -> None:
     """Write an array-like object to a H5 dataset."""
@@ -115,7 +120,7 @@ def write_dataset(
 def write_datasets(
     loc: Group | File,
     *,
-    chunks: bool | tuple[int, ...] | None = None,
+    chunks: bool | tuple[int, ...] = True,
     maxshape: tuple[int, ...] | None = None,
     **kwargs: Any,
 ) -> None:
@@ -129,7 +134,7 @@ def write_object(
     name: str,
     obj: Any,
     *,
-    chunks: bool | tuple[int, ...] | None = None,
+    chunks: bool | tuple[int, ...] = True,
     maxshape: tuple[int, ...] | None = None,
     overwrite: bool = False,
 ) -> None:
@@ -161,7 +166,7 @@ def write_object(
 def write_objects(
     loc: Group | File,
     *,
-    chunks: bool | tuple[int, ...] | None = None,
+    chunks: bool | tuple[int, ...] = True,
     maxshape: tuple[int, ...] | None = None,
     overwrite: bool = False,
     **kwargs: Any,

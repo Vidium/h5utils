@@ -4,13 +4,10 @@
 # imports
 from __future__ import annotations
 
-import numpy as np
+from typing import TYPE_CHECKING, Any, Iterable, Literal
 
+import numpy as np
 import numpy.typing as npt
-from typing import Any
-from typing import Literal
-from typing import Iterable
-from typing import TYPE_CHECKING
 
 from ch5mpy.h5array.indexing.list import ListIndex
 
@@ -20,6 +17,13 @@ if TYPE_CHECKING:
 
 # ====================================================
 # code
+def _positive(value: int, max_: int) -> int:
+    if value < 0:
+        value = max_ + value
+
+    return value
+
+
 class FullSlice:
     # region magic methods
     def __init__(
@@ -29,13 +33,14 @@ class FullSlice:
         step: int | None,
         max_: int,
     ):
-        self._start = start or 0
-        self._step = step or 1
-        self._stop = min(stop or max_, max_)
-        self._max = max_
+        stop = max_ if stop is None else stop
+        if step == 0:
+            raise ValueError("FullSlice step cannot be zero.")
 
-        if self._start < 0:
-            self._start = self._stop + self._start
+        self._start = _positive(start or 0, max_)
+        self._step = step or 1
+        self._stop = _positive(min(stop, max_), max_)
+        self._max = max_
 
     def __repr__(self) -> str:
         if self.is_one_element():
@@ -95,7 +100,7 @@ class FullSlice:
 
     @property
     def true_stop(self) -> int:
-        """Get the true last int in ths slice, if converted to a list."""
+        """Get the true last int in this slice, if converted to a list."""
         if self._start == self._stop:
             return self._stop
 

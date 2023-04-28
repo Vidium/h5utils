@@ -35,7 +35,7 @@ class ArrayCreationFunc:
         name: str,
         loc: str | Path | ch5mpy.File | ch5mpy.Group,
         dtype: npt.DTypeLike = np.float64,
-        chunks: bool | tuple[int, ...] | None = None,
+        chunks: bool | tuple[int, ...] = True,
         maxshape: int | tuple[int | None, ...] | None = None,
     ) -> ch5mpy.H5Array[Any]:
         if self._fill_value == _NoValue:
@@ -59,7 +59,7 @@ class ArrayCreationFunc:
         self,
         shape: int | tuple[int, ...],
         dtype: npt.DTypeLike = np.float64,
-        chunks: bool | tuple[int, ...] | None = None,
+        chunks: bool | tuple[int, ...] = True,
         maxshape: int | tuple[int | None, ...] | None = None,
     ) -> partial[ch5mpy.H5Array[Any]]:
         return partial(self.__call__, shape=shape, dtype=dtype, chunks=chunks, maxshape=maxshape)
@@ -80,7 +80,7 @@ class ArrayCreationFuncWithFill(ArrayCreationFunc):
         name: str,
         loc: str | Path | ch5mpy.File | ch5mpy.Group,
         dtype: npt.DTypeLike = np.float64,
-        chunks: bool | tuple[int, ...] | None = None,
+        chunks: bool | tuple[int, ...] = True,
         maxshape: int | tuple[int | None, ...] | None = None,
     ) -> ch5mpy.H5Array[Any]:
         return super().__call__(shape, name, loc, dtype, chunks, maxshape)
@@ -97,7 +97,7 @@ class _ArrayCreationFuncProtocol(Protocol):
         name: str,
         loc: str | Path | ch5mpy.File | ch5mpy.Group,
         dtype: npt.DTypeLike = np.float64,
-        chunks: bool | tuple[int, ...] | None = None,
+        chunks: bool | tuple[int, ...] = True,
         maxshape: int | tuple[int | None, ...] | None = None,
     ) -> ch5mpy.H5Array[Any]:
         ...
@@ -106,7 +106,7 @@ class _ArrayCreationFuncProtocol(Protocol):
         self,
         shape: int | tuple[int, ...],
         dtype: npt.DTypeLike = np.float64,
-        chunks: bool | tuple[int, ...] | None = None,
+        chunks: bool | tuple[int, ...] = True,
         maxshape: int | tuple[int | None, ...] | None = None,
     ) -> partial[ch5mpy.H5Array[Any]]:
         ...
@@ -129,7 +129,7 @@ def empty(
     name: str,
     loc: str | Path | ch5mpy.File | ch5mpy.Group,
     dtype: npt.DTypeLike = np.float64,
-    chunks: bool | tuple[int, ...] | None = None,
+    chunks: bool | tuple[int, ...] = True,
     maxshape: int | tuple[int | None, ...] | None = None,
 ) -> ch5mpy.H5Array[Any]:
     return empty.acf(shape, name, loc, dtype, chunks, maxshape)
@@ -141,7 +141,7 @@ def zeros(
     name: str,
     loc: str | Path | ch5mpy.File | ch5mpy.Group,
     dtype: npt.DTypeLike = np.float64,
-    chunks: bool | tuple[int, ...] | None = None,
+    chunks: bool | tuple[int, ...] = True,
     maxshape: int | tuple[int | None, ...] | None = None,
 ) -> ch5mpy.H5Array[Any]:
     return zeros.acf(shape, name, loc, dtype, chunks, maxshape)
@@ -153,7 +153,7 @@ def ones(
     name: str,
     loc: str | Path | ch5mpy.File | ch5mpy.Group,
     dtype: npt.DTypeLike = np.float64,
-    chunks: bool | tuple[int, ...] | None = None,
+    chunks: bool | tuple[int, ...] = True,
     maxshape: int | tuple[int | None, ...] | None = None,
 ) -> ch5mpy.H5Array[Any]:
     return ones.acf(shape, name, loc, dtype, chunks, maxshape)
@@ -166,7 +166,7 @@ def full(
     name: str,
     loc: str | Path | ch5mpy.File | ch5mpy.Group,
     dtype: npt.DTypeLike = np.float64,
-    chunks: bool | tuple[int, ...] | None = None,
+    chunks: bool | tuple[int, ...] = True,
     maxshape: int | tuple[int | None, ...] | None = None,
 ) -> ch5mpy.H5Array[Any]:
     full.acf._fill_value = fill_value

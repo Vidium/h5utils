@@ -1,12 +1,11 @@
-import pytest
-import numpy as np
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from typing import Generator
 
-from ch5mpy import H5Array
-from ch5mpy import File
-from ch5mpy import H5Mode
-from ch5mpy import write_object
+import numpy as np
+import pytest
+
+from ch5mpy import File, H5Array, H5Mode, write_object
 
 
 @pytest.fixture
@@ -18,8 +17,8 @@ def group():
 
 
 @pytest.fixture
-def small_array() -> H5Array:
-    data = [1., 2., 3., 4., 5.]
+def small_array() -> Generator[H5Array, None, None]:
+    data = [1.0, 2.0, 3.0, 4.0, 5.0]
 
     with File("h5_s_array", H5Mode.WRITE_TRUNCATE) as h5_file:
         write_object(h5_file, "data", data)
@@ -30,8 +29,8 @@ def small_array() -> H5Array:
 
 
 @pytest.fixture
-def array() -> H5Array:
-    data = np.arange(100.).reshape((10, 10))
+def array() -> Generator[H5Array, None, None]:
+    data = np.arange(100.0).reshape((10, 10))
 
     with File("h5_array", H5Mode.WRITE_TRUNCATE) as h5_file:
         write_object(h5_file, "data", data)
@@ -42,8 +41,8 @@ def array() -> H5Array:
 
 
 @pytest.fixture
-def chunked_array() -> H5Array:
-    data = np.arange(100.).reshape((10, 10))
+def chunked_array() -> Generator[H5Array, None, None]:
+    data = np.arange(100.0).reshape((10, 10))
 
     with File("h5_array", H5Mode.WRITE_TRUNCATE) as h5_file:
         write_object(h5_file, "data", data, chunks=(3, 3))
@@ -54,7 +53,7 @@ def chunked_array() -> H5Array:
 
 
 @pytest.fixture
-def small_large_array() -> H5Array:
+def small_large_array() -> Generator[H5Array, None, None]:
     data = np.arange(3 * 4 * 5).reshape((3, 4, 5))
 
     with File("h5_sl_array", H5Mode.WRITE_TRUNCATE) as h5_file:
@@ -66,7 +65,7 @@ def small_large_array() -> H5Array:
 
 
 @pytest.fixture
-def large_array() -> H5Array:
+def large_array() -> Generator[H5Array, None, None]:
     data = np.arange(20_000 * 10_000).reshape((20_000, 10_000))
 
     with File("h5_large_array", H5Mode.WRITE_TRUNCATE) as h5_file:
@@ -78,8 +77,8 @@ def large_array() -> H5Array:
 
 
 @pytest.fixture
-def str_array() -> H5Array:
-    data = ['a', 'bc', 'd', 'efg', 'h']
+def str_array() -> Generator[H5Array, None, None]:
+    data = ["a", "bc", "d", "efg", "h"]
 
     with File("h5_str_array", H5Mode.WRITE_TRUNCATE) as h5_file:
         write_object(h5_file, "data", data)
@@ -87,4 +86,3 @@ def str_array() -> H5Array:
     yield H5Array(File("h5_str_array", H5Mode.READ_WRITE)["data"])
 
     Path("h5_str_array").unlink()
-
