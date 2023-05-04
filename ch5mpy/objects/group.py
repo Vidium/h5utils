@@ -48,7 +48,9 @@ class _GroupManagerMixin(h5py.Group, ABC):
 
     @property
     def file(self) -> File:
-        return super().file  # type: ignore[return-value]
+        with h5py._objects.phil:  # type: ignore[attr-defined]
+            return File(self.id)
+        # return super().file  # type: ignore[return-value]
 
     # endregion
 

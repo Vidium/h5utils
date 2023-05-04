@@ -11,10 +11,10 @@ import numpy as np
 import numpy.typing as npt
 
 from ch5mpy._typing import SELECTOR
-from ch5mpy.h5array.indexing._typing import SELECTION_ELEMENT
-from ch5mpy.h5array.indexing.list import ListIndex
-from ch5mpy.h5array.indexing.slice import FullSlice
-from ch5mpy.h5array.indexing.special import NewAxis, NewAxisType, Placeholder
+from ch5mpy.indexing._typing import SELECTION_ELEMENT
+from ch5mpy.indexing.list import ListIndex
+from ch5mpy.indexing.slice import FullSlice
+from ch5mpy.indexing.special import NewAxis, NewAxisType, Placeholder
 from ch5mpy.utils import is_sequence
 
 # ====================================================

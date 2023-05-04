@@ -9,9 +9,9 @@ from typing import Any
 import numpy as np
 import pytest
 
-from ch5mpy.h5array.indexing.list import ListIndex
-from ch5mpy.h5array.indexing.selection import NewAxis, Selection
-from ch5mpy.h5array.indexing.slice import FullSlice
+from ch5mpy.indexing.list import ListIndex
+from ch5mpy.indexing.selection import NewAxis, Selection
+from ch5mpy.indexing.slice import FullSlice
 
 
 # ====================================================

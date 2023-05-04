@@ -9,7 +9,7 @@ from typing import Any, Generator, TypeVar, cast
 import numpy as np
 from numpy import typing as npt
 
-from ch5mpy.h5array.indexing.selection import Selection
+from ch5mpy.indexing.selection import Selection
 from ch5mpy.objects.dataset import Dataset, DatasetWrapper
 
 # ====================================================

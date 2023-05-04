@@ -4,22 +4,18 @@
 # imports
 from __future__ import annotations
 
-import numpy as np
-from numpy import _NoValue as NoValue  # type: ignore[attr-defined]
-from numbers import Number
 from functools import partial
+from numbers import Number
+from typing import TYPE_CHECKING, Any, Iterable, Union
 
+import numpy as np
 import numpy.typing as npt
-from typing import Any
-from typing import Union
-from typing import Iterable
-from typing import TYPE_CHECKING
+from numpy import _NoValue as NoValue  # type: ignore[attr-defined]
 
 import ch5mpy
 from ch5mpy._typing import NP_FUNC
 from ch5mpy.h5array.chunks.iter import iter_chunks_2
-from ch5mpy.h5array.indexing.slice import map_slice
-from ch5mpy.h5array.indexing.slice import FullSlice
+from ch5mpy.indexing import FullSlice, map_slice
 
 if TYPE_CHECKING:
     from ch5mpy import H5Array

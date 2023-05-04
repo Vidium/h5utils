@@ -4,21 +4,16 @@
 # imports
 from __future__ import annotations
 
-import numpy as np
 from numbers import Number
+from typing import TYPE_CHECKING, Any, Generator, TypeVar, cast
 
+import numpy as np
 import numpy.typing as npt
-from typing import Any
-from typing import cast
-from typing import TypeVar
-from typing import Generator
-from typing import TYPE_CHECKING
 
 import ch5mpy
 from ch5mpy.h5array.chunks.repeated_array import RepeatedArray
 from ch5mpy.h5array.chunks.utils import _as_valid_dtype
-from ch5mpy.h5array.indexing.slice import FullSlice
-from ch5mpy.h5array.indexing.slice import map_slice
+from ch5mpy.indexing import FullSlice, map_slice
 
 if TYPE_CHECKING:
     from ch5mpy import H5Array

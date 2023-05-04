@@ -9,10 +9,10 @@ from typing import TYPE_CHECKING, Any, Iterable, Literal
 import numpy as np
 import numpy.typing as npt
 
-from ch5mpy.h5array.indexing.list import ListIndex
+from ch5mpy.indexing.list import ListIndex
 
 if TYPE_CHECKING:
-    from ch5mpy.h5array.indexing._typing import SELECTION_ELEMENT
+    from ch5mpy.indexing._typing import SELECTION_ELEMENT
 
 
 # ====================================================
@@ -69,7 +69,7 @@ class FullSlice:
         return (self.true_stop - self._start) // self._step + 1
 
     def __getitem__(self, item: SELECTION_ELEMENT) -> ListIndex | FullSlice:
-        from ch5mpy.h5array.indexing.special import NewAxisType
+        from ch5mpy.indexing.special import NewAxisType
 
         if isinstance(item, FullSlice):
             return FullSlice(

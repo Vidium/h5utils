@@ -4,14 +4,13 @@
 # imports
 from __future__ import annotations
 
-from typing import Any
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from ch5mpy.h5array.indexing.list import ListIndex
-from ch5mpy.h5array.indexing.slice import FullSlice
+from ch5mpy.indexing.list import ListIndex
+from ch5mpy.indexing.slice import FullSlice
 
 if TYPE_CHECKING:
-    from ch5mpy.h5array.indexing._typing import SELECTION_ELEMENT
+    from ch5mpy.indexing._typing import SELECTION_ELEMENT
 
 
 # ====================================================

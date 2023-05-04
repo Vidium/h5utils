@@ -3,7 +3,7 @@
 # ====================================================
 # imports
 from ch5mpy.h5array.chunks.iter import _get_chunk_indices
-from ch5mpy.h5array.indexing.slice import FullSlice
+from ch5mpy.indexing.slice import FullSlice
 
 
 # ====================================================
@@ -13,8 +13,7 @@ def test_1d_smaller_than_nb_elements():
 
 
 def test_1d_greater_than_nb_elements():
-    assert _get_chunk_indices(10, (15,)) == ((FullSlice(0, 10, 1, 15),),
-                                        (FullSlice(10, 15, 1, 15),))
+    assert _get_chunk_indices(10, (15,)) == ((FullSlice(0, 10, 1, 15),), (FullSlice(10, 15, 1, 15),))
 
 
 def test_1d_greater_than_nb_elements_multiple():
@@ -26,30 +25,64 @@ def test_1d_greater_than_nb_elements_multiple():
 
 
 def test_2d_array_smaller_than_nb_elements():
-    assert _get_chunk_indices(100, (2, 10)) == (
-        (FullSlice.whole_axis(2), FullSlice.whole_axis(10)),
-    )
+    assert _get_chunk_indices(100, (2, 10)) == ((FullSlice.whole_axis(2), FullSlice.whole_axis(10)),)
 
 
 def test_2d_array_1row():
     assert _get_chunk_indices(10, (8, 10)) == (
-        (FullSlice.one(0, 8), FullSlice.whole_axis(10),),
-        (FullSlice.one(1, 8), FullSlice.whole_axis(10),),
-        (FullSlice.one(2, 8), FullSlice.whole_axis(10),),
-        (FullSlice.one(3, 8), FullSlice.whole_axis(10),),
-        (FullSlice.one(4, 8), FullSlice.whole_axis(10),),
-        (FullSlice.one(5, 8), FullSlice.whole_axis(10),),
-        (FullSlice.one(6, 8), FullSlice.whole_axis(10),),
-        (FullSlice.one(7, 8), FullSlice.whole_axis(10),),
+        (
+            FullSlice.one(0, 8),
+            FullSlice.whole_axis(10),
+        ),
+        (
+            FullSlice.one(1, 8),
+            FullSlice.whole_axis(10),
+        ),
+        (
+            FullSlice.one(2, 8),
+            FullSlice.whole_axis(10),
+        ),
+        (
+            FullSlice.one(3, 8),
+            FullSlice.whole_axis(10),
+        ),
+        (
+            FullSlice.one(4, 8),
+            FullSlice.whole_axis(10),
+        ),
+        (
+            FullSlice.one(5, 8),
+            FullSlice.whole_axis(10),
+        ),
+        (
+            FullSlice.one(6, 8),
+            FullSlice.whole_axis(10),
+        ),
+        (
+            FullSlice.one(7, 8),
+            FullSlice.whole_axis(10),
+        ),
     )
 
 
 def test_2d_array_2rows():
     assert _get_chunk_indices(20, (8, 10)) == (
-        (FullSlice(0, 2, 1, 8), FullSlice.whole_axis(10),),
-        (FullSlice(2, 4, 1, 8), FullSlice.whole_axis(10),),
-        (FullSlice(4, 6, 1, 8), FullSlice.whole_axis(10),),
-        (FullSlice(6, 8, 1, 8), FullSlice.whole_axis(10),),
+        (
+            FullSlice(0, 2, 1, 8),
+            FullSlice.whole_axis(10),
+        ),
+        (
+            FullSlice(2, 4, 1, 8),
+            FullSlice.whole_axis(10),
+        ),
+        (
+            FullSlice(4, 6, 1, 8),
+            FullSlice.whole_axis(10),
+        ),
+        (
+            FullSlice(6, 8, 1, 8),
+            FullSlice.whole_axis(10),
+        ),
     )
 
 

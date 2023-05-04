@@ -15,9 +15,8 @@ from ch5mpy._typing import NP_FUNC, SELECTOR
 from ch5mpy.h5array import repr
 from ch5mpy.h5array.chunks.iter import ChunkIterator, PairedChunkIterator
 from ch5mpy.h5array.functions import HANDLED_FUNCTIONS
-from ch5mpy.h5array.indexing.selection import Selection
-from ch5mpy.h5array.indexing.slice import map_slice
 from ch5mpy.h5array.io import read_one_from_dataset, write_to_dataset
+from ch5mpy.indexing import Selection, map_slice
 from ch5mpy.objects.dataset import Dataset, DatasetWrapper
 
 if TYPE_CHECKING:

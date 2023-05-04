@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from typing import Union
 
-from ch5mpy.h5array.indexing.list import ListIndex
-from ch5mpy.h5array.indexing.slice import FullSlice
-from ch5mpy.h5array.indexing.special import NewAxisType
+from ch5mpy.indexing.list import ListIndex
+from ch5mpy.indexing.slice import FullSlice
+from ch5mpy.indexing.special import NewAxisType
 
 # ====================================================
 # imports

@@ -10,7 +10,7 @@ import numpy as np
 import numpy.typing as npt
 
 if TYPE_CHECKING:
-    from ch5mpy.h5array.indexing._typing import SELECTION_ELEMENT
+    from ch5mpy.indexing._typing import SELECTION_ELEMENT
 
 
 # ====================================================
@@ -28,7 +28,7 @@ class ListIndex:
         return f"ListIndex({flat_elements_repr} | ndim={self.ndim})"
 
     def __getitem__(self, item: SELECTION_ELEMENT | tuple[SELECTION_ELEMENT, ...]) -> ListIndex:
-        from ch5mpy.h5array.indexing.special import NewAxisType
+        from ch5mpy.indexing.special import NewAxisType
 
         if isinstance(item, tuple):
             if any(isinstance(e, NewAxisType) for e in item):
