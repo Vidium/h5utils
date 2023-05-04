@@ -308,7 +308,7 @@ def delete(arr: H5Array[Any], obj: int | slice | Sequence[int], axis: int | None
     if axis is None:
         axis = 0
 
-    if not isinstance(obj, int):
+    if not isinstance(obj, (int, np.int_)):
         raise NotImplementedError
 
     if obj > arr.shape[axis]:

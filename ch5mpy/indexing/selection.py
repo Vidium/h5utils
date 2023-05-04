@@ -29,7 +29,7 @@ def _cast_h5(obj: ListIndex | FullSlice | NewAxisType, sorted: bool = True) -> i
     if isinstance(obj, FullSlice):
         return obj.as_slice()
 
-    if obj.size > 1:
+    if obj.size != 1:
         return obj.as_array(sorted=sorted)
 
     return int(obj.squeeze().as_array()[()])
