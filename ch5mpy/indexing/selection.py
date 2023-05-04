@@ -213,6 +213,14 @@ class Selection:
         len_end_shape = len(self._indices) - sum(self.is_newaxis)
         return self._min_shape(new_axes=new_axes) + arr_shape[len_end_shape:]
 
+    def size(self, arr_shape: tuple[int, ...], new_axes: bool = True) -> int:
+        _shape = self.compute_shape(arr_shape, new_axes)
+
+        if len(_shape):
+            return int(np.prod(_shape))
+
+        return 0
+
     def cast_on(self, selection: Selection) -> Selection:
         casted_selection: list[SELECTION_ELEMENT | object] = [Placeholder for _ in enumerate(selection)]
         self_indices = Queue(self._indices)
