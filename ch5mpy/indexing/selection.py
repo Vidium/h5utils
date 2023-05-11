@@ -35,6 +35,16 @@ def _cast_h5(obj: ListIndex | FullSlice | NewAxisType, sorted: bool = True) -> i
     return int(obj.squeeze().as_array()[()])
 
 
+def _cast_regular(obj: ListIndex | FullSlice | NewAxisType) -> int | npt.NDArray[np.int_] | slice | None:
+    if isinstance(obj, NewAxisType):
+        return None
+
+    if isinstance(obj, FullSlice):
+        return obj.as_slice()
+
+    return obj.as_array()
+
+
 def _gets_whole_dataset(index: SELECTOR | tuple[SELECTOR, ...]) -> bool:
     return (
         (isinstance(index, tuple) and index == ())
@@ -61,28 +71,28 @@ class Selection:
     def __init__(self, indices: Iterable[SELECTION_ELEMENT] | None = None):
         if indices is None:
             self._indices: tuple[SELECTION_ELEMENT, ...] = ()
+            return
 
-        else:
-            indices = tuple(indices)
-            self._indices = ()
+        indices = tuple(indices)
+        self._indices = ()
 
-            first_list = True
+        first_list = True
 
-            for i in indices:
-                if isinstance(i, ListIndex):
-                    if first_list:
-                        largest_dim = max(
-                            indices,
-                            key=lambda x: (x.ndim if isinstance(x, ListIndex) else -1),
-                        ).ndim
-                        self._indices += (i.expand(largest_dim),)
-                        first_list = False
-
-                    else:
-                        self._indices += (i.squeeze(),)
+        for i in indices:
+            if isinstance(i, ListIndex):
+                if first_list:
+                    largest_dim = max(
+                        indices,
+                        key=lambda x: (x.ndim if isinstance(x, ListIndex) else -1),
+                    ).ndim
+                    self._indices += (i.expand(largest_dim),)
+                    first_list = False
 
                 else:
-                    self._indices += (i,)
+                    self._indices += (i.squeeze(),)
+
+            else:
+                self._indices += (i,)
 
     def __repr__(self) -> str:
         return f"Selection{self._indices}"
@@ -142,7 +152,7 @@ class Selection:
         sel: tuple[SELECTION_ELEMENT, ...] = ()
         shape_index = 0
 
-        for i, axis_index in enumerate(index):
+        for axis_index in index:
             if axis_index is None:
                 sel += (NewAxis,)
                 shape_index += 1
@@ -177,8 +187,11 @@ class Selection:
 
         return Selection(sel)
 
-    def get(self, sorted: bool = False) -> tuple[int | npt.NDArray[np.int_] | slice, ...]:
+    def get_h5(self, sorted: bool = False) -> tuple[int | npt.NDArray[np.int_] | slice, ...]:
         return tuple(_cast_h5(i, sorted=sorted) for i in self._indices if not isinstance(i, NewAxisType))
+
+    def get(self) -> tuple[int | npt.NDArray[np.int_] | slice | None, ...]:
+        return tuple(_cast_regular(i) for i in self._indices)
 
     def _min_shape(self, new_axes: bool) -> tuple[int, ...]:
         is_slice = list(map(lambda x: isinstance(x, FullSlice), self._indices))
@@ -225,6 +238,9 @@ class Selection:
         casted_selection: list[SELECTION_ELEMENT | object] = [Placeholder for _ in enumerate(selection)]
         self_indices = Queue(self._indices)
         other_indices = Queue(list(range(len(selection))))
+        _max_shape = np.broadcast_shapes(
+            *(lst.shape for lst in selection if isinstance(lst, ListIndex) and lst.ndim > 0)
+        )
 
         while not self_indices.is_empty:
             index = self_indices.pop()
@@ -242,36 +258,34 @@ class Selection:
                     casted_selection[current_work_index] = sel_element[index]
                     break
 
-                else:
-                    if (
-                        sel_element.shape == ()
-                        or sel_element.shape == (1,)
-                        and len(current_sel._min_shape(new_axes=True)) < nb_list_1d_plus
-                    ):
-                        # if only one element of the axis is selected, skip this sel element from the casting
-                        casted_selection[current_work_index] = sel_element.squeeze()
+                elif (
+                    sel_element.shape == ()
+                    or sel_element.shape == (1,)
+                    and len(current_sel._min_shape(new_axes=True)) < nb_list_1d_plus
+                ):
+                    # if only one element of the axis is selected, skip this sel element from the casting
+                    casted_selection[current_work_index] = sel_element.squeeze()
 
-                        if other_indices.is_empty:
-                            casted_selection.append(index)
-                            break
-
-                        current_work_index = other_indices.pop()
-
-                    else:
-                        full_index = (index,) + self_indices.pop_at_most(sel_element.ndim - 1)
-                        casted_selection[current_work_index] = sel_element[full_index]
-
-                        if sel_element.ndim == 1:
-                            # propagate selection to other 1D+ list indices
-                            for prop_index, prop_sel in enumerate(
-                                selection[current_work_index + 1 :],
-                                start=current_work_index + 1,
-                            ):
-                                if isinstance(prop_sel, ListIndex) and prop_sel.ndim == 1:
-                                    casted_selection[prop_index] = prop_sel[index]
-                                    other_indices.remove_at(prop_index)
-
+                    if other_indices.is_empty:
+                        casted_selection.append(index)
                         break
+
+                    current_work_index = other_indices.pop()
+
+                else:
+                    full_index = (index,) + self_indices.pop_at_most(sel_element.ndim - 1)
+                    casted_selection[current_work_index] = sel_element.broadcast_to(_max_shape)[full_index]
+
+                    if sel_element.ndim > 0:
+                        # propagate selection to other 1D+ list indices
+                        for prop_index, prop_sel in enumerate(
+                            selection[current_work_index + 1 :], start=current_work_index + 1
+                        ):
+                            if isinstance(prop_sel, ListIndex) and prop_sel.ndim > 0:
+                                casted_selection[prop_index] = prop_sel.broadcast_to(_max_shape)[full_index]
+                                other_indices.remove_at(prop_index)
+
+                    break
 
         for i in other_indices.indices_not_popped:
             casted_selection[i] = selection[i]
@@ -297,13 +311,13 @@ class Selection:
         # short indexing ------------------------------------------------------
         if len(list_indices) == 0 or len(list_indices) == 1 and self._indices[list_indices[0]].ndim == 1:
             # make sure there are at least 2 ListIndex, over-wise the selection can simply be returned as is
-            dataset_sel = self.get(sorted=True)
+            dataset_sel = self.get_h5(sorted=True)
             loading_sel = tuple(0 for _ in takewhile(lambda x: x == 1, array_shape))
 
             yield dataset_sel, loading_sel
             return tuple(
                 np.unique(i.flatten(), return_inverse=True)[1] if isinstance(i, np.ndarray) else slice(None)
-                for i in self.get()[: len(array_shape)]
+                for i in self.get_h5()[: len(array_shape)]
             )
 
         elif len(list_indices) == 1:
@@ -316,7 +330,7 @@ class Selection:
                 yield dataset_sel, loading_sel
             return tuple(
                 np.unique(i.flatten(), return_inverse=True)[1] if isinstance(i, np.ndarray) else slice(None)
-                for i in self.get()[: len(array_shape)]
+                for i in self.get_h5()[: len(array_shape)]
             )
 
         # long indexing -------------------------------------------------------
@@ -348,11 +362,11 @@ class Selection:
 
             yield dataset_sel, loading_sel
 
-        return np.ix_(
-            *(
-                np.unique(np.array(self[i]), return_inverse=True)[1] if i in list_indices else slice(None)
-                for i in range(len(array_shape))
-            )
+        return tuple(
+            np.unique(np.array(self[i]), return_inverse=True)[1].reshape(self[i].shape)
+            if i in list_indices
+            else slice(None)
+            for i in range(len(array_shape))
         )
 
     # endregion

@@ -25,6 +25,28 @@ def get_sel(*sel: int | list[Any] | slice | None) -> Selection:
     )
 
 
+def _equal(s1: tuple[Any, ...], s2: tuple[Any, ...]) -> bool:
+    if not len(s1) == len(s2):
+        return False
+
+    for e1, e2 in zip(s1, s2):
+        if isinstance(e1, np.ndarray) or isinstance(e2, np.ndarray):
+            if not np.array_equal(e1, e2):
+                return False
+
+        elif e1 != e2:
+            return False
+
+    return True
+
+
+@pytest.mark.parametrize("selection, expected", [[get_sel([1]), ([1],)]])
+def test_selection_should_convert_to_lists_and_slices(
+    selection: Selection, expected: tuple[list[int] | slice, ...]
+) -> None:
+    assert _equal(selection.get(), expected)
+
+
 def test_selection_should_have_largest_ndims_first():
     assert Selection((ListIndex(np.array(0)), ListIndex(np.array([[0, 1, 2]])))) == Selection(
         (ListIndex(np.array([[0]])), ListIndex(np.array([0, 1, 2])))
@@ -85,14 +107,8 @@ def test_should_compute_shape_3d(selection: Selection, expected_shape):
             get_sel([0, 1], 1, [0, 2], [0, 2], [1, 2]),
         ],
         [get_sel([0], [0, 1, 2]), get_sel(1), get_sel(0, 1)],
-        [get_sel([[0], [1]], [0, 1, 2]), get_sel(1), get_sel([1], [0, 1, 2])],
-        [
-            get_sel(
-                0,
-            ),
-            get_sel(0),
-            get_sel(0, 0),
-        ],
+        [get_sel([[0], [1]], [0, 1, 2]), get_sel(1), get_sel([1, 1, 1], [0, 1, 2])],
+        [get_sel(0), get_sel(0), get_sel(0, 0)],
         [get_sel([0]), get_sel(0), get_sel(0)],
         [get_sel([[0]]), get_sel(0, 0), get_sel(0)],
         [get_sel([[0], [2], [5]], [[0]]), get_sel(0), get_sel([0], [0])],
@@ -100,6 +116,8 @@ def test_should_compute_shape_3d(selection: Selection, expected_shape):
         [get_sel([[0], [1], [2]], 0), get_sel(slice(0, 3), slice(0, 1)), get_sel([[0], [1], [2]], 0)],
         [get_sel(slice(0, 5), None), get_sel(0), get_sel(0, None)],
         [get_sel(slice(0, 5), None), get_sel(0, 0), get_sel(0)],
+        [get_sel([[0, 1], [1, 2]], [0, 1]), get_sel(0, 1), get_sel(1, 1)],
+        [get_sel([[0], [1], [2], [3], [4]], [[0, 2], [0, 2], [0, 2], [0, 2], [0, 2]]), get_sel(0, 1), get_sel(0, 2)],
     ],
 )
 def test_should_cast_shape(previous_selection: Selection, selection: Selection, expected_selection: Selection):

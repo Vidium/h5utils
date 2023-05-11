@@ -148,10 +148,11 @@ class File(PickleableH5PyObject, _GroupManagerMixin, h5py.File):
 
     def __new__(cls, *args: Any, **kwargs: Any) -> File:
         """Create a new File object with the h5 open function."""
-        self = super().__new__(cls)
-        h5py.File.__init__(self, *args, **kwargs)
+        with h5py._objects.phil:  # type: ignore[attr-defined]
+            self = super().__new__(cls)
+            h5py.File.__init__(self, *args, **kwargs)
 
-        return self
+            return self
 
     def __getstate__(self) -> None:
         pass

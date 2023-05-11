@@ -110,4 +110,7 @@ class ListIndex:
         expanded_shape = (1,) * (n - self.ndim) + self.shape
         return ListIndex(self._elements.reshape(expanded_shape))
 
+    def broadcast_to(self, shape: tuple[int, ...]) -> ListIndex:
+        return ListIndex(np.broadcast_to(self._elements, shape))
+
     # endregion
