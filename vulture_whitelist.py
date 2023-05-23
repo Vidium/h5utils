@@ -1,3 +1,4 @@
+_.set  # unused method (ch5mpy/attributes.py:64)
 _.is_chunked  # unused property (ch5mpy/h5array/array.py:248)
 _.write  # unused method (ch5mpy/list.py:90)
 _.to_dict  # unused method (ch5mpy/list.py:124)

@@ -61,6 +61,10 @@ class AttributeManager:
     def get(self, name: str, default: Any = None) -> Any:
         return self._attrs.get(name, default)
 
+    def set(self, **kwargs: Any) -> None:
+        for k, v in kwargs.items():
+            self[k] = v
+
     def as_dict(self) -> dict[str, Any]:
         return {k: None if v == _NONE_VALUE else v for k, v in self._attrs.items()}
 
