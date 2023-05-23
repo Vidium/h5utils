@@ -344,4 +344,13 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     def copy(self) -> npt.NDArray[_T]:
         return np.copy(self)
 
+    def min(self, axis: int | tuple[int, ...] | None = None) -> _T | npt.NDArray[_T]:
+        return np.min(self, axis=axis)  # type: ignore[no-any-return]
+
+    def max(self, axis: int | tuple[int, ...] | None = None) -> _T | npt.NDArray[_T]:
+        return np.max(self, axis=axis)  # type: ignore[no-any-return]
+
+    def mean(self, axis: int | tuple[int, ...] | None = None) -> Any | npt.NDArray[Any]:
+        return np.mean(self, axis=axis)
+
     # endregion

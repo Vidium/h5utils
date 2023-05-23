@@ -127,6 +127,9 @@ def _apply_operation(
     # Here I have to explicitly write out each operation using +=, *=, ... operators instead of using
     # getattr(..., operation)(...) because dest does not get modified in that way
 
+    if values.ndim == 0:
+        values = values[()]
+
     if operation == "__set__":
         if dest.ndim == 0:
             dest[()] = values
@@ -136,7 +139,7 @@ def _apply_operation(
 
     elif operation == "__iadd__":
         if dest.ndim == 0:
-            dest += values  # type: ignore[assignment]
+            dest[()] = values + dest[()]
 
         else:
             dest[chunk_selection][where_to_output] += values[where_to_output]
@@ -177,6 +180,7 @@ def apply(
     where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue,
     default_0D_output: bool = True,
 ) -> Any:
+    dtype = a.dtype if dtype is None else dtype
     axis = _as_tuple(func.keywords.get("axis", None), a.ndim, default_0D_output)
     output_array = _get_output_array(out, a.shape, axis, func.keywords.get("keepdims", False), dtype, initial, None)
 
