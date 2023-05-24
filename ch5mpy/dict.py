@@ -32,17 +32,9 @@ def _get_in_memory(value: Any) -> Any:
     return value
 
 
-def _parse_value(obj: Group | Dataset[Any]) -> Any:
-    """Parse a h5 object into a higher abstraction-level object."""
-    if isinstance(obj, Group):
-        # return Group as H5Dict
-        return H5Dict(obj)
-
-    elif isinstance(obj, Dataset):
-        return read_object(obj)
-
-    else:
-        raise ValueError(f"Got unexpected object of type '{type(obj)}' for key '{obj}'.")
+def _is_group(obj: Group | Dataset[Any]) -> bool:
+    h5_type = obj.attrs.get("__h5_type__", "<UNKNOWN>")
+    return isinstance(obj, Group) and h5_type != "object"
 
 
 def _get_repr(items: ItemsViewHDF5[str, Group | Dataset[Any]]) -> str:
@@ -51,7 +43,7 @@ def _get_repr(items: ItemsViewHDF5[str, Group | Dataset[Any]]) -> str:
 
     return (
         "{\n\t"
-        + ",\n\t".join([str(k) + ": " + ("{...}" if isinstance(v, Group) else repr(_parse_value(v))) for k, v in items])
+        + ",\n\t".join([str(k) + ": " + ("{...}" if _is_group(v) else repr(read_object(v))) for k, v in items])
         + "\n}"
     )
 
@@ -67,7 +59,7 @@ class H5DictValuesView(Iterable[_T]):
         return f"{type(self).__name__}([{len(self._values)} values])"
 
     def __iter__(self) -> Iterator[_T]:
-        return map(_parse_value, self._values)
+        return map(read_object, self._values)
 
     # endregion
 
@@ -84,7 +76,7 @@ class H5DictItemsView(Iterable[tuple[str, _T]]):
         return f"{type(self).__name__}([{len(self._keys)} items])"
 
     def __iter__(self) -> Iterator[tuple[str, _T]]:
-        return zip(self._keys, map(_parse_value, self._values))
+        return zip(self._keys, map(read_object, self._values))
 
     # endregion
 
@@ -113,7 +105,7 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
         del self._file[key]
 
     def __getitem__(self, key: str) -> _T:
-        return cast(_T, _parse_value(self._file[key]))
+        return cast(_T, read_object(self._file[key]))
 
     def __getattr__(self, item: str) -> _T:
         return self.__getitem__(item)

@@ -9,6 +9,7 @@ from typing import Any, cast
 
 import numpy as np
 
+import ch5mpy.dict
 from ch5mpy.h5array.array import H5Array
 from ch5mpy.objects.dataset import Dataset
 from ch5mpy.objects.group import Group
@@ -24,13 +25,13 @@ def read_object(data: Dataset[Any] | Group) -> Any:
     if isinstance(data, Group):
         h5_type = data.attrs.get("__h5_type__", "<UNKNOWN>")
         if h5_type != "object":
-            raise ValueError(f"Cannot read object with invalid type '{h5_type}'.")
+            return ch5mpy.dict.H5Dict(data)
 
         h5_class = data.attrs.get("__h5_class__", None)
         if h5_class is None:
             raise ValueError("Cannot read object with unknown class.")
 
-        data_class = pickle.loads(data.attrs.get("__h5_class__", "<UNKNOWN>"))
+        data_class = pickle.loads(h5_class)
 
         if not hasattr(data_class, "__h5_read__"):
             raise ValueError(

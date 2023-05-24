@@ -2,13 +2,15 @@
 
 # ====================================================
 # imports
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Generator
 
 import numpy as np
 import pytest
 
-from ch5mpy import File, H5Array, H5Dict, H5Mode, write_object
+from ch5mpy import File, Group, H5Array, H5Dict, H5Mode, write_object
 
 
 # ====================================================
@@ -157,3 +159,24 @@ def test_backed_dict_copy_dataset_proxy_should_be_array(backed_dict):
     c = backed_dict.copy()
 
     assert isinstance(c["b"], H5Array)
+
+
+class ComplexObject:
+    def __init__(self, value: int):
+        self.value = value
+
+    def __repr__(self) -> str:
+        return f"CO({self.value})"
+
+    def __h5_write__(self, group: Group) -> None:
+        group.attrs["value"] = self.value
+
+    @classmethod
+    def __h5_read__(cls, group: Group) -> ComplexObject:
+        return ComplexObject(group.attrs["value"])
+
+
+def test_backed_dict_can_store_complex_objects(backed_dict):
+    backed_dict["g"] = {"a": ComplexObject(1), "b": ComplexObject(2)}
+
+    assert isinstance(backed_dict["g"]["a"], ComplexObject)

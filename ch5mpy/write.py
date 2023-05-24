@@ -100,6 +100,8 @@ def write_dataset(
 
     # cast to np.array if needed (to get shape and dtype)
     array = np.array(obj) if not hasattr(obj, "shape") else obj
+    if array.dtype == object:
+        array = array.astype(str)
 
     if name in loc.keys():
         if loc[name] is array:
