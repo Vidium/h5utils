@@ -47,8 +47,8 @@ class H5Object(ABC):
 
     # region attributes
     @property
-    def file(self) -> File:
-        return self._file.file
+    def file(self) -> Group:
+        return self._file
 
     @property
     def attributes(self) -> AttributeManager:

@@ -4,7 +4,6 @@
 # imports
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from typing import Any, Collection, cast
 
 import h5py
@@ -32,8 +31,10 @@ def _h5py_wrap_type(obj: Any) -> Any:
         return obj  # Just return, since we want to wrap h5py.Group.get too
 
 
-class _GroupManagerMixin(h5py.Group, ABC):
-    """Mixin for File and Group objects which can access and create groups on H5 files."""
+class Group(PickleableH5PyObject, h5py.Group):
+    """Overwrite group to allow pickling, and to create new groups and datasets
+    of the right type (i.e. the ones defined in this module).
+    """
 
     # region magic methods
     def __getitem__(self, name: str | bytes) -> Any:  # type: ignore[override]
@@ -55,10 +56,15 @@ class _GroupManagerMixin(h5py.Group, ABC):
     # endregion
 
     # region methods
-    @abstractmethod
     def _wrap(self, obj: Any) -> Any:
         """Wrap an object accessed in this group with our custom classes."""
-        pass
+        obj = _h5py_wrap_type(obj)
+
+        # If it is a group or dataset copy the current file info in
+        if isinstance(obj, Group) or isinstance(obj, Dataset):
+            obj.file_info = self.file_info
+
+        return obj
 
     def require_group(self, name: str) -> Group:
         """
@@ -116,25 +122,7 @@ class _GroupManagerMixin(h5py.Group, ABC):
     # endregion
 
 
-class Group(PickleableH5PyObject, _GroupManagerMixin):
-    """Overwrite group to allow pickling, and to create new groups and datasets
-    of the right type (i.e. the ones defined in this module).
-    """
-
-    # region methods
-    def _wrap(self, obj: Any) -> Any:
-        obj = _h5py_wrap_type(obj)
-
-        # If it is a group or dataset copy the current file info in
-        if isinstance(obj, Group) or isinstance(obj, Dataset):
-            obj.file_info = self.file_info
-
-        return obj
-
-    # endregion
-
-
-class File(PickleableH5PyObject, _GroupManagerMixin, h5py.File):
+class File(Group, h5py.File):
     """A subclass of h5py.File that implements pickling.
     Pickling is done not with __{get,set}state__ but with __getnewargs_ex__
     which produces the arguments to supply to the __new__ method.
@@ -170,14 +158,9 @@ class File(PickleableH5PyObject, _GroupManagerMixin, h5py.File):
 
     # endregion
 
-    # region methods
-    def _wrap(self, obj: Any) -> Any:
-        obj = _h5py_wrap_type(obj)
-
-        # If it is a group or dataset copy the current file info in
-        if isinstance(obj, Group) or isinstance(obj, Dataset):
-            obj.file_info = self
-
-        return obj
+    # region attributes
+    @property
+    def file_info(self) -> File:
+        return self
 
     # endregion

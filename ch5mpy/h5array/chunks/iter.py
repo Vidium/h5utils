@@ -38,6 +38,9 @@ def _get_chunk_indices(chunk_size: int, shape: tuple[int, ...]) -> tuple[tuple[F
     if len(shape) == 0:
         raise ValueError("0D array")
 
+    if np.prod(shape) == 0:
+        return (tuple(FullSlice.whole_axis(s) for s in shape),)
+
     rev_shape = tuple(reversed(shape))
 
     # not enough max mem

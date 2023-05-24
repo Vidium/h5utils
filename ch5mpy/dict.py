@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from collections.abc import Collection, Iterable, KeysView, MutableMapping
+from functools import partial
 from pathlib import Path
 from typing import Any, Iterator, TypeVar, cast
 
@@ -20,6 +21,8 @@ from ch5mpy.write import write_object
 # ====================================================
 # code
 _T = TypeVar("_T")
+
+_safe_read = partial(read_object, error="ignore")
 
 
 def _get_in_memory(value: Any) -> Any:
@@ -43,9 +46,15 @@ def _get_repr(items: ItemsViewHDF5[str, Group | Dataset[Any]]) -> str:
 
     return (
         "{\n\t"
-        + ",\n\t".join([str(k) + ": " + ("{...}" if _is_group(v) else repr(read_object(v))) for k, v in items])
+        + ",\n\t".join(
+            [str(k) + ": " + ("{...}" if _is_group(v) else repr(_safe_read(v)).replace("\n", "\n\t")) for k, v in items]
+        )
         + "\n}"
     )
+
+
+def _get_note(annotation: str | None) -> str:
+    return "" if annotation is None else f"[{annotation}]"
 
 
 class H5DictValuesView(Iterable[_T]):
@@ -59,7 +68,7 @@ class H5DictValuesView(Iterable[_T]):
         return f"{type(self).__name__}([{len(self._values)} values])"
 
     def __iter__(self) -> Iterator[_T]:
-        return map(read_object, self._values)
+        return map(_safe_read, self._values)
 
     # endregion
 
@@ -76,7 +85,7 @@ class H5DictItemsView(Iterable[tuple[str, _T]]):
         return f"{type(self).__name__}([{len(self._keys)} items])"
 
     def __iter__(self) -> Iterator[tuple[str, _T]]:
-        return zip(self._keys, map(read_object, self._values))
+        return zip(self._keys, map(_safe_read, self._values))
 
     # endregion
 
@@ -85,6 +94,10 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
     """Class for managing dictionaries backed on h5 files."""
 
     # region magic methods
+    def __init__(self, file: File | Group, annotation: str | None = None):
+        super().__init__(file)
+        self.annotation = annotation
+
     def __dir__(self) -> Iterable[str]:
         return dir(H5Dict) + list(self.keys())
 
@@ -92,20 +105,20 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
         if self.is_closed:
             return "Closed H5Dict{}"
 
-        return f"H5Dict{_get_repr(self._file.items())}"
+        return f"H5Dict{_get_note(self.annotation)}{_get_repr(self._file.items())}"
 
     def __setitem__(self, key: str, value: Any) -> None:
         if callable(value):
             value(name=key, loc=self._file)
 
         else:
-            write_object(self._file, key, value, overwrite=True)
+            write_object(self, key, value, overwrite=True)
 
     def __delitem__(self, key: str) -> None:
         del self._file[key]
 
     def __getitem__(self, key: str) -> _T:
-        return cast(_T, read_object(self._file[key]))
+        return cast(_T, _safe_read(self._file[key]))
 
     def __getattr__(self, item: str) -> _T:
         return self.__getitem__(item)

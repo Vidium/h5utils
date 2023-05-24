@@ -4,17 +4,17 @@
 # imports
 from __future__ import annotations
 
-import pytest
 from pathlib import Path
+from typing import Any, Generator
 
-from typing import Any
+import pytest
 
 import ch5mpy as ch
 
 
 # ====================================================
 # code
-class O:
+class O_:
     def __init__(self, v: float):
         self._v = v
 
@@ -22,15 +22,15 @@ class O:
         return f"O({self._v})"
 
     def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, O):
+        if not isinstance(other, O_):
             return False
 
         return self._v == other._v
 
 
 class C:
-    def __init__(self, l: list[int]):
-        self.l = l
+    def __init__(self, l_: list[int]):
+        self.l = l_
 
     def __repr__(self) -> str:
         return f"C({self.l})"
@@ -41,17 +41,17 @@ class C:
 
         return self.l == other.l
 
-    def __h5_write__(self, group: ch.Group) -> None:
-        group.create_dataset("l", data=self.l)
+    def __h5_write__(self, values: ch.H5Dict) -> None:
+        values["l"] = self.l
 
     @classmethod
-    def __h5_read__(cls, group: ch.Group) -> C:
-        return C(list(group["l"]))
+    def __h5_read__(cls, values: ch.H5Dict) -> C:
+        return C(list(values["l"]))
 
 
 @pytest.fixture
-def h5_list() -> ch.H5List:
-    data = [1.0, 2, C([1, 2, 3]), "4.", O(5.0)]
+def h5_list() -> Generator[ch.H5List, None, None]:
+    data = [1.0, 2, C([1, 2, 3]), "4.", O_(5.0)]
 
     with ch.File("h5_list.h5", ch.H5Mode.WRITE_TRUNCATE) as h5_file:
         ch.H5List.write(data, h5_file, "data")
@@ -66,7 +66,7 @@ def test_list_repr(h5_list):
 
 
 def test_list_should_read_custom_object(h5_list):
-    assert isinstance(h5_list[4], O)
+    assert isinstance(h5_list[4], O_)
 
 
 def test_list_should_read_custom_object_with_method(h5_list):
@@ -75,7 +75,7 @@ def test_list_should_read_custom_object_with_method(h5_list):
 
 def test_list_should_convert_to_regular_list(h5_list):
     lst = h5_list.copy()
-    assert lst == [1.0, 2, C([1, 2, 3]), "4.", O(5.0)]
+    assert lst == [1.0, 2, C([1, 2, 3]), "4.", O_(5.0)]
 
 
 def test_list_get_negative_index(h5_list):

@@ -15,6 +15,13 @@ _SPACER = ", \n                 "
 _NONE_VALUE = "__h5_NONE__"
 
 
+def _is_None(v: Any) -> bool:
+    if isinstance(v, np.void):
+        return False
+
+    return isinstance(v, str) and v == _NONE_VALUE
+
+
 class AttributeManager:
     """Manage attributes of a File, Group or Dataset."""
 
@@ -66,6 +73,6 @@ class AttributeManager:
             self[k] = v
 
     def as_dict(self) -> dict[str, Any]:
-        return {k: None if v == _NONE_VALUE else v for k, v in self._attrs.items()}
+        return {k: None if _is_None(v) else v for k, v in self._attrs.items()}
 
     # endregion

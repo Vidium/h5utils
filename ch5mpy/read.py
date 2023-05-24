@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import pickle
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import numpy as np
 
@@ -17,7 +17,15 @@ from ch5mpy.objects.group import Group
 
 # ====================================================
 # code
-def read_object(data: Dataset[Any] | Group) -> Any:
+def _handle_read_error(data: Group, error: Literal["ignore", "raise"], msg: str) -> ch5mpy.dict.H5Dict[Any]:
+    if error == "raise":
+        raise ValueError(msg)
+
+    else:
+        return ch5mpy.dict.H5Dict(data, annotation=f"Failed reading object: {msg}")
+
+
+def read_object(data: Dataset[Any] | Group, error: Literal["ignore", "raise"] = "raise") -> Any:
     """Read an object from a .h5 file"""
     if not isinstance(data, (Dataset, Group)):
         raise ValueError(f"Cannot read object from '{type(data)}'.")
@@ -29,16 +37,21 @@ def read_object(data: Dataset[Any] | Group) -> Any:
 
         h5_class = data.attrs.get("__h5_class__", None)
         if h5_class is None:
-            raise ValueError("Cannot read object with unknown class.")
+            return _handle_read_error(data, error, "Cannot read object with unknown class.")
 
         data_class = pickle.loads(h5_class)
-
         if not hasattr(data_class, "__h5_read__"):
-            raise ValueError(
-                f"Don't know how to read {data_class} since it does not " f"implement the '__h5_read__' method."
+            return _handle_read_error(
+                data,
+                error,
+                f"Don't know how to read {data_class} since it does not implement " f"the '__h5_read__' method.",
             )
 
-        return data_class.__h5_read__(data)
+        try:
+            return data_class.__h5_read__(ch5mpy.dict.H5Dict(data))
+
+        except Exception as e:
+            return _handle_read_error(data, error, str(e))
 
     if data.ndim == 0:
         if np.issubdtype(data.dtype, np.void):

@@ -10,7 +10,7 @@ from typing import Generator
 import numpy as np
 import pytest
 
-from ch5mpy import File, Group, H5Array, H5Dict, H5Mode, write_object
+from ch5mpy import File, H5Array, H5Dict, H5Mode, write_object
 
 
 # ====================================================
@@ -168,12 +168,12 @@ class ComplexObject:
     def __repr__(self) -> str:
         return f"CO({self.value})"
 
-    def __h5_write__(self, group: Group) -> None:
-        group.attrs["value"] = self.value
+    def __h5_write__(self, values: H5Dict) -> None:
+        values.attributes["value"] = self.value
 
     @classmethod
-    def __h5_read__(cls, group: Group) -> ComplexObject:
-        return ComplexObject(group.attrs["value"])
+    def __h5_read__(cls, values: H5Dict) -> ComplexObject:
+        return ComplexObject(values.attributes["value"])
 
 
 def test_backed_dict_can_store_complex_objects(backed_dict):

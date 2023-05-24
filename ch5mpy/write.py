@@ -12,6 +12,7 @@ import numpy as np
 import numpy.typing as npt
 from h5py import string_dtype
 
+import ch5mpy.dict
 from ch5mpy.objects.dataset import Dataset
 from ch5mpy.objects.group import File, Group
 from ch5mpy.utils import is_sequence
@@ -85,7 +86,7 @@ def _store_dataset(
 
 
 def write_dataset(
-    loc: Group | File,
+    loc: Group | File | ch5mpy.dict.H5Dict[Any],
     name: str,
     obj: Any,
     *,
@@ -93,6 +94,9 @@ def write_dataset(
     maxshape: tuple[int, ...] | None = None,
 ) -> None:
     """Write an array-like object to a H5 dataset."""
+    if isinstance(loc, ch5mpy.dict.H5Dict):
+        loc = loc.file
+
     if isinstance(obj, Mapping):
         group = loc.create_group(name)
         write_datasets(group, **obj)
@@ -120,7 +124,7 @@ def write_dataset(
 
 
 def write_datasets(
-    loc: Group | File,
+    loc: Group | File | ch5mpy.dict.H5Dict[Any],
     *,
     chunks: bool | tuple[int, ...] = True,
     maxshape: tuple[int, ...] | None = None,
@@ -132,7 +136,7 @@ def write_datasets(
 
 
 def write_object(
-    loc: Group | File,
+    loc: Group | File | ch5mpy.dict.H5Dict[Any],
     name: str,
     obj: Any,
     *,
@@ -141,9 +145,12 @@ def write_object(
     overwrite: bool = False,
 ) -> None:
     """Write any object to a H5 file."""
+    if isinstance(loc, ch5mpy.dict.H5Dict):
+        loc = loc.file
+
     if hasattr(obj, "__h5_write__"):
         group = loc.create_group(name, overwrite=overwrite)
-        obj.__h5_write__(group=group)
+        obj.__h5_write__(ch5mpy.dict.H5Dict(group))
         group.attrs["__h5_type__"] = "object"
         group.attrs["__h5_class__"] = np.void(pickle.dumps(type(obj), protocol=pickle.HIGHEST_PROTOCOL))
 
@@ -166,7 +173,7 @@ def write_object(
 
 
 def write_objects(
-    loc: Group | File,
+    loc: Group | File | ch5mpy.dict.H5Dict[Any],
     *,
     chunks: bool | tuple[int, ...] = True,
     maxshape: tuple[int, ...] | None = None,

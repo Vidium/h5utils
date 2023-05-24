@@ -71,7 +71,7 @@ class H5List(H5Object, Generic[_T]):
 
     # region class methods
     @classmethod
-    def read(cls, path: str | Path | File | Group, name: str = "", mode: H5Mode = H5Mode.READ) -> H5Object:
+    def read(cls, path: str | Path | File | Group, name: str = "", mode: H5Mode = H5Mode.READ) -> H5List[Any]:
         if isinstance(path, (str, Path)):
             path = File(path, mode=mode)
 
