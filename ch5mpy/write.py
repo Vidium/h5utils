@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, Mapping
 import numpy as np
 import numpy.typing as npt
 from h5py import string_dtype
+from tqdm.auto import tqdm
 
 import ch5mpy.dict
 from ch5mpy.objects.dataset import Dataset
@@ -143,20 +144,21 @@ def write_object(
     chunks: bool | tuple[int, ...] = True,
     maxshape: tuple[int, ...] | None = None,
     overwrite: bool = False,
+    progress: tqdm[Any] | None = None,
 ) -> None:
     """Write any object to a H5 file."""
     if isinstance(loc, ch5mpy.dict.H5Dict):
         loc = loc.file
 
     if hasattr(obj, "__h5_write__"):
-        group = loc.create_group(name, overwrite=overwrite)
+        group = loc.create_group(name, overwrite=overwrite) if name else loc
         obj.__h5_write__(ch5mpy.dict.H5Dict(group))
         group.attrs["__h5_type__"] = "object"
         group.attrs["__h5_class__"] = np.void(pickle.dumps(type(obj), protocol=pickle.HIGHEST_PROTOCOL))
 
     elif isinstance(obj, Mapping):
-        group = loc.create_group(name, overwrite=overwrite)
-        write_objects(group, **obj, chunks=chunks, maxshape=maxshape)
+        group = loc.create_group(name, overwrite=overwrite) if name else loc
+        write_objects(group, **obj, chunks=chunks, maxshape=maxshape, progress=progress)
 
     elif is_sequence(obj):
         write_dataset(loc, name, obj, chunks=chunks, maxshape=maxshape)
@@ -171,6 +173,9 @@ def write_object(
         loc[name] = np.void(pickle.dumps(obj, protocol=pickle.HIGHEST_PROTOCOL))
         loc[name].attrs["__h5_type__"] = "pickle"
 
+    if progress is not None:
+        progress.update()
+
 
 def write_objects(
     loc: Group | File | ch5mpy.dict.H5Dict[Any],
@@ -178,8 +183,9 @@ def write_objects(
     chunks: bool | tuple[int, ...] = True,
     maxshape: tuple[int, ...] | None = None,
     overwrite: bool = False,
+    progress: tqdm[Any] | None = None,
     **kwargs: Any,
 ) -> None:
     """Write multiple objects of any type to a H5 file."""
     for name, obj in kwargs.items():
-        write_object(loc, name, obj, chunks=chunks, maxshape=maxshape, overwrite=overwrite)
+        write_object(loc, name, obj, chunks=chunks, maxshape=maxshape, overwrite=overwrite, progress=progress)

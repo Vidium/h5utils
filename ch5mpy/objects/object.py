@@ -51,8 +51,16 @@ class H5Object(ABC):
         return self._file
 
     @property
+    def filename(self) -> str:
+        return self._file.file.filename
+
+    @property
     def attributes(self) -> AttributeManager:
         return self.file.attrs
+
+    @property
+    def name(self) -> str:
+        return self.file.name
 
     # endregion
 

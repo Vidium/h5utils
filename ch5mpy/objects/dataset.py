@@ -14,7 +14,7 @@ from h5py.h5t import check_string_dtype
 
 from ch5mpy._typing import SELECTOR
 from ch5mpy.attributes import AttributeManager
-from ch5mpy.pickle.wrap import PickleableH5PyObject
+from ch5mpy.objects.pickle import PickleableH5Object
 
 # ====================================================
 # code
@@ -210,7 +210,7 @@ class AsObjectWrapper(DatasetWrapper[_WT]):
     # endregion
 
 
-class Dataset(PickleableH5PyObject, h5py.Dataset, Generic[_T]):
+class Dataset(PickleableH5Object, h5py.Dataset, Generic[_T]):
     """Mix in our pickling class"""
 
     # region magic methods

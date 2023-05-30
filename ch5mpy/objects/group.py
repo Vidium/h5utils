@@ -12,7 +12,7 @@ from h5py._hl.base import ItemsViewHDF5, ValuesViewHDF5
 
 from ch5mpy.attributes import AttributeManager
 from ch5mpy.objects.dataset import Dataset
-from ch5mpy.pickle.wrap import PickleableH5PyObject
+from ch5mpy.objects.pickle import PickleableH5Object
 
 
 # ====================================================
@@ -31,7 +31,7 @@ def _h5py_wrap_type(obj: Any) -> Any:
         return obj  # Just return, since we want to wrap h5py.Group.get too
 
 
-class Group(PickleableH5PyObject, h5py.Group):
+class Group(PickleableH5Object, h5py.Group):
     """Overwrite group to allow pickling, and to create new groups and datasets
     of the right type (i.e. the ones defined in this module).
     """

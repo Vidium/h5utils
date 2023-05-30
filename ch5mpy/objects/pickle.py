@@ -1,23 +1,16 @@
-# coding: utf-8
-
 """
 Modify h5 File, Group and Dataset objects to allow pickling.
 
 Modified from https://github.com/DaanVanVugt/h5pickle/blob/master/h5pickle
 """
-
-# ====================================================
-# imports
 from __future__ import annotations
-
-import h5py
 
 from typing import Any
 
+import h5py
 
-# ====================================================
-# code
-class PickleableH5PyObject(h5py.HLObject):
+
+class PickleableH5Object(h5py.HLObject):
     """Save state required to pickle and unpickle h5py objects and groups.
     This class should not be used directly, but is here as a base for inheritance
     for Group and Dataset"""

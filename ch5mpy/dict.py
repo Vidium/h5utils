@@ -11,6 +11,7 @@ from typing import Any, Iterator, TypeVar, cast
 
 from h5py._hl.base import ItemsViewHDF5
 
+from ch5mpy.h5array import H5Array
 from ch5mpy.names import H5Mode
 from ch5mpy.objects.dataset import AsStrWrapper, Dataset
 from ch5mpy.objects.group import File, Group
@@ -31,6 +32,9 @@ def _get_in_memory(value: Any) -> Any:
 
     elif isinstance(value, (Dataset, AsStrWrapper)):
         return value[()]
+
+    elif isinstance(value, (H5Object, H5Array)):
+        return value.copy()
 
     return value
 
@@ -133,11 +137,13 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
 
     # region class methods
     @classmethod
-    def read(cls, path: str | Path | File | Group, name: str = "", mode: H5Mode = H5Mode.READ) -> H5Dict[Any]:
-        if isinstance(path, (str, Path)):
-            path = File(path, mode=mode)
+    def read(cls, path: str | Path | File | Group, name: str | None = None, mode: H5Mode = H5Mode.READ) -> H5Dict[Any]:
+        file = File(path, mode=mode) if isinstance(path, (str, Path)) else path
 
-        return H5Dict(path[name])
+        if name is not None:
+            file = file[name]
+
+        return H5Dict(file)
 
     # endregion
 
@@ -151,6 +157,9 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
 
     def items(self) -> H5DictItemsView[_T]:  # type: ignore[override]
         return H5DictItemsView(self._file.keys(), self._file.values())
+
+    def rename(self, name: str, new_name: str) -> None:
+        self._file.move(name, new_name)
 
     def copy(self) -> dict[str, Any]:
         """
