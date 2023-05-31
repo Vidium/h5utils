@@ -9,6 +9,7 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Iterator, TypeVar, cast
 
+import numpy as np
 from h5py._hl.base import ItemsViewHDF5
 
 from ch5mpy.h5array import H5Array
@@ -24,6 +25,7 @@ from ch5mpy.write import write_object
 _T = TypeVar("_T")
 
 _safe_read = partial(read_object, error="ignore")
+_NO_OBJECT = object()
 
 
 def _get_in_memory(value: Any) -> Any:
@@ -94,6 +96,10 @@ class H5DictItemsView(Iterable[tuple[str, _T]]):
     # endregion
 
 
+def _diff(a: Any, b: Any) -> bool:
+    return bool(np.array(a != b).any())
+
+
 class H5Dict(H5Object, MutableMapping[str, _T]):
     """Class for managing dictionaries backed on h5 files."""
 
@@ -111,18 +117,18 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
 
         return f"H5Dict{_get_note(self.annotation)}{_get_repr(self._file.items())}"
 
+    def __getitem__(self, key: str) -> _T:
+        return cast(_T, _safe_read(self._file[key]))
+
     def __setitem__(self, key: str, value: Any) -> None:
         if callable(value):
             value(name=key, loc=self._file)
 
-        else:
+        elif _diff(self.get(key, _NO_OBJECT), value):
             write_object(self, key, value, overwrite=True)
 
     def __delitem__(self, key: str) -> None:
         del self._file[key]
-
-    def __getitem__(self, key: str) -> _T:
-        return cast(_T, _safe_read(self._file[key]))
 
     def __getattr__(self, item: str) -> _T:
         return self.__getitem__(item)
@@ -157,6 +163,13 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
 
     def items(self) -> H5DictItemsView[_T]:  # type: ignore[override]
         return H5DictItemsView(self._file.keys(), self._file.values())
+
+    def get(self, key: str, default: Any = None) -> Any:
+        res = self._file.get(key, default)
+
+        if res is default:
+            return default
+        return _safe_read(res)
 
     def rename(self, name: str, new_name: str) -> None:
         self._file.move(name, new_name)
