@@ -193,6 +193,16 @@ def test_should_not_find_missing_value_in_array(small_large_array):
     assert 1000 not in small_large_array
 
 
+def test_should_find_value_in_view(small_array) -> None:
+    view = small_array[2:]
+    assert 4 in view
+
+
+def test_should_not_find_missing_value_in_view(small_array) -> None:
+    view = small_array[2:]
+    assert 1 not in view
+
+
 def test_subset_0d(array):
     subset = array[[]]
     assert subset.shape == (0, 10)

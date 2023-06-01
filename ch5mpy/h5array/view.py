@@ -51,9 +51,6 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
     def __len__(self) -> int:
         return self.shape[0]
 
-    def __contains__(self, item: Any) -> bool:
-        raise NotImplementedError
-
     def _inplace(self, func: NP_FUNC, value: Any) -> H5ArrayView[_T]:
         if np.issubdtype(self.dtype, str):
             raise TypeError("Cannot perform inplace operation on str H5Array.")
