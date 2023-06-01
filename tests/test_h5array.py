@@ -357,6 +357,11 @@ def test_get_in_random_order_2d(array):
     )
 
 
+def test_inplace_type_casting(array: ch5mpy.H5Array):
+    array.astype(str, inplace=True)
+    assert array.dtype == np.dtype("<U4")
+
+
 # FIXME
 @pytest.mark.xfail
 def test_repr_3d_array():

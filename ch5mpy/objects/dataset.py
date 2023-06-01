@@ -12,6 +12,7 @@ import numpy as np
 import numpy.typing as npt
 from h5py.h5t import check_string_dtype
 
+import ch5mpy
 from ch5mpy._typing import SELECTOR
 from ch5mpy.attributes import AttributeManager
 from ch5mpy.objects.pickle import PickleableH5Object
@@ -227,6 +228,11 @@ class Dataset(PickleableH5Object, h5py.Dataset, Generic[_T]):
     # endregion
 
     # region attributes
+    @property
+    def file(self) -> ch5mpy.File:
+        with h5py._objects.phil:  # type: ignore[attr-defined]
+            return ch5mpy.File(self.id)
+
     @property
     def dtype(self) -> np.dtype[_T]:
         return self.id.dtype  # type: ignore[return-value]

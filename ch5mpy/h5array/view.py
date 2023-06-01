@@ -97,11 +97,14 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
     # endregion
 
     # region methods
-    def astype(self, dtype: npt.DTypeLike) -> H5ArrayView[Any]:
+    def astype(self, dtype: npt.DTypeLike, inplace: bool = False) -> H5ArrayView[Any]:
         """
         Cast an H5Array to a specified dtype.
         This does not perform a copy, it returns a wrapper around the underlying H5 dataset.
         """
+        if inplace:
+            raise TypeError("Cannot cast inplace a view of an H5Array.")
+
         if np.issubdtype(dtype, str) and (np.issubdtype(self._dset.dtype, str) or self._dset.dtype == object):
             return H5ArrayView(self._dset.asstr(), sel=self._selection)
 

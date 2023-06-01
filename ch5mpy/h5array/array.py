@@ -18,6 +18,7 @@ from ch5mpy.h5array.functions import HANDLED_FUNCTIONS
 from ch5mpy.h5array.io import read_one_from_dataset, write_to_dataset
 from ch5mpy.indexing import Selection, map_slice
 from ch5mpy.objects.dataset import Dataset, DatasetWrapper
+from ch5mpy.write import write_dataset
 
 if TYPE_CHECKING:
     from ch5mpy.h5array.view import H5ArrayView
@@ -308,15 +309,31 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
         """
         self._resize(-amount, axis)
 
-    def astype(self, dtype: npt.DTypeLike) -> H5Array[Any]:
+    def astype(self, dtype: npt.DTypeLike, inplace: bool = False) -> H5Array[Any]:
         """
         Cast an H5Array to a specified dtype.
         This does not perform a copy, it returns a wrapper around the underlying H5 dataset.
         """
         if np.issubdtype(dtype, str) and (np.issubdtype(self._dset.dtype, str) or self._dset.dtype == object):
-            return H5Array(self._dset.asstr())
+            new_dset = self._dset.asstr()
 
-        return H5Array(self._dset.astype(dtype))
+        else:
+            new_dset = self._dset.astype(dtype)
+
+        if inplace:
+            file, name = self._dset.file, self._dset.name
+            del file[name]
+
+            # FIXME : conversion to np happens anyway but might be expensive, could we save data without conversion ?
+            write_dataset(file, name, np.array(new_dset), chunks=new_dset.chunks, maxshape=new_dset.maxshape)
+
+            if file[name].dtype == object:
+                self._dset = file[name].asstr()
+
+            else:
+                self._dset = file[name]
+
+        return H5Array(new_dset)
 
     def maptype(self, otype: type[Any]) -> H5Array[Any]:
         """

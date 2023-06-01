@@ -51,7 +51,6 @@ class Group(PickleableH5Object, h5py.Group):
     def file(self) -> File:
         with h5py._objects.phil:  # type: ignore[attr-defined]
             return File(self.id)
-        # return super().file  # type: ignore[return-value]
 
     # endregion
 
