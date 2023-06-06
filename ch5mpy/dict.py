@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 from collections.abc import Collection, Iterable, KeysView, MutableMapping
-from functools import partial
 from pathlib import Path
 from typing import Any, Iterator, TypeVar, cast
 
@@ -17,6 +16,7 @@ from ch5mpy.names import H5Mode
 from ch5mpy.objects.dataset import AsStrWrapper, Dataset
 from ch5mpy.objects.group import File, Group
 from ch5mpy.objects.object import H5Object
+from ch5mpy.options import _ERROR_MODE
 from ch5mpy.read import read_object
 from ch5mpy.write import write_object
 
@@ -24,7 +24,6 @@ from ch5mpy.write import write_object
 # code
 _T = TypeVar("_T")
 
-_safe_read = partial(read_object, error="ignore")
 _NO_OBJECT = object()
 
 
@@ -53,7 +52,12 @@ def _get_repr(items: ItemsViewHDF5[str, Group | Dataset[Any]]) -> str:
     return (
         "{\n\t"
         + ",\n\t".join(
-            [str(k) + ": " + ("{...}" if _is_group(v) else repr(_safe_read(v)).replace("\n", "\n\t")) for k, v in items]
+            [
+                str(k)
+                + ": "
+                + ("{...}" if _is_group(v) else repr(read_object(v, error="ignore")).replace("\n", "\n\t"))
+                for k, v in items
+            ]
         )
         + "\n}"
     )
@@ -74,7 +78,7 @@ class H5DictValuesView(Iterable[_T]):
         return f"{type(self).__name__}([{len(self._values)} values])"
 
     def __iter__(self) -> Iterator[_T]:
-        return map(_safe_read, self._values)
+        return (read_object(v, error=_ERROR_MODE["h5dict"]) for v in self._values)
 
     # endregion
 
@@ -91,7 +95,7 @@ class H5DictItemsView(Iterable[tuple[str, _T]]):
         return f"{type(self).__name__}([{len(self._keys)} items])"
 
     def __iter__(self) -> Iterator[tuple[str, _T]]:
-        return zip(self._keys, map(_safe_read, self._values))
+        return zip(self._keys, (read_object(v, error=_ERROR_MODE["h5dict"]) for v in self._values))
 
     # endregion
 
@@ -118,7 +122,7 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
         return f"H5Dict{_get_note(self.annotation)}{_get_repr(self._file.items())}"
 
     def __getitem__(self, key: str) -> _T:
-        return cast(_T, _safe_read(self._file[key]))
+        return cast(_T, read_object(self._file[key], error=_ERROR_MODE["h5dict"]))
 
     def __setitem__(self, key: str, value: Any) -> None:
         if callable(value):
@@ -172,7 +176,7 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
 
         if res is default:
             return default
-        return _safe_read(res)
+        return read_object(res, error=_ERROR_MODE["h5dict"])
 
     def rename(self, name: str, new_name: str) -> None:
         self._file.move(name, new_name)

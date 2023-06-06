@@ -65,6 +65,34 @@ class Group(PickleableH5Object, h5py.Group):
 
         return obj
 
+    def get(self, name: str, default: Any = None, getclass: bool = False, getlink: bool = False) -> Any:
+        """Retrieve an item or other information.
+
+        "name" given only:
+            Return the item, or "default" if it doesn't exist
+
+        "getclass" is True:
+            Return the class of object (Group, Dataset, etc.), or "default"
+            if nothing with that name exists
+
+        "getlink" is True:
+            Return HardLink, SoftLink or ExternalLink instances.  Return
+            "default" if nothing with that name exists.
+
+        "getlink" and "getclass" are True:
+            Return HardLink, SoftLink and ExternalLink classes.  Return
+            "default" if nothing with that name exists.
+
+        Example:
+
+        >>> cls = group.get('foo', getclass=True)
+        >>> if cls == SoftLink:
+        """
+        if not getclass and not getlink:
+            return self._wrap(h5py.Group.get(self, name, default))  # type: ignore[arg-type]
+
+        return h5py.Group.get(self, name, default, getclass, getlink)  # type: ignore[call-overload]
+
     def require_group(self, name: str) -> Group:
         """
         Return a group, creating it if it doesn't exist.

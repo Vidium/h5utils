@@ -13,6 +13,7 @@ from .names import H5Mode
 from .np import arange_nd
 from .objects.dataset import Dataset
 from .objects.group import File, Group
+from .options import error_mode, set_error_mode
 from .read import read_object
 from .write import (
     write_dataset,
@@ -42,6 +43,8 @@ __all__ = [
     "zeros",
     "ones",
     "full",
+    "set_error_mode",
+    "error_mode",
 ]
 
 __version__ = "0.1.3"
