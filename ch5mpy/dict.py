@@ -139,6 +139,9 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
     def __iter__(self) -> Iterator[str]:
         return iter(self.keys())
 
+    def __deepcopy__(self, _memo: dict[Any, Any]) -> dict[str, Any]:
+        return self.copy()
+
     # endregion
 
     # region class methods
