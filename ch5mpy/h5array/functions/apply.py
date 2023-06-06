@@ -233,6 +233,16 @@ def _get_str_dtype(
     raise NotImplementedError
 
 
+def _largest_shape(shape_a: tuple[int, ...], shape_b: tuple[int, ...]) -> tuple[int, ...]:
+    if len(shape_a) > len(shape_b):
+        return shape_a
+
+    if len(shape_b) > len(shape_a):
+        return shape_b
+
+    return max(shape_a, shape_b)
+
+
 def str_apply_2(
     func: NP_FUNC,
     a: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_],
@@ -247,7 +257,7 @@ def str_apply_2(
     if b.dtype == object:
         b = b.astype(str)
 
-    output_array = np.empty(max(a.shape, b.shape), dtype=_get_str_dtype(a, b, func))
+    output_array = np.empty(_largest_shape(a.shape, b.shape), dtype=_get_str_dtype(a, b, func))
 
     for index, chunk_x1, chunk_x2 in iter_chunks_2(a, b):
         output_array[map_slice(index)] = func(chunk_x1, chunk_x2)
