@@ -101,7 +101,7 @@ class H5List(H5Object, Generic[_T]):
         if isinstance(path, (str, Path)):
             path = File(path, mode=H5Mode.READ_WRITE)
 
-        if path.file.mode == H5Mode.READ:  # type: ignore[attr-defined]
+        if path.file.mode == H5Mode.READ:
             raise ValueError("Cannot write to h5 file open in 'r' mode.")
 
         dest, group_name = _get_group(path, name)

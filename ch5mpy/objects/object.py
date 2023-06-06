@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from ch5mpy.names import H5Mode
 from ch5mpy.objects.group import File, Group
@@ -53,6 +53,10 @@ class H5Object(ABC):
     @property
     def filename(self) -> str:
         return self._file.file.filename
+
+    @property
+    def mode(self) -> Literal[H5Mode.READ, H5Mode.READ_WRITE]:
+        return self._file.file.mode
 
     @property
     def attributes(self) -> AttributeManager:

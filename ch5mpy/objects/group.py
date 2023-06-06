@@ -4,13 +4,14 @@
 # imports
 from __future__ import annotations
 
-from typing import Any, Collection, cast
+from typing import Any, Collection, Literal, cast
 
 import h5py
 import numpy.typing as npt
 from h5py._hl.base import ItemsViewHDF5, ValuesViewHDF5
 
 from ch5mpy.attributes import AttributeManager
+from ch5mpy.names import H5Mode
 from ch5mpy.objects.dataset import Dataset
 from ch5mpy.objects.pickle import PickleableH5Object
 
@@ -186,6 +187,10 @@ class File(Group, h5py.File):
     # endregion
 
     # region attributes
+    @property
+    def mode(self) -> Literal[H5Mode.READ, H5Mode.READ_WRITE]:  # type: ignore[override]
+        return H5Mode(super().mode)  # type: ignore[return-value]
+
     @property
     def file_info(self) -> File:
         return self

@@ -215,9 +215,8 @@ def _get_str_dtype(
         assert np.issubdtype(b.dtype, np.number)
         return np.dtype(f"<U{a.dtype.itemsize // 4 * max(b)}")
 
-    assert np.issubdtype(b.dtype, str)
-
     if func == np.char.add:
+        assert np.issubdtype(b.dtype, str)
         return np.dtype(f"<U{(a.dtype.itemsize + b.dtype.itemsize) // 4}")
 
     elif func in (
@@ -247,7 +246,7 @@ def str_apply_2(
     func: NP_FUNC,
     a: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_],
     b: Any,
-) -> npt.NDArray[Any]:
+) -> npt.NDArray[Any] | bool:
     if not isinstance(a, (np.ndarray, ch5mpy.H5Array)):
         a = np.array(a, dtype=str)
 
@@ -258,6 +257,13 @@ def str_apply_2(
         b = b.astype(str)
 
     output_array = np.empty(_largest_shape(a.shape, b.shape), dtype=_get_str_dtype(a, b, func))
+
+    if not np.issubdtype(b.dtype, str):
+        try:
+            return {np.char.equal: False, np.char.not_equal: True}[func]
+
+        except KeyError:
+            raise TypeError(f"'{func}' not supported between arrays with dtypes {a.dtype} and {b.dtype}.")
 
     for index, chunk_x1, chunk_x2 in iter_chunks_2(a, b):
         output_array[map_slice(index)] = func(chunk_x1, chunk_x2)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Collection, Iterator
+from typing import Any, Collection, Iterator, Literal
 
 import numpy.typing as npt
 
@@ -32,3 +32,5 @@ class Group(HLObject, MutableMappingHDF5[str, "Group" | Dataset | Datatype]):
     @property
     def id(self) -> GroupID: ...
     def move(self, source: str, dest: str) -> None: ...
+    @property
+    def mode(self) -> Literal["r", "r+"]: ...
