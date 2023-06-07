@@ -66,6 +66,38 @@ def _within_bounds(
     return (obj,)
 
 
+def _compute_shape_empty_dset(
+    indices: tuple[SELECTION_ELEMENT, ...], arr_shape: tuple[int, ...], new_axes: bool
+) -> tuple[int, ...]:
+    if new_axes and any(
+        dropwhile(lambda x: x, reversed(list(dropwhile(lambda x: x, [x is NewAxis for x in indices]))))
+    ):
+        raise NotImplementedError("Cannot have new axis besides first and last indices yet.")
+
+    shape: tuple[int, ...] = ()
+    indices_queue = Queue(indices)
+    arr_shape_queue = Queue(arr_shape)
+
+    while not indices_queue.is_empty:
+        index = indices_queue.pop()
+
+        if index is NewAxis:
+            if not new_axes:
+                continue
+
+            shape += (1,)
+            continue
+
+        axis_shape = arr_shape_queue.pop()
+
+        if axis_shape == 0:
+            continue
+
+        shape += (0,) if index.ndim == 0 else (len(index),)
+
+    return shape
+
+
 class Selection:
     # region magic methods
     def __init__(self, indices: Iterable[SELECTION_ELEMENT] | None = None):
@@ -155,7 +187,6 @@ class Selection:
         for axis_index in index:
             if axis_index is None:
                 sel += (NewAxis,)
-                shape_index += 1
 
             elif isinstance(axis_index, (slice, range)):
                 sel += _within_bounds(
@@ -223,6 +254,9 @@ class Selection:
             return min_shape
 
     def compute_shape(self, arr_shape: tuple[int, ...], new_axes: bool = True) -> tuple[int, ...]:
+        if np.prod(arr_shape) == 0:
+            return _compute_shape_empty_dset(self._indices, arr_shape, new_axes=new_axes)
+
         len_end_shape = len(self._indices) - sum(self.is_newaxis)
         return self._min_shape(new_axes=new_axes) + arr_shape[len_end_shape:]
 

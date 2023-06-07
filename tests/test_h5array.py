@@ -231,6 +231,12 @@ def test_subset_2d(array):
     assert subset.ndim == 2
 
 
+@pytest.mark.parametrize("subset, shape", [[(slice(None), 0), (0,)], [(None, slice(None), 0, None), (1, 0, 1)]])
+def test_subset_from_empty_array(empty_array, subset, shape):
+    subset = empty_array[subset]
+    assert subset.shape == shape
+
+
 def test_array_subset_ix(array):
     assert array[np.ix_([5], [5])] == 55
 

@@ -20,7 +20,6 @@ from ch5mpy.objects.dataset import DatasetWrapper
 # ====================================================
 # code
 _T = TypeVar("_T", bound=np.generic)
-_OT = TypeVar("_OT")
 
 
 class H5ArrayView(ch5mpy.H5Array[_T]):
