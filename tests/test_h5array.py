@@ -241,8 +241,10 @@ def test_empty_array_should_convert_to_numpy_array(empty_array):
     assert np.array_equal(np.array(empty_array), np.empty((0, 1)))
 
 
-def test_empty_array_subset_should_convert_to_numpy_array(empty_array):
-    assert np.array_equal(np.array(empty_array[:, 0]), np.empty(0))
+@pytest.mark.parametrize("subset, array", [[(slice(None), 0), np.empty(0)], [[], np.empty((0, 1))]])
+def test_empty_array_subset_should_convert_to_numpy_array(empty_array, subset, array):
+    subset = empty_array[subset]
+    assert np.array_equal(np.array(subset), array)
 
 
 def test_array_subset_ix(array):

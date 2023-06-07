@@ -66,6 +66,9 @@ class FullSlice:
         return False
 
     def __len__(self) -> int:
+        if self._stop == self._start:
+            return 0
+
         return (self.true_stop - self._start) // self._step + 1
 
     def __getitem__(self, item: SELECTION_ELEMENT) -> ListIndex | FullSlice:

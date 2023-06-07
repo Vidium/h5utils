@@ -75,12 +75,8 @@ def _compute_shape_empty_dset(
         raise NotImplementedError("Cannot have new axis besides first and last indices yet.")
 
     shape: tuple[int, ...] = ()
-    indices_queue = Queue(indices)
-    arr_shape_queue = Queue(arr_shape)
 
-    while not indices_queue.is_empty:
-        index = indices_queue.pop()
-
+    for index in indices:
         if index is NewAxis:
             if not new_axes:
                 continue
@@ -88,14 +84,10 @@ def _compute_shape_empty_dset(
             shape += (1,)
             continue
 
-        axis_shape = arr_shape_queue.pop()
+        if index.ndim > 0:
+            shape += (len(index),)
 
-        if axis_shape == 0:
-            continue
-
-        shape += (0,) if index.ndim == 0 else (len(index),)
-
-    return shape
+    return shape + arr_shape[len(indices) :]
 
 
 class Selection:
