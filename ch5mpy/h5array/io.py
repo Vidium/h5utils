@@ -31,6 +31,11 @@ def read_from_dataset(
     selection: Selection,
     loading_array: npt.NDArray[_DT],
 ) -> None:
+    if not dataset.size:
+        if loading_array.size:
+            raise ValueError("Reading from empty dataset.")
+        return
+
     sel_iter = IterWithValue(selection.iter_h5(loading_array.shape))
     for dataset_idx, array_idx in sel_iter:
         # TODO : would be nice to be able to pass an array with random order in `dest_sel`

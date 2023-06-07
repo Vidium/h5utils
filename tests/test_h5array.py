@@ -237,6 +237,14 @@ def test_subset_from_empty_array(empty_array, subset, shape):
     assert subset.shape == shape
 
 
+def test_empty_array_should_convert_to_numpy_array(empty_array):
+    assert np.array_equal(np.array(empty_array), np.empty((0, 1)))
+
+
+def test_empty_array_subset_should_convert_to_numpy_array(empty_array):
+    assert np.array_equal(np.array(empty_array[:, 0]), np.empty(0))
+
+
 def test_array_subset_ix(array):
     assert array[np.ix_([5], [5])] == 55
 
