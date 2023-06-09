@@ -4,14 +4,26 @@
 # imports
 from __future__ import annotations
 
-from typing import Any
-from typing import Union
-from typing import Iterable
-from typing import Callable
+from types import EllipsisType
+from typing import Any, Callable, Iterable, SupportsIndex, Union
+
+from numpy._typing import _ArrayLikeInt_co
 
 # ====================================================
 # code
-SELECTOR = Union[int, bool, slice, range, Iterable[Any], tuple[()]]
+SELECTOR = Union[
+    None,
+    EllipsisType,
+    tuple[()],
+    int,
+    bool,
+    SupportsIndex,
+    slice,
+    range,
+    Iterable[int],
+    Iterable[bool],
+    _ArrayLikeInt_co,
+]
 
 NP_FUNC = Callable[..., Any]
 H5_FUNC = Callable[..., Any]

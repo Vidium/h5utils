@@ -1,13 +1,27 @@
 from numbers import Number
-from typing import Any, Collection, Iterable, Literal, Union, overload
+from types import EllipsisType
+from typing import Any, Collection, Iterable, Literal, SupportsIndex, Union, overload
 
 import numpy as np
 import numpy.typing as npt
+from numpy._typing import _ArrayLikeInt_co
 
 from ..h5d import DatasetID
 from .base import HLObject
 
-SELECTOR = Union[int, bool, slice, range, Iterable[Any], tuple[()]]
+SELECTOR = Union[
+    None,
+    EllipsisType,
+    tuple[()],
+    int,
+    bool,
+    SupportsIndex,
+    slice,
+    range,
+    Iterable[int],
+    Iterable[bool],
+    _ArrayLikeInt_co,
+]
 
 class AstypeWrapper:
     """Wrapper to convert data on reading from a dataset."""

@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from itertools import dropwhile, takewhile
-from typing import Any, Generator, Generic, Iterable, Iterator, TypeVar, overload
+from typing import Any, Generator, Generic, Iterable, Iterator, SupportsIndex, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -177,7 +177,7 @@ class Selection:
         shape_index = 0
 
         for axis_index in index:
-            if axis_index is None:
+            if axis_index is None or axis_index is Ellipsis:
                 sel += (NewAxis,)
 
             elif isinstance(axis_index, (slice, range)):
@@ -193,7 +193,7 @@ class Selection:
                 )
                 shape_index += 1
 
-            elif is_sequence(axis_index) or isinstance(axis_index, (int, np.int_)):
+            elif is_sequence(axis_index) or isinstance(axis_index, (int, np.int_, SupportsIndex)):
                 axis_index = np.array(axis_index)
 
                 if axis_index.dtype == bool:

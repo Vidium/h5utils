@@ -30,7 +30,7 @@ repos:
         exclude: (^tests/)|(vulture_whitelist.py)
         args: [--strict]
         additional_dependencies: [numpy==1.24.2, types-tqdm]
-        language_version: python3.9
+        language_version: python3.10
 
   - repo: local
     hooks:
