@@ -4,9 +4,9 @@
 # imports
 from __future__ import annotations
 
-from collections.abc import Collection, Iterable, KeysView, MutableMapping
+from collections.abc import Iterable, KeysView, MutableMapping
 from pathlib import Path
-from typing import Any, Iterator, TypeVar, cast
+from typing import Any, ItemsView, Iterator, TypeVar, Union, ValuesView, cast
 
 import numpy as np
 from h5py._hl.base import ItemsViewHDF5
@@ -67,35 +67,34 @@ def _get_note(annotation: str | None) -> str:
     return "" if annotation is None else f"[{annotation}]"
 
 
-class H5DictValuesView(Iterable[_T]):
+class H5DictValuesView(ValuesView[_T]):
     """Class for iterating over values in an H5Dict."""
 
     # region magic methods
-    def __init__(self, values: Collection[Group | Dataset[Any]]):
-        self._values = values
-
     def __repr__(self) -> str:
-        return f"{type(self).__name__}([{len(self._values)} values])"
+        return f"{type(self).__name__}([{len(self)} values])"
 
     def __iter__(self) -> Iterator[_T]:
-        return (read_object(v, error=_ERROR_MODE["h5dict"]) for v in self._values)
+        return (
+            read_object(v, error=_ERROR_MODE["h5dict"])
+            for v in cast(Iterator[Union[Group, Dataset[Any]]], super().__iter__())
+        )
 
     # endregion
 
 
-class H5DictItemsView(Iterable[tuple[str, _T]]):
+class H5DictItemsView(ItemsView[str, _T]):
     """Class for iterating over items in an H5Dict."""
 
     # region magic methods
-    def __init__(self, keys: Collection[str], values: Collection[Group | Dataset[Any]]):
-        self._keys = keys
-        self._values = values
-
     def __repr__(self) -> str:
-        return f"{type(self).__name__}([{len(self._keys)} items])"
+        return f"{type(self).__name__}([{len(self)} items])"
 
     def __iter__(self) -> Iterator[tuple[str, _T]]:
-        return zip(self._keys, (read_object(v, error=_ERROR_MODE["h5dict"]) for v in self._values))
+        return (
+            (k, read_object(v, error=_ERROR_MODE["h5dict"]))
+            for k, v in cast(Iterator[tuple[str, Union[Group, Dataset[Any]]]], super().__iter__())
+        )
 
     # endregion
 
@@ -164,12 +163,11 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
     def keys(self) -> KeysView[str]:
         return self._file.keys()
 
-    def values(self) -> H5DictValuesView[_T]:  # type: ignore[override]
-        # from typing import reveal_type
-        return H5DictValuesView(self._file.values())
+    def values(self) -> H5DictValuesView[_T]:
+        return H5DictValuesView(self._file)  # type: ignore[arg-type]
 
-    def items(self) -> H5DictItemsView[_T]:  # type: ignore[override]
-        return H5DictItemsView(self._file.keys(), self._file.values())
+    def items(self) -> H5DictItemsView[_T]:
+        return H5DictItemsView(self._file)  # type: ignore[arg-type]
 
     def get(self, key: str, default: Any = None) -> Any:
         res = self._file.get(key, default)
