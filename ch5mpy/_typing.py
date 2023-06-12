@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from types import EllipsisType
@@ -9,8 +5,6 @@ from typing import Any, Callable, Iterable, SupportsIndex, Union
 
 from numpy._typing import _ArrayLikeInt_co
 
-# ====================================================
-# code
 SELECTOR = Union[
     None,
     EllipsisType,

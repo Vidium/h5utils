@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import TYPE_CHECKING, Any, Generic, Iterator, TypeVar
+from typing import TYPE_CHECKING, Any, Collection, Iterator, TypeVar
 
 import numpy as np
 import numpy.lib.mixins
@@ -70,7 +70,7 @@ def _dtype_repr(dset: Dataset[Any] | DatasetWrapper[Any]) -> str:
     return str(dset.dtype)
 
 
-class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
+class H5Array(Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     """Wrapper around Dataset objects to interface with numpy's API."""
 
     MAX_MEM_USAGE: int | str = "250M"
@@ -116,9 +116,7 @@ class H5Array(Generic[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     def __len__(self) -> int:
         return len(self._dset)
 
-    def __iter__(
-        self,
-    ) -> Iterator[_T | npt.NDArray[_T] | H5Array[_T] | H5ArrayView[_T]]:
+    def __iter__(self) -> Iterator[_T | npt.NDArray[_T] | H5Array[_T] | H5ArrayView[_T]]:  # type: ignore[override]
         for i in range(self.shape[0]):
             yield self[i]
 
