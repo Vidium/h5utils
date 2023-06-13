@@ -332,3 +332,10 @@ def delete(arr: H5Array[Any], obj: int | slice | Sequence[int], axis: int | None
     arr.contract(1, axis=axis)
 
     return arr
+
+
+@implements(np.atleast_1d)
+def atleast_1d(arr: H5Array[Any]) -> H5Array[Any]:
+    if arr.ndim >= 1:
+        return arr
+    return arr[None]
