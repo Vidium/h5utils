@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 # ====================================================
 # code
-_T = TypeVar("_T", bound=np.generic)
+_T = TypeVar("_T", bound=np.generic, covariant=True)
 SIZES = {"K": 1024, "M": 1024 * 1024, "G": 1024 * 1024 * 1024}
 
 
