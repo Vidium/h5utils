@@ -44,9 +44,9 @@ classifiers = [
 
 [project.optional-dependencies]
 docs = [
-    "sphinx",
-    "sphinx-autodoc-typehints",
-    "sphinx-rtd-theme"
+    "sphinx==6.2.1",
+    "sphinx-autodoc-typehints==1.22",
+    "sphinx-rtd-theme==0.5.1"
 ]
 
 [project.urls]
