@@ -80,3 +80,8 @@ def test_list_should_convert_to_regular_list(h5_list):
 
 def test_list_get_negative_index(h5_list):
     assert h5_list[-2] == "4."
+
+
+def test_can_append_value_to_list(h5_list):
+    h5_list.append(-1)
+    assert h5_list[5] == -1

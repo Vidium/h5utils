@@ -1,12 +1,15 @@
 # Ch5mpy
 
 Pronounced "champy".
-Collection of helper tools for reading or writing to h5 files using the h5py library.
+This library provides a set of helper tools for reading or writing to h5 files using the h5py library.
 
 ## Description
 
-Ch5mpy provides a set of abstractions over h5py's (https://docs.h5py.org/en/stable/) objects for handling them as 
-more commonly used objects.
+Ch5mpy provides a set of abstractions over h5py's (https://docs.h5py.org/en/stable/) objects for handling them as more commonly used objects :
+- H5Dict: an object behaving as regular Python dictionaries, for exploring Files and Groups.
+- H5List: an object behaving as regular Python lists for storing any set of objects.
+- H5Array: an object behaving as Numpy ndarrays for dealing effortlessly with Datasets while keeping the memory usage low. This works by applying numpy functions to small chunks of the whole Dataset at a time.
+- read/write utily functions for effortlessly storing any object to an h5 file.
 
 ### Pickle
 The first level of abstraction simply wraps h5py's Datasets, Groups and Files to allow pickling. Those objects can 
@@ -43,6 +46,37 @@ Here, `dct` is an H5Dict with 3 keys `a, b and c` where :
 - `a` maps to the value `1` (a 0D Dataset)
 - `b` maps to a 1D H5Array (values are not loaded into memory) 
 - `c` maps to another H5Dict with keys and values not loaded yet
+
+### H5List
+An H5List behave as regular Python lists, allowing to store and access any kind of object in an h5 file.
+H5Lists are usually created when regular lists are stored in an h5 file. H5Lists can be created by providing that file, as for H5Dicts :
+
+```python
+from ch5mpy import File
+from ch5mpy import H5List
+from ch5mpy import H5Mode
+
+lst = H5List(File("backed_list.h5", H5Mode.READ_WRITE))
+
+lst
+
+H5List[1.0, 2, '4.']
+```
+
+```
+class O_:
+    def __init__(self, v: float):
+        self._v = v
+
+    def __repr__(self) -> str:
+        return f"O({self._v})"
+
+lst.append(O(5.0))
+
+H5List[1.0, 2, '4.', O(5.0)]
+```
+
+H5Lists can store regular integers, floats and strings, but can also store any object (such as the `O` object at index 3 in this example).
 
 ### H5Arrays
 H5Arrays wrap Datasets and implement numpy arrays' interface to fully behave as numpy arrays while controlling the 

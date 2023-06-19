@@ -124,4 +124,7 @@ class H5List(H5Object, Generic[_T]):
     def to_dict(self) -> H5Dict[_T]:
         return H5Dict(self._file)
 
+    def append(self, value: None) -> None:
+        write_object(self._file, str(len(self)), value, chunks=True)
+
     # endregion
