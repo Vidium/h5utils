@@ -33,7 +33,8 @@ def _h5py_wrap_type(obj: Any) -> Any:
 
 
 class Group(PickleableH5Object, h5py.Group):
-    """Overwrite group to allow pickling, and to create new groups and datasets
+    """
+    A subclass of h5py.Group that implements pickling, and to create new groups and datasets
     of the right type (i.e. the ones defined in this module).
     """
 
@@ -151,10 +152,7 @@ class Group(PickleableH5Object, h5py.Group):
 
 
 class File(Group, h5py.File):
-    """A subclass of h5py.File that implements pickling.
-    Pickling is done not with __{get,set}state__ but with __getnewargs_ex__
-    which produces the arguments to supply to the __new__ method.
-    """
+    """A subclass of h5py.File that implements pickling."""
 
     # region magic methods
     def __init__(self, *args: Any, **kwargs: Any):

@@ -212,7 +212,7 @@ class AsObjectWrapper(DatasetWrapper[_WT]):
 
 
 class Dataset(PickleableH5Object, h5py.Dataset, Generic[_T]):
-    """Mix in our pickling class"""
+    """A subclass of h5py.Dataset that implements pickling."""
 
     # region magic methods
     def __getitem__(
