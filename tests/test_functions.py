@@ -51,19 +51,19 @@ def test_sum_with_axis(array):
 
 
 def test_sum_axis_0(small_large_array):
-    small_large_array.MAX_MEM_USAGE = str(3 * small_large_array.dtype.itemsize)
-    assert np.array_equal(
-        np.sum(small_large_array, axis=0),
-        np.array([[60, 63, 66, 69, 72], [75, 78, 81, 84, 87], [90, 93, 96, 99, 102], [105, 108, 111, 114, 117]]),
-    )
+    with ch5mpy.options(max_memory=str(3 * small_large_array.dtype.itemsize)):
+        assert np.array_equal(
+            np.sum(small_large_array, axis=0),
+            np.array([[60, 63, 66, 69, 72], [75, 78, 81, 84, 87], [90, 93, 96, 99, 102], [105, 108, 111, 114, 117]]),
+        )
 
 
 def test_sum_axis_2(small_large_array):
-    small_large_array.MAX_MEM_USAGE = str(3 * small_large_array.dtype.itemsize)
-    assert np.array_equal(
-        np.sum(small_large_array, axis=2),
-        np.array([[10.0, 35.0, 60.0, 85.0], [110.0, 135.0, 160.0, 185.0], [210.0, 235.0, 260.0, 285.0]]),
-    )
+    with ch5mpy.options(max_memory=str(3 * small_large_array.dtype.itemsize)):
+        assert np.array_equal(
+            np.sum(small_large_array, axis=2),
+            np.array([[10.0, 35.0, 60.0, 85.0], [110.0, 135.0, 160.0, 185.0], [210.0, 235.0, 260.0, 285.0]]),
+        )
 
 
 def test_sum_where(small_large_array):
@@ -74,19 +74,19 @@ def test_sum_where(small_large_array):
 
 
 def test_sum_where_multiple_rows(small_large_array):
-    small_large_array.MAX_MEM_USAGE = str(40 * small_large_array.dtype.itemsize)
-    assert np.array_equal(
-        np.sum(small_large_array, axis=1, where=[True, False, False, True, True]),
-        np.array([[30.0, 0.0, 0.0, 42.0, 46.0], [110.0, 0.0, 0.0, 122.0, 126.0], [190.0, 0.0, 0.0, 202.0, 206.0]]),
-    )
+    with ch5mpy.options(max_memory=str(40 * small_large_array.dtype.itemsize)):
+        assert np.array_equal(
+            np.sum(small_large_array, axis=1, where=[True, False, False, True, True]),
+            np.array([[30.0, 0.0, 0.0, 42.0, 46.0], [110.0, 0.0, 0.0, 122.0, 126.0], [190.0, 0.0, 0.0, 202.0, 206.0]]),
+        )
 
 
 def test_sum_where_few_elements(small_large_array):
-    small_large_array.MAX_MEM_USAGE = str(3 * small_large_array.dtype.itemsize)
-    assert np.array_equal(
-        np.sum(small_large_array, axis=1, where=[True, False, False, True, True]),
-        np.array([[30.0, 0.0, 0.0, 42.0, 46.0], [110.0, 0.0, 0.0, 122.0, 126.0], [190.0, 0.0, 0.0, 202.0, 206.0]]),
-    )
+    with ch5mpy.options(max_memory=str(3 * small_large_array.dtype.itemsize)):
+        assert np.array_equal(
+            np.sum(small_large_array, axis=1, where=[True, False, False, True, True]),
+            np.array([[30.0, 0.0, 0.0, 42.0, 46.0], [110.0, 0.0, 0.0, 122.0, 126.0], [190.0, 0.0, 0.0, 202.0, 206.0]]),
+        )
 
 
 def test_all(array):
@@ -231,21 +231,21 @@ def test_unique(repeating_array):
 
 
 def test_unique_by_chunks(repeating_array):
-    repeating_array.MAX_MEM_USAGE = 3 * repeating_array.dtype.itemsize
-    assert np.array_equal(np.unique(repeating_array), [0, 1, 2])
+    with ch5mpy.options(max_memory=3 * repeating_array.dtype.itemsize):
+        assert np.array_equal(np.unique(repeating_array), [0, 1, 2])
 
 
 def test_unique_with_index(repeating_array):
-    repeating_array.MAX_MEM_USAGE = 3 * repeating_array.dtype.itemsize
-    unique, index = np.unique(repeating_array, return_index=True)
-    assert np.array_equal(unique, [0, 1, 2])
-    assert np.array_equal(index, [8, 0, 1])
+    with ch5mpy.options(max_memory=3 * repeating_array.dtype.itemsize):
+        unique, index = np.unique(repeating_array, return_index=True)
+        assert np.array_equal(unique, [0, 1, 2])
+        assert np.array_equal(index, [8, 0, 1])
 
 
 def test_unique_with_counts(repeating_array):
-    repeating_array.MAX_MEM_USAGE = 3 * repeating_array.dtype.itemsize
-    _, counts = np.unique(repeating_array, return_counts=True)
-    assert np.array_equal(counts, [1, 7, 4])
+    with ch5mpy.options(max_memory=3 * repeating_array.dtype.itemsize):
+        _, counts = np.unique(repeating_array, return_counts=True)
+        assert np.array_equal(counts, [1, 7, 4])
 
 
 def test_unique_not_equal_nan(repeating_array):
@@ -263,48 +263,47 @@ def test_unique_not_equal_nan_with_counts(repeating_array):
 
 
 def test_in1d_np_in_h5(small_array):
-    small_array.MAX_MEM_USAGE = 3 * small_array.dtype.itemsize
-    assert np.array_equal(np.in1d([4, 1, 7], small_array), [True, True, False])
+    with ch5mpy.options(max_memory=3 * small_array.dtype.itemsize):
+        assert np.array_equal(np.in1d([4, 1, 7], small_array), [True, True, False])
 
 
 def test_in1d_np_in_h5_invert(small_array):
-    small_array.MAX_MEM_USAGE = 3 * small_array.dtype.itemsize
-    assert np.array_equal(np.in1d([4, 1, 7], small_array, invert=True), [False, False, True])
+    with ch5mpy.options(max_memory=3 * small_array.dtype.itemsize):
+        assert np.array_equal(np.in1d([4, 1, 7], small_array, invert=True), [False, False, True])
 
 
 def test_in1d_h5_in_np(small_array):
-    small_array.MAX_MEM_USAGE = 3 * small_array.dtype.itemsize
-    assert np.array_equal(np.in1d(small_array, [4, 1, 7]), [True, False, False, True, False])
+    with ch5mpy.options(max_memory=3 * small_array.dtype.itemsize):
+        assert np.array_equal(np.in1d(small_array, [4, 1, 7]), [True, False, False, True, False])
 
 
 def test_in1d_h5_in_h5(small_array):
-    small_array.MAX_MEM_USAGE = 3 * small_array.dtype.itemsize
-    assert np.array_equal(np.in1d(small_array, small_array), [True, True, True, True, True])
+    with ch5mpy.options(max_memory=3 * small_array.dtype.itemsize):
+        assert np.array_equal(np.in1d(small_array, small_array), [True, True, True, True, True])
 
 
 def test_isin_h5_in_np(small_array):
-    small_array.MAX_MEM_USAGE = 3 * small_array.dtype.itemsize
-    res = np.isin(small_array, [4, 1, 7])
-    assert res.shape == (5,)
-    assert np.array_equal(res, [True, False, False, True, False])
+    with ch5mpy.options(max_memory=3 * small_array.dtype.itemsize):
+        res = np.isin(small_array, [4, 1, 7])
+        assert res.shape == (5,)
+        assert np.array_equal(res, [True, False, False, True, False])
 
 
 def test_isin_np_in_h5(small_array):
-    small_array.MAX_MEM_USAGE = 3 * small_array.dtype.itemsize
-    res = np.isin([4, 1, 7], small_array)
-    assert res.shape == (3,)
-    assert np.array_equal(res, [True, True, False])
+    with ch5mpy.options(max_memory=3 * small_array.dtype.itemsize):
+        res = np.isin([4, 1, 7], small_array)
+        assert res.shape == (3,)
+        assert np.array_equal(res, [True, True, False])
 
 
 def test_isin_h5_in_h5(array, small_array):
-    array.MAX_MEM_USAGE = 3 * array.dtype.itemsize
-    small_array.MAX_MEM_USAGE = 3 * small_array.dtype.itemsize
-    res = np.isin(array, small_array)
-    assert res.shape == (10, 10)
+    with ch5mpy.options(max_memory=3 * array.dtype.itemsize):
+        res = np.isin(array, small_array)
+        assert res.shape == (10, 10)
 
-    expected = np.zeros((10, 10), dtype=bool)
-    expected[0, [1, 2, 3, 4, 5]] = True
-    assert np.array_equal(res, expected)
+        expected = np.zeros((10, 10), dtype=bool)
+        expected[0, [1, 2, 3, 4, 5]] = True
+        assert np.array_equal(res, expected)
 
 
 def test_amax(array):

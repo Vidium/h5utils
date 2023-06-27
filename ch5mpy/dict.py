@@ -16,7 +16,7 @@ from ch5mpy.names import H5Mode
 from ch5mpy.objects.dataset import AsStrWrapper, Dataset
 from ch5mpy.objects.group import File, Group
 from ch5mpy.objects.object import H5Object
-from ch5mpy.options import _ERROR_MODE
+from ch5mpy.options import _OPTIONS
 from ch5mpy.read import read_object
 from ch5mpy.write import write_object
 
@@ -76,7 +76,7 @@ class H5DictValuesView(ValuesView[_T]):
 
     def __iter__(self) -> Iterator[_T]:
         return (
-            read_object(v, error=_ERROR_MODE["h5dict"])
+            read_object(v, error=_OPTIONS["error_mode"])
             for v in cast(Iterator[Union[Group, Dataset[Any]]], super().__iter__())
         )
 
@@ -92,7 +92,7 @@ class H5DictItemsView(ItemsView[str, _T]):
 
     def __iter__(self) -> Iterator[tuple[str, _T]]:
         return (
-            (k, read_object(v, error=_ERROR_MODE["h5dict"]))
+            (k, read_object(v, error=_OPTIONS["error_mode"]))
             for k, v in cast(Iterator[tuple[str, Union[Group, Dataset[Any]]]], super().__iter__())
         )
 
@@ -121,7 +121,7 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
         return f"H5Dict{_get_note(self.annotation)}{_get_repr(self._file.items())}"
 
     def __getitem__(self, key: str) -> _T:
-        return cast(_T, read_object(self._file[key], error=_ERROR_MODE["h5dict"]))
+        return cast(_T, read_object(self._file[key], error=_OPTIONS["error_mode"]))
 
     def __setitem__(self, key: str, value: Any) -> None:
         if callable(value):
@@ -174,7 +174,7 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
 
         if res is default:
             return default
-        return read_object(res, error=_ERROR_MODE["h5dict"])
+        return read_object(res, error=_OPTIONS["error_mode"])
 
     def rename(self, name: str, new_name: str) -> None:
         self._file.move(name, new_name)

@@ -124,8 +124,7 @@ H5List[1.0, 2, '4.', O(5.0)]
 `H5Lists` can store regular integers, floats and strings, but can also store any object (such as the `O` object at index 3 in this example).
 
 ### H5Array
-`H5Arrays` wrap `Datasets` and implement numpy ndarrays' interface to behave as numpy ndarrays while controlling the amount of RAM used. The maximum amount of available RAM for performing operations can be set with the class variable 
-`H5Array.MAX_MEM_USAGE`, using suffixes `K`, `M` and `G` for expressing amounts in bytes.
+`H5Arrays` wrap `Datasets` and implement numpy ndarrays' interface to behave as numpy ndarrays while controlling the amount of RAM used. The maximum amount of available RAM for performing operations can be set with the function `set_options(max_memory_usage=...)`, using suffixes `B`, `K`, `M` and `G` for expressing amounts in bytes.
 
 H5Arrays can be created by passing a `Dataset` as argument. 
 

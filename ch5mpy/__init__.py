@@ -12,7 +12,7 @@ from ch5mpy.names import H5Mode
 from ch5mpy.np import arange_nd
 from ch5mpy.objects.dataset import Dataset
 from ch5mpy.objects.group import File, Group
-from ch5mpy.options import error_mode, set_error_mode
+from ch5mpy.options import options, set_options
 from ch5mpy.read import read_object
 from ch5mpy.write import (
     write_dataset,
@@ -20,7 +20,6 @@ from ch5mpy.write import (
     write_object,
     write_objects,
 )
-
 
 __all__ = [
     "File",
@@ -41,8 +40,8 @@ __all__ = [
     "zeros",
     "ones",
     "full",
-    "set_error_mode",
-    "error_mode",
+    "options",
+    "set_options",
 ]
 
 __version__ = metadata.version("ch5mpy")

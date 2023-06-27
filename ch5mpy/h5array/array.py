@@ -18,6 +18,7 @@ from ch5mpy.h5array.functions import HANDLED_FUNCTIONS
 from ch5mpy.h5array.io import read_one_from_dataset, write_to_dataset
 from ch5mpy.indexing import Selection, map_slice
 from ch5mpy.objects.dataset import Dataset, DatasetWrapper
+from ch5mpy.options import _OPTIONS
 from ch5mpy.write import write_dataset
 
 if TYPE_CHECKING:
@@ -27,28 +28,6 @@ if TYPE_CHECKING:
 # ====================================================
 # code
 _T = TypeVar("_T", bound=np.generic, covariant=True)
-SIZES = {"K": 1024, "M": 1024 * 1024, "G": 1024 * 1024 * 1024}
-
-
-def get_size(s: int | str) -> int:
-    value: int | None = None
-
-    if isinstance(s, int):
-        value = s
-
-    elif s[-1] in SIZES and s[:-1].lstrip("-").isdigit():
-        value = int(s[:-1]) * SIZES[s[-1]]
-
-    elif s.isdigit():
-        value = int(s)
-
-    if value is None:
-        raise ValueError(f"Unrecognized size '{s}'")
-
-    if value <= 0:
-        raise ValueError(f"Got invalid size ({value} <= 0).")
-
-    return value
 
 
 def as_array(values: Any, dtype: np.dtype[Any]) -> npt.NDArray[Any]:
@@ -72,8 +51,6 @@ def _dtype_repr(dset: Dataset[Any] | DatasetWrapper[Any]) -> str:
 
 class H5Array(Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     """Wrapper around Dataset objects to interface with numpy's API."""
-
-    MAX_MEM_USAGE: int | str = "250M"
 
     # region magic methods
     def __init__(self, dset: Dataset[_T] | DatasetWrapper[_T]):
@@ -258,7 +235,7 @@ class H5Array(Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     @property
     def chunk_size(self) -> int:
         """Get the size of a chunk (i.e. the nb of elements that can be read/written at a time)."""
-        return get_size(self.MAX_MEM_USAGE) // self._dset.dtype.itemsize
+        return _OPTIONS["max_memory_usage"].get() // self._dset.dtype.itemsize
 
     @property
     def shape(self) -> tuple[int, ...]:
