@@ -21,6 +21,13 @@
 
     
     
+    .. rubric:: Methods
+
+    .. autosummary::
+        :nosignatures:
+    
+        H5Mode.has_write_intent
+    
     
 
 
@@ -41,4 +48,11 @@ Attributes
 
 
 
+
+
+Methods
+-------
+
+
+    .. automethod:: ch5mpy.H5Mode.has_write_intent
 

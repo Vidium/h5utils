@@ -6,6 +6,7 @@
 
 import sys
 from pathlib import Path
+
 from sphinx.application import Sphinx
 
 sys.path.insert(0, Path(__file__).parents[2].resolve().as_posix())
@@ -15,7 +16,6 @@ for generated in (Path(__file__).parent / "generated").iterdir():
     generated.unlink()
 
 import ch5mpy
-
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -80,7 +80,7 @@ pygments_style = "sphinx"
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
-html_logo = "_static/images/logo_ch5mpy_low.png"
+html_logo = "_static/images/logo_ch5mpy_transparent.png"
 
 html_context = dict(
     display_github=True,  # Integrate GitHub

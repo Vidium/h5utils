@@ -7,7 +7,7 @@ Ch5mpy : helper tools for reading or writing to h5 files
 A Python library for effortlessly interacting with h5df files, built on top of h5py.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
    self
