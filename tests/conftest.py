@@ -30,12 +30,12 @@ def small_array() -> Generator[H5Array, None, None]:
 
 @pytest.fixture
 def empty_array() -> Generator[H5Array, None, None]:
-    with File("h5_s_array", H5Mode.WRITE_TRUNCATE) as h5_file:
+    with File("h5_e_array", H5Mode.WRITE_TRUNCATE) as h5_file:
         write_object(h5_file, "data", np.empty((0, 1)))
 
-    yield H5Array(File("h5_s_array", H5Mode.READ_WRITE)["data"])
+    yield H5Array(File("h5_e_array", H5Mode.READ_WRITE)["data"])
 
-    Path("h5_s_array").unlink()
+    Path("h5_e_array").unlink()
 
 
 @pytest.fixture

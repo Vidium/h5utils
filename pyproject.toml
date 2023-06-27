@@ -27,7 +27,7 @@ keywords = [
     "data manipulation"
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "License :: CeCILL-B Free Software License Agreement (CECILL-B)",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
@@ -54,7 +54,10 @@ Documentation = "https://ch5mpy.readthedocs.io/"
 Source = "https://github.com/Vidium/ch5mpy"
 
 [tool.setuptools.packages.find]
-include = ["ch5mpy*"]
+include = [
+    "ch5mpy*",
+    "ch5mpy.indexing"
+]
 
 [tool.vulture]
 exclude = ["np.py"]

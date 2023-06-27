@@ -1,7 +1,9 @@
 # Ch5mpy
 
 Pronounced "champy".
-This library provides a set of helper tools for reading or writing to h5 files using the h5py library.
+This library provides a set of helper tools for easily reading or writing even complex objects to h5 files using the h5py library. It implements wrappers around h5py objects providing APIs identical to regular Python lists and dicts and to numpy ndarrays.
+
+See the complete documentation at https://ch5mpy.readthedocs.io/en/latest/ for more details.
 
 ## Description
 
@@ -9,92 +11,141 @@ Ch5mpy provides a set of abstractions over h5py's (https://docs.h5py.org/en/stab
 - H5Dict: an object behaving as regular Python dictionaries, for exploring Files and Groups.
 - H5List: an object behaving as regular Python lists for storing any set of objects.
 - H5Array: an object behaving as Numpy ndarrays for dealing effortlessly with Datasets while keeping the memory usage low. This works by applying numpy functions to small chunks of the whole Dataset at a time.
+- AttributeManager: a dict-like object for accessing an h5 object's metadata.
 - read/write utily functions for effortlessly storing any object to an h5 file.
 
-### Pickle
-The first level of abstraction simply wraps h5py's Datasets, Groups and Files to allow pickling. Those objects can 
-be directly imported from ch5mpy :
+Pickling has also been added to base h5 objects.
+
+### Pickling
+Ch5mpy provides Datasets, Groups and Files objects wrapping the h5py's equivalents to allow pickling. Those objects can be directly imported from `ch5mpy`:
 
 ```python
-from ch5mpy import File
-from ch5mpy import Group
-from ch5mpy import Dataset
+>>> from ch5mpy import File
+>>> from ch5mpy import Group
+>>> from ch5mpy import Dataset
 ```
+
+The `H5Mode` enum lists valid modes for opening an h5 file:
+
+```python
+>>> from ch5mpy import H5Mode
+```
+
+```python
+class H5Mode(str, Enum):
+    READ = "r"  # Readonly, file must exist
+    READ_WRITE = "r+"  # Read/write, file must exist
+    WRITE_TRUNCATE = "w"  # Create file, truncate if exists
+    WRITE = "w-"  # Create file, fail if exists
+    READ_WRITE_CREATE = "a"  # Read/write if exists, create otherwise
+```
+
+### Attributes
+Metadata on Datasets, Groups and Files can be obtained and modified through the `.attrs` attribute, returning an `AttributeManager` object. `AttributeManagers` behave like Python dictionaries for getting and setting any value.
+
+```python
+>>> from ch5mpy import File
+>>> f = File('some/file.h5')
+>>> f.attrs
+AttributeManager{value: 1,
+                 creation: '02/08/2021',
+                 parent: None}
+>>> f.attrs['value']
+1
+```
+
+`AttributeManagers` correctly handle `None` values.
 
 ### H5Dict
-An H5Dict allows to explore the content of an H5 File or Group as if it was a regular Python dict. However, keys in 
-an H5Dict are not loaded into memory until they are directly requested (unless they are small objects such as 0D 
-Datasets). Large Datasets are wrapped as H5Arrays (see section [H5Arrays](#H5Arrays)).
+An `H5Dict` allows to explore the content of an H5 File or Group as if it was a regular Python dict. Any value can be set in an `H5Dict`. However, keys in an `H5Dict` are not loaded into memory until they are directly requested. `Datasets` are wrapped and accessed as `H5Arrays` (see section [H5Arrays](#h5array)).
 
-To create an H5Dict, a `File` or `Group` object must be provided as argument :
+To create an `H5Dict`, a `File` or `Group` object must be provided as argument:
 
 ```python
-from ch5mpy import File
-from ch5mpy import H5Dict
-from ch5mpy import H5Mode
-
-dct = H5Dict(File("backed_dict.h5", H5Mode.READ_WRITE))
-
-dct.keys()
+>>> from ch5mpy import File
+>>> from ch5mpy import H5Dict
+>>> from ch5mpy import H5Mode
+>>>
+>>> dct = H5Dict(File("dict.h5", H5Mode.READ_WRITE))
+>>> dct
+H5Dict{
+    a: 1, 
+    b: H5Array([1, 2, 3], shape=(3,), dtype=int64), 
+    c: {...}
+}
 ```
 
-```
-H5Dict{a: 1, b: H5Array([1, 2, 3], shape=(3,), dtype=int64), c: {...}}
-```
+Here, `dct` is an `H5Dict` with 3 keys `a, b and c` where :
+- `a` maps to the value `1`
+- `b` maps to a 1D Dataset 
+- `c` maps to a sub H5Dict with keys and values not loaded yet
 
-Here, `dct` is an H5Dict with 3 keys `a, b and c` where :
-- `a` maps to the value `1` (a 0D Dataset)
-- `b` maps to a 1D H5Array (values are not loaded into memory) 
-- `c` maps to another H5Dict with keys and values not loaded yet
+Alternatively, an `H5Dict` can be created directly from a path to an h5 file:
+
+```python
+>>> H5Dict.read("dict.h5")
+H5Dict{
+    a: 1, 
+    b: H5Array([1, 2, 3], shape=(3,), dtype=int64), 
+    c: {...}
+}
+```
 
 ### H5List
-An H5List behave as regular Python lists, allowing to store and access any kind of object in an h5 file.
-H5Lists are usually created when regular lists are stored in an h5 file. H5Lists can be created by providing that file, as for H5Dicts :
+An `H5List` behave as regular Python lists, allowing to store and access any kind of object in an h5 file. `H5Lists` are usually created when regular lists are stored in an h5 file. 
+
+As for [H5Dicts](#h5dict), `H5Lists` can be created by providing a `File` or by calling the `.read()` method:
 
 ```python
-from ch5mpy import File
-from ch5mpy import H5List
-from ch5mpy import H5Mode
-
-lst = H5List(File("backed_list.h5", H5Mode.READ_WRITE))
-
-lst
-
+>>> from ch5mpy import File
+>>> from ch5mpy import H5List
+>>> from ch5mpy import H5Mode
+>>>
+>>> lst = H5List(File("backed_list.h5", H5Mode.READ_WRITE))
+>>> lst
 H5List[1.0, 2, '4.']
 ```
 
-```
+```python
 class O_:
     def __init__(self, v: float):
         self._v = v
 
     def __repr__(self) -> str:
         return f"O({self._v})"
+```
 
-lst.append(O(5.0))
-
+```python
+>>> lst.append(O(5.0))
+>>> lst
 H5List[1.0, 2, '4.', O(5.0)]
 ```
 
-H5Lists can store regular integers, floats and strings, but can also store any object (such as the `O` object at index 3 in this example).
+`H5Lists` can store regular integers, floats and strings, but can also store any object (such as the `O` object at index 3 in this example).
 
-### H5Arrays
-H5Arrays wrap Datasets and implement numpy arrays' interface to fully behave as numpy arrays while controlling the 
-amount of RAM used. The maximum amount of available RAM for performing operations can be set with the class variable 
+### H5Array
+`H5Arrays` wrap `Datasets` and implement numpy ndarrays' interface to behave as numpy ndarrays while controlling the amount of RAM used. The maximum amount of available RAM for performing operations can be set with the class variable 
 `H5Array.MAX_MEM_USAGE`, using suffixes `K`, `M` and `G` for expressing amounts in bytes.
 
 H5Arrays can be created by passing a `Dataset` as argument. 
 
 ```python
-from ch5mpy import File
-from ch5mpy import H5Mode
-from ch5mpy import H5Array
-
-h5_array = H5Array(File("h5_s_array", H5Mode.READ_WRITE)["data"])
+>>> from ch5mpy import File
+>>> from ch5mpy import H5Mode
+>>> from ch5mpy import H5Array
+>>> h5_array = H5Array(File("h5_arrays", H5Mode.READ_WRITE)["integers"])
+>>> h5_array
+H5Array([[0, 1, 2],
+         [3, 4, 5],
+         [6, 7, 8]], shape=(3, 3), dtype=int64)
+>>> h5_array = H5Array(File("h5_arrays", H5Mode.READ_WRITE)["strings"])
+>>> h5_array
+H5Array(['blue', 'red', 'yellow'], shape=(3,), dtype='<U6')
 ```
 
-Then, all usual numpy indexing and methods can be used. 
-When possible, those methods will be applied repeatedly on small chunks of the Dataset.
+
+
+Then, all usual numpy indexing and methods can be used. To keep the memory footprint small, those methods will be applied repeatedly on small chunks of the underlying Dataset.
 
 To load an H5Array into memory as a numpy array, simply run :
 
@@ -102,7 +153,38 @@ To load an H5Array into memory as a numpy array, simply run :
 np.array(h5_array)
 ```
 
+### Read/write utilities
+
+#### Functions
+To store any array-like object (object which could be converted to a numpy ndarray), functions `write_dataset()` and `write_datasets()` respectively allow to store one or many such objects.
+
+To store any other object, call functions `write_object()` and `write_objects()`. 
+To dertermine how the object will be stored in the h5 file, the following rules are applied:
+- objects implementing the [Storing API](#storing-api) will be stored by calling the `__h5_write__()` function
+- objects that can be converted to numpy arrays will be saved by calling `write_dataset()`
+- numbers and strings will be stored directly 
+- all other objects will be stored as binary data by first pickling them
+
+#### Storing API
+To define by hand how an object is stored and read from an h5 file, you can implement the `__h5_write__()` and `__h5_read__()` methods:
+
+```python
+class YourObject:
+    ...
+
+    def __h5_write__(self, values: ch5mpy.H5Dict[Any]) -> None: 
+        ...
+
+    @classmethod
+    def __h5_read__(cls, values: ch5mpy.H5Dict[Any]) -> YourObject:
+        ...
+```
+
+Both `__h5_write__()` and `__h5_read__()` receive as input an `H5Dict` in which to store or retreive your object. Please note that `__h5_read__()` is a classmethod, called as `YourObject.__h5_read__()` and which is responsible for both reading data from the `H5Dict` and reconstructing an instance of `YourObject`.
+
 ### Roadmap
+
+Numpy methods to implement for `H5Arrays`:
 
 Logic functions
 - [x] np.all
