@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from numbers import Number
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Collection, Iterator, TypeVar
 
 import numpy as np
@@ -17,7 +18,8 @@ from ch5mpy.h5array.chunks.iter import ChunkIterator, PairedChunkIterator
 from ch5mpy.h5array.functions import HANDLED_FUNCTIONS
 from ch5mpy.h5array.io import read_one_from_dataset, write_to_dataset
 from ch5mpy.indexing import Selection, map_slice
-from ch5mpy.objects.dataset import Dataset, DatasetWrapper
+from ch5mpy.names import H5Mode
+from ch5mpy.objects import Dataset, DatasetWrapper, File, Group, H5Object
 from ch5mpy.options import _OPTIONS
 from ch5mpy.write import write_dataset
 
@@ -49,7 +51,7 @@ def _dtype_repr(dset: Dataset[Any] | DatasetWrapper[Any]) -> str:
     return str(dset.dtype)
 
 
-class H5Array(Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
+class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     """Wrapper around Dataset objects to interface with numpy's API."""
 
     # region magic methods
@@ -62,6 +64,8 @@ class H5Array(Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
         else:
             self._dset = dset
+
+        super().__init__(self._dset.file)
 
     def __repr__(self) -> str:
         return (
@@ -217,6 +221,18 @@ class H5Array(Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
             return NotImplemented
 
         return HANDLED_FUNCTIONS[func](*args, **kwargs)
+
+    # endregion
+
+    # region class methods
+    @classmethod
+    def read(cls, path: str | Path | File | Group, name: str | None = None, mode: H5Mode = H5Mode.READ) -> H5Array[Any]:
+        file = File(path, mode=mode) if isinstance(path, (str, Path)) else path
+
+        if name is None:
+            return H5Array(next(iter(file.values())))  # type: ignore[arg-type]
+
+        return H5Array(file[name])
 
     # endregion
 

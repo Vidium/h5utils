@@ -15,7 +15,7 @@ from ch5mpy._typing import NP_FUNC, SELECTOR
 from ch5mpy.h5array.array import as_array
 from ch5mpy.h5array.io import read_from_dataset, read_one_from_dataset, write_to_dataset
 from ch5mpy.indexing import FullSlice, Selection
-from ch5mpy.objects.dataset import DatasetWrapper
+from ch5mpy.objects import DatasetWrapper
 
 # ====================================================
 # code

@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, KeysView, MutableMapping
+from itertools import islice
 from pathlib import Path
 from typing import Any, ItemsView, Iterator, TypeVar, Union, ValuesView, cast
 
@@ -13,9 +14,7 @@ from h5py._hl.base import ItemsViewHDF5
 
 from ch5mpy.h5array import H5Array
 from ch5mpy.names import H5Mode
-from ch5mpy.objects.dataset import AsStrWrapper, Dataset
-from ch5mpy.objects.group import File, Group
-from ch5mpy.objects.object import H5Object
+from ch5mpy.objects import AsStrWrapper, Dataset, File, Group, H5Object
 from ch5mpy.options import _OPTIONS
 from ch5mpy.read import read_object
 from ch5mpy.write import write_object
@@ -49,13 +48,30 @@ def _get_repr(items: ItemsViewHDF5[str, Group | Dataset[Any]]) -> str:
     if not len(items):
         return "{}"
 
+    if len(items) > 100:
+        return (
+            "{\n\t"
+            + ",\n\t".join(
+                [
+                    f"{k}: " + ("{...}" if _is_group(v) else repr(read_object(v, error="ignore")).replace("\n", "\n\t"))
+                    for k, v in islice(items, 0, 10)
+                ]
+            )
+            + ",\n\t...,\n\t"
+            + ",\n\t".join(
+                [
+                    f"{k}: " + ("{...}" if _is_group(v) else repr(read_object(v, error="ignore")).replace("\n", "\n\t"))
+                    for k, v in islice(items, len(items) - 10, None)
+                ]
+            )
+            + "}"
+        )
+
     return (
         "{\n\t"
         + ",\n\t".join(
             [
-                str(k)
-                + ": "
-                + ("{...}" if _is_group(v) else repr(read_object(v, error="ignore")).replace("\n", "\n\t"))
+                f"{k}: " + ("{...}" if _is_group(v) else repr(read_object(v, error="ignore")).replace("\n", "\n\t"))
                 for k, v in items
             ]
         )
@@ -123,6 +139,11 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
     def __getitem__(self, key: str) -> _T:
         return cast(_T, read_object(self._file[key], error=_OPTIONS["error_mode"]))
 
+    def __matmul__(self, key: str) -> H5Dict[_T] | Group:
+        return read_object(  # type: ignore[no-any-return]
+            self._file[key], error=_OPTIONS["error_mode"], read_object=False
+        )
+
     def __setitem__(self, key: str, value: Any) -> None:
         if callable(value):
             value(name=key, loc=self._file)
@@ -134,6 +155,9 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
         del self._file[key]
 
     def __getattr__(self, item: str) -> _T:
+        if item not in self._file.keys():
+            raise AttributeError
+
         return self.__getitem__(item)
 
     def __len__(self) -> int:

@@ -60,7 +60,7 @@ include = [
 ]
 
 [tool.setuptools.package-data]
-ch5mpy = ["py.typed"]
+"ch5mpy" = ["py.typed"]
 
 [tool.vulture]
 exclude = ["np.py"]

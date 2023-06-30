@@ -10,8 +10,7 @@ from ch5mpy.h5array.creation_routines import empty, full, ones, zeros
 from ch5mpy.list import H5List
 from ch5mpy.names import H5Mode
 from ch5mpy.np import arange_nd
-from ch5mpy.objects.dataset import Dataset
-from ch5mpy.objects.group import File, Group
+from ch5mpy.objects import Dataset, File, Group
 from ch5mpy.options import options, set_options
 from ch5mpy.read import read_object
 from ch5mpy.write import (

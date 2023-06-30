@@ -10,7 +10,7 @@ import numpy as np
 from numpy import typing as npt
 
 from ch5mpy.indexing.selection import Selection
-from ch5mpy.objects.dataset import Dataset, DatasetWrapper
+from ch5mpy.objects import Dataset, DatasetWrapper
 
 # ====================================================
 # code

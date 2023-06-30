@@ -11,8 +11,7 @@ import numpy as np
 
 import ch5mpy.dict
 from ch5mpy.h5array.array import H5Array
-from ch5mpy.objects.dataset import Dataset
-from ch5mpy.objects.group import Group
+from ch5mpy.objects import Dataset, Group
 
 
 # ====================================================
@@ -25,14 +24,16 @@ def _handle_read_error(data: Group, error: Literal["ignore", "raise"], msg: str)
         return ch5mpy.dict.H5Dict(data, annotation=f"Failed reading object: {msg}")
 
 
-def read_object(data: Dataset[Any] | Group, error: Literal["ignore", "raise"] = "raise") -> Any:
+def read_object(
+    data: Dataset[Any] | Group, error: Literal["ignore", "raise"] = "raise", read_object: bool = True
+) -> Any:
     """Read an object from a .h5 file"""
     if not isinstance(data, (Dataset, Group)):
         raise ValueError(f"Cannot read object from '{type(data)}'.")
 
     if isinstance(data, Group):
         h5_type = data.attrs.get("__h5_type__", "<UNKNOWN>")
-        if h5_type != "object":
+        if not read_object or h5_type != "object":
             return ch5mpy.dict.H5Dict(data)
 
         h5_class = data.attrs.get("__h5_class__", None)

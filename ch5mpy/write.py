@@ -14,8 +14,7 @@ from h5py import string_dtype
 from tqdm.auto import tqdm
 
 import ch5mpy.dict
-from ch5mpy.objects.dataset import Dataset
-from ch5mpy.objects.group import File, Group
+from ch5mpy.objects import Dataset, File, Group
 from ch5mpy.utils import is_sequence
 
 if TYPE_CHECKING:
