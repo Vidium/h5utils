@@ -337,3 +337,8 @@ def atleast_1d(arr: H5Array[Any]) -> H5Array[Any]:
     if arr.ndim >= 1:
         return arr
     return arr[None]
+
+
+@implements(np.ravel)
+def ravel(arr: H5Array[Any], order: Literal["C", "F", "A", "K"]) -> npt.NDArray[Any]:
+    return np.ravel(np.array(arr), order=order)

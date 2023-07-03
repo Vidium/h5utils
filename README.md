@@ -445,7 +445,7 @@ Array manipulation routines
 - [ ] np.copyto
 - [ ] np.shape
 - [ ] np.reshape
-- [ ] np.ravel
+- [x] np.ravel
 - [ ] np.ndarray.flat
 - [ ] np.ndarray.flatten
 - [ ] np.moveaxis

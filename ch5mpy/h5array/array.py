@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from numbers import Number
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Collection, Iterator, TypeVar
+from typing import TYPE_CHECKING, Any, Collection, Iterator, Literal, TypeVar
 
 import numpy as np
 import numpy.lib.mixins
@@ -380,5 +380,8 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
     def sum(self, axis: int | tuple[int, ...] | None = None) -> _T | npt.NDArray[_T]:
         return np.sum(self, axis=axis)  # type: ignore[no-any-return]
+
+    def ravel(self, order: Literal["C", "F", "A", "K"]) -> npt.NDArray[_T]:
+        return np.ravel(self, order=order)
 
     # endregion

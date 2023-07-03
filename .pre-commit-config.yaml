@@ -2,7 +2,7 @@ fail_fast: true
 
 repos:
   - repo: https://github.com/ambv/black
-    rev: 22.12.0
+    rev: 23.3.0
     hooks:
       - id: black
         args: [--line-length=120]
@@ -17,19 +17,19 @@ repos:
         require_serial: true
 
   - repo: https://github.com/pycqa/pylint
-    rev: v2.15.8
+    rev: v3.0.0a6
     hooks:
       - id: pylint
         args: [--disable=all, --enable=unused-import]
         language_version: python3.9
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.0.1
+    rev: v1.4.1
     hooks:
       - id: mypy
         exclude: (^tests/)|(vulture_whitelist.py)|(^docs/)
         args: [--strict]
-        additional_dependencies: [numpy==1.24.2, types-tqdm]
+        additional_dependencies: [numpy==1.24.2, types-tqdm, importlib-metadata]
         language_version: python3.10
 
   - repo: local

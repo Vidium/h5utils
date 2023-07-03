@@ -1,7 +1,7 @@
 try:
     from importlib import metadata
 except ImportError:  # for Python<3.8
-    import importlib_metadata as metadata  # type: ignore[import, no-redef]
+    import importlib_metadata as metadata  # type: ignore[no-redef]
 
 from ch5mpy.attributes import AttributeManager
 from ch5mpy.dict import H5Dict
