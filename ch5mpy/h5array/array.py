@@ -55,12 +55,17 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     """Wrapper around Dataset objects to interface with numpy's API."""
 
     # region magic methods
-    def __init__(self, dset: Dataset[_T] | DatasetWrapper[_T]):
+    def __init__(self, dset: Dataset[_T] | DatasetWrapper[_T] | H5Array[_T]):
+        if isinstance(dset, H5Array):
+            self._dset: Dataset[_T] | DatasetWrapper[_T] = dset.dset
+            super().__init__(dset.dset.file)
+            return
+
         if not isinstance(dset, (Dataset, DatasetWrapper)):
             raise TypeError(f"Object of type '{type(dset)}' is not supported by H5Array.")
 
         if isinstance(dset, Dataset) and np.issubdtype(np.dtype(str(dset.attrs.get("dtype", "O"))), str):
-            self._dset: Dataset[_T] | DatasetWrapper[_T] = dset.asstr()  # type: ignore[assignment]
+            self._dset = dset.asstr()  # type: ignore[assignment]
 
         else:
             self._dset = dset
@@ -186,6 +191,18 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
     def __ixor__(self, other: Any) -> H5Array[_T]:
         return self._inplace(np.logical_xor, other)
+
+    def __int__(self) -> int:
+        if self.size == 1:
+            return int(np.array(self))
+
+        raise TypeError("Only size-1 H5Arrays can bon converted to Python scalars.")
+
+    def __float__(self) -> float:
+        if self.size == 1:
+            return float(np.array(self))
+
+        raise TypeError("Only size-1 H5Arrays can be converted to Python scalars.")
 
     # endregion
 
@@ -360,5 +377,8 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
     def mean(self, axis: int | tuple[int, ...] | None = None) -> Any | npt.NDArray[Any]:
         return np.mean(self, axis=axis)
+
+    def sum(self, axis: int | tuple[int, ...] | None = None) -> _T | npt.NDArray[_T]:
+        return np.sum(self, axis=axis)  # type: ignore[no-any-return]
 
     # endregion

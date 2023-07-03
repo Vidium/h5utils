@@ -228,11 +228,9 @@ def hstack(
     dtype: npt.DTypeLike | None = None,
     casting: str = "same_kind",
 ) -> npt.NDArray[Any]:
-    # FIXME : had to downgrade to numpy 1.23 for compatibility with numpy_indexed
-    del dtype
-    del casting
-    # return np.hstack(map(np.array, tup), dtype=dtype, casting=casting)    # type: ignore[no-any-return, call-overload]
-    return np.hstack(map(np.array, tup))  # type: ignore[no-any-return, call-overload]
+    return np.hstack(  # type: ignore[no-any-return, call-overload]
+        [np.array(a) for a in tup], dtype=dtype, casting=casting
+    )
 
 
 @implements(np.vstack)

@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 import pickle
@@ -21,8 +17,6 @@ if TYPE_CHECKING:
     from ch5mpy import H5Array
 
 
-# ====================================================
-# code
 def _store_dataset(
     loc: Group | File,
     name: str,
