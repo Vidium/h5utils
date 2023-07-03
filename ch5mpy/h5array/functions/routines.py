@@ -340,5 +340,5 @@ def atleast_1d(arr: H5Array[Any]) -> H5Array[Any]:
 
 
 @implements(np.ravel)
-def ravel(arr: H5Array[Any], order: Literal["C", "F", "A", "K"]) -> npt.NDArray[Any]:
+def ravel(arr: H5Array[Any], order: Literal["C", "F", "A", "K"] = "C") -> npt.NDArray[Any]:
     return np.ravel(np.array(arr), order=order)
