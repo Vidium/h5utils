@@ -448,3 +448,7 @@ def test_repr_3d_array():
         "          [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0]]], shape=(10, 10, 10), dtype=float64)"
     )
     path.unlink()
+
+
+def test_can_flatten(small_large_array: ch5mpy.H5Array) -> None:
+    assert small_large_array.flatten().shape == (60,)

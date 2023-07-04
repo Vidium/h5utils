@@ -79,6 +79,10 @@ def _store_dataset(
     return dset
 
 
+def _has_dataset_attributes(obj: Any) -> bool:
+    return hasattr(obj, "shape") and hasattr(obj, "dtype")
+
+
 def write_dataset(
     loc: Group | File | ch5mpy.dict.H5Dict[Any],
     name: str,
@@ -92,14 +96,20 @@ def write_dataset(
         loc = loc.file
 
     if isinstance(obj, Mapping):
-        group = loc.create_group(name)
+        group = loc.create_group(name, track_order=True)
         write_datasets(group, **obj)
         return
 
     # cast to np.array if needed (to get shape and dtype)
-    array = np.array(obj) if not hasattr(obj, "shape") else obj
+    array = np.array(obj) if not _has_dataset_attributes(obj) else obj
     if array.dtype == object:
         array = array.astype(str)
+
+        if array.dtype == object:
+            array = np.array(array).astype(str)
+
+        if array.dtype == object:
+            raise ValueError("Array casting to string has failed repeatedly.")
 
     if name in loc.keys():
         if loc[name] is array:
@@ -144,13 +154,13 @@ def write_object(
         loc = loc.file
 
     if hasattr(obj, "__h5_write__"):
-        group = loc.create_group(name, overwrite=overwrite) if name else loc
+        group = loc.create_group(name, overwrite=overwrite, track_order=True) if name else loc
         obj.__h5_write__(ch5mpy.dict.H5Dict(group))
         group.attrs["__h5_type__"] = "object"
         group.attrs["__h5_class__"] = np.void(pickle.dumps(type(obj), protocol=pickle.HIGHEST_PROTOCOL))
 
     elif isinstance(obj, Mapping):
-        group = loc.create_group(name, overwrite=overwrite) if name else loc
+        group = loc.create_group(name, overwrite=overwrite, track_order=True) if name else loc
         write_objects(group, **obj, chunks=chunks, maxshape=maxshape, progress=progress)
 
     elif is_sequence(obj):

@@ -81,7 +81,7 @@ class H5List(H5Object, Generic[_T]):
 
         src_type = src.attrs.get("__h5_type__", "")
 
-        if not src_type == "list":
+        if src_type != "list":
             raise ValueError(f"Cannot read H5List from Group marked as type " f"'{src_type}', should be 'list'.")
 
         return H5List(src)

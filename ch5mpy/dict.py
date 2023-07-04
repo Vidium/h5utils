@@ -44,6 +44,10 @@ def _is_group(obj: Group | Dataset[Any]) -> bool:
     return isinstance(obj, Group) and h5_type != "object"
 
 
+def _get_group_repr(obj: Group | Dataset[Any]) -> str:
+    return "{...}" if len(obj) else "{}"
+
+
 def _get_repr(items: ItemsViewHDF5[str, Group | Dataset[Any]]) -> str:
     if not len(items):
         return "{}"
@@ -53,14 +57,24 @@ def _get_repr(items: ItemsViewHDF5[str, Group | Dataset[Any]]) -> str:
             "{\n\t"
             + ",\n\t".join(
                 [
-                    f"{k}: " + ("{...}" if _is_group(v) else repr(read_object(v, error="ignore")).replace("\n", "\n\t"))
+                    f"{k}: "
+                    + (
+                        _get_group_repr(v)
+                        if _is_group(v)
+                        else repr(read_object(v, error="ignore")).replace("\n", "\n\t")
+                    )
                     for k, v in islice(items, 0, 10)
                 ]
             )
             + ",\n\t...,\n\t"
             + ",\n\t".join(
                 [
-                    f"{k}: " + ("{...}" if _is_group(v) else repr(read_object(v, error="ignore")).replace("\n", "\n\t"))
+                    f"{k}: "
+                    + (
+                        _get_group_repr(v)
+                        if _is_group(v)
+                        else repr(read_object(v, error="ignore")).replace("\n", "\n\t")
+                    )
                     for k, v in islice(items, len(items) - 10, None)
                 ]
             )
@@ -71,7 +85,8 @@ def _get_repr(items: ItemsViewHDF5[str, Group | Dataset[Any]]) -> str:
         "{\n\t"
         + ",\n\t".join(
             [
-                f"{k}: " + ("{...}" if _is_group(v) else repr(read_object(v, error="ignore")).replace("\n", "\n\t"))
+                f"{k}: "
+                + (_get_group_repr(v) if _is_group(v) else repr(read_object(v, error="ignore")).replace("\n", "\n\t"))
                 for k, v in items
             ]
         )
@@ -116,6 +131,8 @@ class H5DictItemsView(ItemsView[str, _T]):
 
 
 def _diff(a: Any, b: Any) -> bool:
+    if a is _NO_OBJECT:
+        return True
     return bool(np.array(a != b).any())
 
 

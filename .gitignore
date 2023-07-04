@@ -5,3 +5,4 @@ venv*
 dist
 .vscode
 docs/build
+f.h5

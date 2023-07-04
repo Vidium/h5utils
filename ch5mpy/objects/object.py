@@ -62,10 +62,6 @@ class H5Object(ABC):
     def attributes(self) -> AttributeManager:
         return self.file.attrs
 
-    @property
-    def name(self) -> str:
-        return self.file.name
-
     # endregion
 
     # region predicates

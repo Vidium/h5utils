@@ -24,6 +24,7 @@ from ch5mpy.options import _OPTIONS
 from ch5mpy.write import write_dataset
 
 if TYPE_CHECKING:
+    from ch5mpy.attributes import AttributeManager
     from ch5mpy.h5array.view import H5ArrayView
 
 
@@ -286,6 +287,10 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     def size(self) -> int:
         return int(np.prod(self.shape))
 
+    @property
+    def attributes(self) -> AttributeManager:
+        return self._dset.attrs
+
     # endregion
 
     # region methods
@@ -383,5 +388,8 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
     def ravel(self, order: Literal["C", "F", "A", "K"] = "C") -> npt.NDArray[_T]:
         return np.ravel(self, order=order)
+
+    def flatten(self, order: Literal["C", "F", "A", "K"] = "C") -> npt.NDArray[_T]:
+        return np.array(self).flatten(order=order)
 
     # endregion
