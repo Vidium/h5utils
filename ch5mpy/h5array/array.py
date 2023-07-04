@@ -6,11 +6,12 @@ from __future__ import annotations
 
 from numbers import Number
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Collection, Iterator, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Collection, Iterator, Literal, SupportsIndex, TypeVar
 
 import numpy as np
 import numpy.lib.mixins
 import numpy.typing as npt
+from numpy._typing import _ArrayLikeInt_co
 
 from ch5mpy._typing import NP_FUNC, SELECTOR
 from ch5mpy.h5array import repr
@@ -391,5 +392,13 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
     def flatten(self, order: Literal["C", "F", "A", "K"] = "C") -> npt.NDArray[_T]:
         return np.array(self).flatten(order=order)
+
+    def take(
+        self,
+        indices: _ArrayLikeInt_co,
+        axis: SupportsIndex | None = None,
+        mode: Literal["raise", "wrap", "clip"] = "raise",
+    ) -> npt.NDArray[_T]:
+        return np.take(self, indices, axis=axis, mode=mode)
 
     # endregion

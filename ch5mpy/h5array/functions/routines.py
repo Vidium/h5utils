@@ -4,10 +4,11 @@
 # imports
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Iterable, Literal, Sequence, cast
+from typing import TYPE_CHECKING, Any, Iterable, Literal, Sequence, SupportsIndex, cast
 
 import numpy as np
 import numpy.typing as npt
+from numpy._typing import _ArrayLikeInt_co
 
 import ch5mpy
 from ch5mpy._typing import NP_FUNC
@@ -342,3 +343,22 @@ def atleast_1d(arr: H5Array[Any]) -> H5Array[Any]:
 @implements(np.ravel)
 def ravel(arr: H5Array[Any], order: Literal["C", "F", "A", "K"] = "C") -> npt.NDArray[Any]:
     return np.ravel(np.array(arr), order=order)
+
+
+@implements(np.take)
+def take(
+    arr: H5Array[Any],
+    indices: _ArrayLikeInt_co,
+    axis: SupportsIndex | None = None,
+    out: npt.NDArray[Any] | None = None,
+    mode: Literal["raise", "wrap", "clip"] = "raise",
+) -> npt.NDArray[Any]:
+    if axis is not None:
+        raise NotImplementedError
+
+    if out is None:
+        out = np.empty_like(indices)
+
+    out[:] = arr[np.unravel_index(indices, arr.shape)]
+
+    return out

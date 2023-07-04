@@ -528,3 +528,7 @@ def test_ravel(small_large_array) -> None:
             ]
         ),
     )
+
+
+def test_take(small_large_array) -> None:
+    assert np.array_equal(np.take(small_large_array, [[0, 1], [2, 3]]), np.array([[0, 1], [2, 3]]))

@@ -231,6 +231,18 @@ def test_subset_2d(array):
     assert subset.ndim == 2
 
 
+def test_view_should_convert_to_numpy(array):
+    subset = array[[0, 2], [[0]]]
+    subset = subset.copy()
+    assert np.array_equal(subset, [[0.0, 20.0]])
+
+
+def test_view_should_convert_to_numpy_2(small_large_array):
+    subset = small_large_array[[[0, 1], [1, 0]], [[3, 2], [1, 0]], [[0, 1], [2, 3]]]
+    subset.copy()
+    assert np.array_equal(subset, [[15, 31], [27, 3]])
+
+
 @pytest.mark.parametrize("subset, shape", [[(slice(None), 0), (0,)], [(None, slice(None), 0, None), (1, 0, 1)]])
 def test_subset_from_empty_array(empty_array, subset, shape):
     subset = empty_array[subset]

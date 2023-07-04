@@ -4,7 +4,7 @@
 # imports
 from __future__ import annotations
 
-from itertools import dropwhile, takewhile
+from itertools import chain, dropwhile, repeat, takewhile
 from typing import Any, Generator, Generic, Iterable, Iterator, SupportsIndex, TypeVar, overload
 
 import numpy as np
@@ -88,6 +88,12 @@ def _compute_shape_empty_dset(
             shape += (len(index),)
 
     return shape + arr_shape[len(indices) :]
+
+
+def _get_sorting_indices(i: Any) -> npt.NDArray[np.int_] | slice:
+    if isinstance(i, np.ndarray):
+        return np.unique(i.flatten(), return_inverse=True)[1]  # type: ignore[no-any-return]
+    return slice(None)
 
 
 class Selection:
@@ -341,10 +347,9 @@ class Selection:
             loading_sel = tuple(0 for _ in takewhile(lambda x: x == 1, array_shape))
 
             yield dataset_sel, loading_sel
-            return tuple(
-                np.unique(i.flatten(), return_inverse=True)[1] if isinstance(i, np.ndarray) else slice(None)
-                for i in self.get_h5()[: len(array_shape)]
-            )
+
+            sel_it = chain(self.get_h5(), repeat(slice(None)))
+            return tuple(slice(None) if s == 1 else _get_sorting_indices(next(sel_it)) for s in array_shape)
 
         elif len(list_indices) == 1:
             for e_index, list_e in enumerate(np.array(self._indices[list_indices[0]]).flatten()):
@@ -354,10 +359,9 @@ class Selection:
                 loading_sel = tuple(0 for _ in takewhile(lambda x: x == 1, array_shape)) + (e_index,)
 
                 yield dataset_sel, loading_sel
-            return tuple(
-                np.unique(i.flatten(), return_inverse=True)[1] if isinstance(i, np.ndarray) else slice(None)
-                for i in self.get_h5()[: len(array_shape)]
-            )
+
+            sel_it = chain(self.get_h5(), repeat(slice(None)))
+            return tuple(slice(None) if s == 1 else _get_sorting_indices(next(sel_it)) for s in array_shape)
 
         # long indexing -------------------------------------------------------
         # delete index of last list since we can subset with (at most) one list
@@ -373,27 +377,18 @@ class Selection:
                 )
             )
         ]
-        indices_loading = [np.unique(a, return_inverse=True)[1] for a in indices_dataset]
+        indices_loading = zip(*[i.flatten() for i in np.indices(self._min_shape(new_axes=False))])
 
-        for index_dataset, index_loading in zip(map(iter, zip(*indices_dataset)), map(iter, zip(*indices_loading))):
+        for index_dataset, index_loading in zip(map(iter, zip(*indices_dataset)), indices_loading):
             dataset_sel = tuple(
                 next(index_dataset) if i in list_indices else _cast_h5(e)
                 for i, e in enumerate(self)
                 if not isinstance(e, NewAxisType)
             )
 
-            loading_sel = tuple(
-                next(index_loading) if i in list_indices else slice(None) for i in range(len(array_shape))
-            )
+            yield dataset_sel, index_loading
 
-            yield dataset_sel, loading_sel
-
-        return tuple(
-            np.unique(np.array(self[i]), return_inverse=True)[1].reshape(self[i].shape)
-            if i in list_indices
-            else slice(None)
-            for i in range(len(array_shape))
-        )
+        return (slice(None),)
 
     # endregion
 
