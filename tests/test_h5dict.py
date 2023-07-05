@@ -158,7 +158,7 @@ def test_backed_dict_copy_nested_backed_dict_should_be_dict(backed_dict):
 def test_backed_dict_copy_dataset_proxy_should_be_array(backed_dict):
     c = backed_dict.copy()
 
-    assert isinstance(c["b"], np.ndarray)
+    assert type(c["b"]) == np.ndarray
 
 
 class ComplexObject:

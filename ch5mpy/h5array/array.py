@@ -56,6 +56,8 @@ def _dtype_repr(dset: Dataset[Any] | DatasetWrapper[Any]) -> str:
 class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     """Wrapper around Dataset objects to interface with numpy's API."""
 
+    __class__ = np.ndarray  # type: ignore[assignment]
+
     # region magic methods
     def __init__(self, dset: Dataset[_T] | DatasetWrapper[_T] | H5Array[_T]):
         if isinstance(dset, H5Array):
@@ -291,6 +293,10 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     @property
     def attributes(self) -> AttributeManager:
         return self._dset.attrs
+
+    @property
+    def flat(self) -> np.flatiter[npt.NDArray[_T]]:
+        return np.array(self).flat
 
     # endregion
 

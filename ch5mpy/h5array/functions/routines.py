@@ -4,6 +4,7 @@
 # imports
 from __future__ import annotations
 
+from itertools import repeat
 from typing import TYPE_CHECKING, Any, Iterable, Literal, Sequence, SupportsIndex, cast
 
 import numpy as np
@@ -126,7 +127,7 @@ def in1d(ar1: Any, ar2: Any, invert: bool = False) -> npt.NDArray[np.bool_]:
         res = np.zeros(ar1.size, dtype=bool)
 
     # case np.array in H5Array
-    if isinstance(ar1, np.ndarray):
+    if type(ar1) == np.ndarray:
         ar2 = cast(ch5mpy.H5Array[Any], ar2)
 
         for _, chunk in ar2.iter_chunks():
@@ -137,7 +138,7 @@ def in1d(ar1: Any, ar2: Any, invert: bool = False) -> npt.NDArray[np.bool_]:
         index_offset = 0
 
         # case H5Array in np.array
-        if isinstance(ar2, np.ndarray):
+        if type(ar2) == np.ndarray:
             for _, chunk in ar1.iter_chunks():
                 index = slice(index_offset, index_offset + chunk.size)
                 index_offset += chunk.size
@@ -173,7 +174,7 @@ def isin(element: Any, test_elements: Any, invert: bool = False) -> npt.NDArray[
         res = np.zeros_like(element, dtype=bool)
 
     # case np.array in H5Array
-    if isinstance(element, np.ndarray):
+    if type(element) == np.ndarray:
         test_elements = cast(ch5mpy.H5Array[Any], test_elements)
 
         for _, chunk in test_elements.iter_chunks():
@@ -183,7 +184,7 @@ def isin(element: Any, test_elements: Any, invert: bool = False) -> npt.NDArray[
         element = cast(ch5mpy.H5Array[Any], element)
 
         # case H5Array in np.array
-        if isinstance(test_elements, np.ndarray):
+        if type(test_elements) == np.ndarray:
             for index, chunk in element.iter_chunks():
                 res[index] = _in_chunk(chunk, test_elements, res[index], invert=invert, func=np.isin)
 
@@ -353,12 +354,16 @@ def take(
     out: npt.NDArray[Any] | None = None,
     mode: Literal["raise", "wrap", "clip"] = "raise",
 ) -> npt.NDArray[Any]:
-    if axis is not None:
-        raise NotImplementedError
-
     if out is None:
         out = np.empty_like(indices)
 
-    out[:] = arr[np.unravel_index(indices, arr.shape)]
+    if not out.size:
+        return out
+
+    if axis is not None:
+        out[:] = arr[tuple(repeat(slice(None), int(axis))) + (indices,)]
+
+    else:
+        out[:] = arr[np.unravel_index(indices, arr.shape)]
 
     return out

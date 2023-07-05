@@ -33,7 +33,7 @@ def test_should_print_repr(array):
 
 
 def test_should_convert_to_numpy_array(array):
-    assert isinstance(np.asarray(array), np.ndarray)
+    assert type(np.asarray(array)) == np.ndarray
     assert np.array_equal(np.asarray(array), np.arange(100).reshape((10, 10)))
 
 
@@ -66,7 +66,7 @@ def test_should_add_to_view(array):
     view = array[:, 0]
     res = view + 1
 
-    assert isinstance(res, np.ndarray)
+    assert type(res) == np.ndarray
     assert np.array_equal(res, np.array([1, 11, 21, 31, 41, 51, 61, 71, 81, 91]))
 
 

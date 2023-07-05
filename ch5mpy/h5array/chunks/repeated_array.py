@@ -4,13 +4,11 @@
 # imports
 from __future__ import annotations
 
-import numpy as np
 from itertools import zip_longest
+from typing import TYPE_CHECKING, Any, Generator
 
+import numpy as np
 from numpy import typing as npt
-from typing import Any
-from typing import Generator
-from typing import TYPE_CHECKING
 
 import ch5mpy
 from ch5mpy.h5array.chunks.utils import _as_valid_dtype
@@ -92,10 +90,10 @@ class RepeatedArray:
 
     @property
     def chunks(self) -> tuple[int, ...] | None:
-        if isinstance(self._array, np.ndarray):
-            return None
+        if type(self._array) == H5Array:
+            return self._array.dset.chunks
 
-        return self._array.dset.chunks
+        return None
 
     # endregion
 
