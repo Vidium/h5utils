@@ -26,7 +26,7 @@ INF = np.iinfo(int).max
 
 
 def get_work_array(shape: tuple[int, ...], slicer: tuple[FullSlice, ...], dtype: np.dtype[_DT]) -> npt.NDArray[_DT]:
-    if len(slicer) == 1 and slicer[0].is_whole_axis():
+    if len(slicer) == 1 and slicer[0].is_whole_axis:
         return np.empty(shape, dtype=object if np.issubdtype(dtype, str) else dtype)
 
     slicer_shape = tuple(len(s) for s in slicer)

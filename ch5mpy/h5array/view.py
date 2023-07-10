@@ -30,7 +30,7 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
         super().__init__(dset)
         self._selection = sel
 
-    def __getitem__(self, index: SELECTOR | tuple[SELECTOR, ...]) -> _T | H5ArrayView[_T]:
+    def __getitem__(self, index: SELECTOR | tuple[SELECTOR, ...]) -> _T | ch5mpy.H5Array[_T]:
         selection = Selection.from_selector(index, self.shape)
 
         if selection.is_empty:
@@ -38,7 +38,10 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
 
         selection = selection.cast_on(self._selection)
 
-        if selection.compute_shape(self._dset.shape) == ():
+        if selection.is_empty:
+            return ch5mpy.H5Array(self._dset)
+
+        if selection.out_shape == ():
             return read_one_from_dataset(self._dset, selection, self.dtype)
 
         return H5ArrayView(dset=self._dset, sel=selection)
@@ -63,7 +66,7 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
         for index, chunk in self.iter_chunks():
             func(chunk, value, out=chunk)
 
-            for dest_sel, source_sel in Selection(index).cast_on(self._selection).iter_h5(self.shape):
+            for dest_sel, source_sel in Selection(index, self.shape).cast_on(self._selection).iter_indexers():
                 # FIXME : can be slow in some cases (e.g. index is [column vector, 0] --> we loop over all pairs
                 #  (c, 0) for c in column vector / instead we could flatten the column vector and pass it as is)
                 # write back result into array
@@ -76,7 +79,7 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
     # region interface
     def __array__(self, dtype: npt.DTypeLike | None = None) -> npt.NDArray[Any]:
         loading_array = np.empty(
-            self._selection.compute_shape(self._dset.shape, new_axes=False),
+            self._selection.out_shape_squeezed,
             dtype or self.dtype,
         )
         read_from_dataset(self._dset, self._selection, loading_array)
@@ -88,7 +91,7 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
     # region attributes
     @property
     def shape(self) -> tuple[int, ...]:
-        return self._selection.compute_shape(self._dset.shape)
+        return self._selection.out_shape
 
     # endregion
 
@@ -123,7 +126,10 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
         dset = self._dset.asstr() if np.issubdtype(self.dtype, str) else self._dset
         read_from_dataset(
             dset,
-            Selection((FullSlice.from_slice(s) for s in source_sel)).cast_on(self._selection),
+            Selection(
+                (FullSlice.from_slice(sl, max_=axis_shape) for sl, axis_shape in zip(source_sel, dset.shape)),
+                shape=self.shape,
+            ).cast_on(self._selection),
             dest[dest_sel],
         )
 

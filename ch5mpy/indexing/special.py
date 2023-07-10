@@ -10,7 +10,7 @@ from ch5mpy.indexing.list import ListIndex
 from ch5mpy.indexing.slice import FullSlice
 
 if TYPE_CHECKING:
-    from ch5mpy.indexing._typing import SELECTION_ELEMENT
+    from ch5mpy.indexing.typing import SELECTION_ELEMENT
 
 
 # ====================================================
@@ -30,14 +30,13 @@ class NewAxisType:
 
             item = item[0]
 
-        if isinstance(item, FullSlice) and item.is_whole_axis():
+        if isinstance(item, FullSlice) and item.is_whole_axis:
             return NewAxis
 
         elif isinstance(item, ListIndex) and item.is_zero:
             return None
 
-        else:
-            raise ValueError
+        raise ValueError
 
     def __len__(self) -> int:
         return 1
@@ -61,4 +60,4 @@ class NewAxisType:
 
 NewAxis = object.__new__(NewAxisType)
 
-Placeholder = object()
+PLACEHOLDER = type("Placeholder", (), {"__repr__": lambda _: "<placeholder>"})()

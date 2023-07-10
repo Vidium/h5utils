@@ -239,8 +239,14 @@ def test_view_should_convert_to_numpy(array):
 
 def test_view_should_convert_to_numpy_2(small_large_array):
     subset = small_large_array[[[0, 1], [1, 0]], [[3, 2], [1, 0]], [[0, 1], [2, 3]]]
-    subset.copy()
+    subset = subset.copy()
     assert np.array_equal(subset, [[15, 31], [27, 3]])
+
+
+def test_view_as_object_dtype_should_convert_to_numpy(str_array):
+    subset = str_array[0:1].astype(object)
+    subset = subset.copy()
+    assert np.array_equal(subset, [b"a"])
 
 
 @pytest.mark.parametrize("subset, shape", [[(slice(None), 0), (0,)], [(None, slice(None), 0, None), (1, 0, 1)]])
@@ -464,3 +470,10 @@ def test_repr_3d_array():
 
 def test_can_flatten(small_large_array: ch5mpy.H5Array) -> None:
     assert small_large_array.flatten().shape == (60,)
+
+
+def test_can_hash(small_array: ch5mpy.H5Array) -> None:
+    hash1 = hash(small_array)
+    small_array[0] = -1
+    hash2 = hash(small_array)
+    assert hash1 != hash2

@@ -12,16 +12,13 @@ import numpy.typing as npt
 from ch5mpy.indexing.list import ListIndex
 
 if TYPE_CHECKING:
-    from ch5mpy.indexing._typing import SELECTION_ELEMENT
+    from ch5mpy.indexing.typing import SELECTION_ELEMENT
 
 
 # ====================================================
 # code
 def _positive(value: int, max_: int) -> int:
-    if value < 0:
-        value = max_ + value
-
-    return value
+    return value if value >= 0 else max_ + value
 
 
 class FullSlice:
@@ -42,11 +39,13 @@ class FullSlice:
         self._stop = _positive(min(stop, max_), max_)
         self._max = max_
 
+        assert self._max >= self._start and self._max >= self._stop
+
     def __repr__(self) -> str:
-        if self.is_one_element():
+        if self.is_one_element:
             return f"{type(self).__name__}(<{self.start}> | {self._max})"
 
-        if self.is_whole_axis():
+        if self.is_whole_axis:
             return f"{type(self).__name__}(* | {self._max})"
 
         return f"{type(self).__name__}({self._start}, {self._stop}, {self._step} | {self._max})"
@@ -129,10 +128,11 @@ class FullSlice:
     # endregion
 
     # region predicates
-    def is_whole_axis(self, max_: int | None = None) -> bool:
-        max_ = max_ or self._max
-        return self._start == 0 and self._step == 1 and self._stop == max_
+    @property
+    def is_whole_axis(self) -> bool:
+        return self._start == 0 and self._step == 1 and self._stop == self._max
 
+    @property
     def is_one_element(self) -> bool:
         return len(self) == 1
 
@@ -149,8 +149,8 @@ class FullSlice:
         return FullSlice(element, element + 1, 1, max_)
 
     @classmethod
-    def from_slice(cls, s: slice | range) -> FullSlice:
-        return FullSlice(s.start, s.stop, s.step, s.stop)
+    def from_slice(cls, s: slice | range, max_: int) -> FullSlice:
+        return FullSlice(s.start, s.stop, s.step, max_)
 
     def as_slice(self) -> slice:
         return slice(self.start, self.stop, self.step)

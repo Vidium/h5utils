@@ -10,7 +10,7 @@ import numpy as np
 import numpy.typing as npt
 
 if TYPE_CHECKING:
-    from ch5mpy.indexing._typing import SELECTION_ELEMENT
+    from ch5mpy.indexing.typing import SELECTION_ELEMENT
 
 
 # ====================================================
@@ -21,7 +21,7 @@ class ListIndex:
         if elements.dtype != int:
             raise RuntimeError
 
-        self._elements = elements
+        self._elements = np.array(elements)
 
     def __repr__(self) -> str:
         flat_elements_repr = str(self._elements).replace("\n", "")
@@ -95,10 +95,16 @@ class ListIndex:
     # endregion
 
     # region methods
-    def as_array(self, sorted: bool = False) -> npt.NDArray[np.int_]:
+    def as_array(self, sorted: bool = False, flattened: bool = False) -> npt.NDArray[np.int_]:
+        elements = self._elements
+
+        if flattened:
+            elements = elements.flatten()
+
         if sorted:
-            return np.sort(self._elements)
-        return self._elements
+            elements = np.sort(elements)
+
+        return elements
 
     def squeeze(self) -> ListIndex:
         return ListIndex(np.squeeze(self._elements))

@@ -1,21 +1,12 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from numbers import Number
-
-from typing import Any
-from typing import overload
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, overload
 
 if TYPE_CHECKING:
     from ch5mpy import H5Array
 
 
-# ====================================================
-# code
 @overload
 def _get3(arr: None) -> None:
     ...
@@ -31,16 +22,18 @@ def _get3(arr: H5Array[Any] | Number | str | None) -> list[Any] | None:
     if arr is None:
         return None
 
-    elif isinstance(arr, (Number, str)):
+    if isinstance(arr, (Number, str)):
         return [arr]
 
-    elif len(arr) <= 6:
+    if len(arr) <= 6:
         return list(arr)
 
-    return list(arr[:3]) + [None] + list(arr[-3:])
+    res = list(arr[[0, 1, 2, -3, -2, -1]])
+    res.insert(3, None)
+    return res
 
 
-def _print3(lst: list[Any | None] | None, end: str = "\n", before: str = "", sep: str = ",") -> str:
+def _print3(lst: list[Any] | None, end: str = "\n", before: str = "", sep: str = ",") -> str:
     """Print the first (and last) 3 elements in"""
     if lst is None:
         return f"{before}...{end}"

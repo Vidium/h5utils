@@ -17,7 +17,7 @@ from ch5mpy.objects import Dataset, DatasetWrapper
 _DT = TypeVar("_DT", bound=np.generic)
 
 
-class IterWithValue:
+class IterWithFinalReordering:
     def __init__(self, gen: Generator[Any, Any, Any]):
         self.gen = gen
         self.value = None
@@ -39,14 +39,14 @@ def read_from_dataset(
     if not loading_array.size:
         return
 
-    sel_iter = IterWithValue(selection.iter_h5(loading_array.shape))
-    for dataset_idx, array_idx in sel_iter:
+    reordering = IterWithFinalReordering(selection.iter_indexers())
+    for dataset_idx, loading_array_idx in reordering:
         # TODO : would be nice to be able to pass an array with random order in `dest_sel`
-        dataset.read_direct(loading_array, source_sel=dataset_idx, dest_sel=array_idx)
+        dataset.read_direct(loading_array, source_sel=dataset_idx, dest_sel=loading_array_idx)
 
     # reorder values in loading_array if needed
     if loading_array.ndim > 0:
-        loading_array[:] = loading_array[sel_iter.value]
+        loading_array[:] = loading_array[reordering.value]
 
 
 def read_one_from_dataset(
@@ -64,10 +64,10 @@ def write_to_dataset(
     values: npt.NDArray[_DT],
     selection: Selection,
 ) -> None:
-    selection_shape = selection.compute_shape(dataset.shape)
+    selection_shape = selection.out_shape
 
     if values.size == np.prod(selection_shape) and values.shape != selection_shape:
         values = values.reshape(selection_shape)
 
-    for dataset_idx, array_idx in selection.iter_h5(values.shape):
+    for dataset_idx, array_idx in selection.iter_indexers():
         dataset.write_direct(values, source_sel=array_idx, dest_sel=dataset_idx)

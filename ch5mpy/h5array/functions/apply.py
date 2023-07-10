@@ -103,7 +103,7 @@ def _get_indices(
     output_ndim: int,
 ) -> tuple[WHERE_SELECTION, tuple[slice, ...] | tuple[()], WHERE_SELECTION]:
     # compute on whole array at once
-    if len(index) == 1 and index[0].is_whole_axis():
+    if len(index) == 1 and index[0].is_whole_axis:
         return where_compute[:], (), where_output[index]
 
     where_to_compute = where_compute[map_slice(index)]

@@ -88,12 +88,12 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     def __getitem__(self, index: SELECTOR | tuple[SELECTOR, ...]) -> _T | H5Array[_T] | H5ArrayView[_T]:
         from ch5mpy.h5array.view import H5ArrayView
 
-        selection = Selection.from_selector(index, self.shape)
+        selection = Selection.from_selector(index, self._dset.shape)
 
         if selection.is_empty:
             return H5Array(dset=self._dset)
 
-        elif selection.compute_shape(self._dset.shape) == ():
+        elif selection.out_shape == ():
             return read_one_from_dataset(self._dset, selection, self.dtype)
 
         else:
@@ -207,6 +207,9 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
             return float(np.array(self))
 
         raise TypeError("Only size-1 H5Arrays can be converted to Python scalars.")
+
+    def __hash__(self) -> int:
+        return hash(np.array(self._dset).data.tobytes())
 
     # endregion
 

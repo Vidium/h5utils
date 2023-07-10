@@ -20,6 +20,6 @@ def arange_nd(
     dtype: npt.DTypeLike | None = None,
 ) -> npt.NDArray[Any]:
     start_ = 0 if start is None else start
-    stop = np.product(shape) + start_  # type: ignore[call-overload]
+    stop = np.prod(shape) + start_  # type: ignore[call-overload]
 
     return np.arange(start=start_, stop=stop, step=step, dtype=dtype).reshape(shape)
