@@ -72,7 +72,9 @@ def _get_chunk_indices(chunk_size: int, shape: tuple[int, ...]) -> tuple[tuple[F
     left_chunks = np.array(np.meshgrid(*map(range, left_shape))).T.reshape(-1, len(left_shape))
 
     return tuple(
-        tuple(map(FullSlice.one, left, shape)) + tuple(right) for left in left_chunks for right in right_chunks
+        tuple(FullSlice.one(_l, _s) for _l, _s in zip(left, shape)) + tuple(right)
+        for left in left_chunks
+        for right in right_chunks
     )
 
 

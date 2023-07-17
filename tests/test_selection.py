@@ -128,7 +128,7 @@ def test_should_compute_shape_3d(selection: Selection, expected_shape):
         [
             get_sel([[0], [1]], [0, 1, 2], shape=(100, 100, 100)),
             get_sel(1, shape=(2, 3, 100)),
-            get_sel([1, 1, 1], [0, 1, 2], shape=(100, 100, 100)),
+            get_sel(1, slice(0, 3), shape=(100, 100, 100)),
         ],
         [get_sel(0, shape=(100, 100, 100)), get_sel(0, shape=(100, 100)), get_sel(0, 0, shape=(100, 100, 100))],
         [get_sel([0], shape=(100, 100, 100)), get_sel(0, shape=(1, 100, 100)), get_sel(0, shape=(100, 100, 100))],
@@ -172,6 +172,11 @@ def test_should_compute_shape_3d(selection: Selection, expected_shape):
             get_sel(0, 1, shape=(5, 2, 100)),
             get_sel(0, 2, shape=(100, 100, 100)),
         ],
+        [
+            get_sel([0, 2, 1, 3], shape=(100, 100, 100)),
+            get_sel(slice(None), [0, 2, 1], shape=(4, 100, 100)),
+            get_sel([[0], [2], [1], [3]], [0, 2, 1], shape=(100, 100, 100)),
+        ],
     ],
 )
 def test_should_cast_shape(previous_selection: Selection, selection: Selection, expected_selection: Selection):
@@ -204,9 +209,13 @@ def test_should_iter(selection: Selection, expected):
     [
         (([1, 2, 3, 4, 5],), (6,), (FullSlice(1, 6, 1, 6),)),
         (([[0], [1]], [[2, 3]]), (2, 4), (FullSlice(0, 2, 1, 2), FullSlice(2, 4, 1, 4))),
-        (([[3], [2]], [[0, 1]]), (3, 2), (FullSlice(3, 1, -1, 3), FullSlice(0, 2, 1, 2))),
+        (([[3], [2]], [[0, 1]]), (3, 2), (ListIndex(np.array([3, 2])),)),
         ((0, [[[0, 1, 2]]]), (10, 10), (NewAxis, FullSlice(0, 1, 1, 10), FullSlice(0, 3, 1, 10))),
     ],
 )
 def test_should_optimize(indices, shape, expected: Selection):
     assert get_sel(*indices, shape=shape)._indices == expected
+
+
+def test_should_get_indexers():
+    assert get_sel([[0]], [0], shape=(100, 2)).get_indexers() == (slice(0, 1, 1), slice(0, 1, 1))

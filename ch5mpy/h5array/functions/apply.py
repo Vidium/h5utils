@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from functools import partial
 from numbers import Number
-from typing import TYPE_CHECKING, Any, Iterable, Union
+from typing import TYPE_CHECKING, Any, Iterable, Literal, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -52,7 +52,6 @@ def _get_output_array(
     keepdims: bool,
     dtype: npt.DTypeLike | None,
     initial: int | float | complex | NoValue,
-    default: Any,
 ) -> H5Array[Any] | npt.NDArray[Any]:
     if keepdims:
         expected_shape = tuple(s if i not in axis else 1 for i, s in enumerate(shape))
@@ -60,25 +59,48 @@ def _get_output_array(
     else:
         expected_shape = tuple(s for i, s in enumerate(shape) if i not in axis)
 
-    if out is None:
-        out = np.empty(shape=expected_shape, dtype=dtype)
-
-        if default is not None:
-            out[()] = default
-
-    else:
+    if out is not None:
         ndim = len(expected_shape)
-
         if out.ndim != ndim:
             raise ValueError(f"Output array has the wrong number of dimensions: Found {out.ndim} but expected {ndim}")
 
         if out.shape != expected_shape:
             raise ValueError(f"Output array has the wrong shape: Found {out.shape} but expected {expected_shape}")
 
-    if initial is not NoValue:
-        out[()] = initial
+        if initial is not NoValue:
+            out[()] = initial
 
-    return out
+        return out
+
+    if initial is NoValue:
+        return np.empty(shape=expected_shape, dtype=dtype)
+
+    return np.full(shape=expected_shape, fill_value=initial, dtype=dtype)
+
+
+def _get_output_array_2(
+    out: H5Array[Any] | npt.NDArray[Any] | None,
+    a_shape: tuple[int, ...],
+    b_shape: tuple[int, ...],
+    dtype: npt.DTypeLike | None,
+    default: Any,
+) -> H5Array[Any] | npt.NDArray[Any]:
+    expected_shape = np.broadcast_shapes(a_shape, b_shape)
+
+    if out is not None:
+        ndim = len(expected_shape)
+        if out.ndim != ndim:
+            raise ValueError(f"Output array has the wrong number of dimensions: Found {out.ndim} but expected {ndim}")
+
+        if out.shape != expected_shape:
+            raise ValueError(f"Output array has the wrong shape: Found {out.shape} but expected {expected_shape}")
+
+        return out
+
+    if default is None:
+        return np.empty(shape=expected_shape, dtype=dtype)
+
+    return np.full(shape=expected_shape, fill_value=default, dtype=dtype)
 
 
 def _as_tuple(
@@ -118,15 +140,12 @@ def _get_indices(
 
 
 def _apply_operation(
-    operation: str,
+    operation: Literal["__set__", "__iadd__", "__imul__", "__iand__", "__ior__"],
     dest: H5Array[Any] | npt.NDArray[Any],
     chunk_selection: tuple[slice, ...] | tuple[()],
     where_to_output: WHERE_SELECTION,
     values: npt.NDArray[Any],
 ) -> None:
-    # Here I have to explicitly write out each operation using +=, *=, ... operators instead of using
-    # getattr(..., operation)(...) because dest does not get modified in that way
-
     if values.ndim == 0:
         values = values[()]
 
@@ -171,7 +190,7 @@ def _apply_operation(
 
 def apply(
     func: partial[NP_FUNC],
-    operation: str,
+    operation: Literal["__set__", "__iadd__", "__imul__", "__iand__", "__ior__"],
     a: H5Array[Any],
     out: H5Array[Any] | npt.NDArray[Any] | None,
     *,
@@ -182,7 +201,7 @@ def apply(
 ) -> Any:
     dtype = a.dtype if dtype is None else dtype
     axis = _as_tuple(func.keywords.get("axis", None), a.ndim, default_0D_output)
-    output_array = _get_output_array(out, a.shape, axis, func.keywords.get("keepdims", False), dtype, initial, None)
+    output_array = _get_output_array(out, a.shape, axis, func.keywords.get("keepdims", False), dtype, initial)
 
     if where is not False:
         where_compute = MaskWhere(where, a.shape)
@@ -299,14 +318,14 @@ def apply_2(
         return str_apply_2(num_to_str_ufunc[func], a, b)
 
     # operation on regular H5Arrays
-    output_array = _get_output_array(out, a.shape, (), False, dtype, NoValue, default)
+    if not isinstance(b, (np.ndarray, ch5mpy.H5Array)):
+        b = np.array(b)
+
+    output_array = _get_output_array_2(out, a.shape, b.shape, dtype, default)
 
     if where is not False:
         where_compute = MaskWhere(where, a.shape)
         where_output = MaskWhere(where, output_array.shape)
-
-        if not isinstance(b, (np.ndarray, ch5mpy.H5Array)):
-            b = np.array(b)
 
         for index, chunk_x1, chunk_x2 in iter_chunks_2(a, b):
             where_to_compute, chunk_selection, where_to_output = _get_indices(

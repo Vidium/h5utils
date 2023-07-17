@@ -4,6 +4,7 @@
 # imports
 from __future__ import annotations
 
+from math import lcm
 from typing import TYPE_CHECKING, Any, Iterable, Literal
 
 import numpy as np
@@ -23,6 +24,13 @@ def _positive(value: int, max_: int) -> int:
 
 class FullSlice:
     # region magic methods
+    def __new__(cls, start: int | None, stop: int | None, step: int | None, max_: int):
+        if start is not None and step is not None and np.sign(start) * np.sign(step) == -1:
+            # /!\ np.sign(0) is 0 --> so when signs are different -- excluding 0 -- their product is -1
+            return ListIndex(np.arange(start, max_ if stop is None else stop, step))
+
+        return super().__new__(cls)
+
     def __init__(
         self,
         start: int | None,
@@ -30,12 +38,14 @@ class FullSlice:
         step: int | None,
         max_: int,
     ):
-        stop = max_ if stop is None else stop
         if step == 0:
             raise ValueError("FullSlice step cannot be zero.")
 
-        self._start = _positive(start or 0, max_)
-        self._step = step or 1
+        start = 0 if start is None else start
+        stop = max_ if stop is None else stop
+
+        self._start = _positive(0 if start is None else start, max_)
+        self._step = 1 if step is None else step
         self._stop = _positive(min(stop, max_), max_)
         self._max = max_
 
@@ -76,8 +86,8 @@ class FullSlice:
         if isinstance(item, FullSlice):
             return FullSlice(
                 start=self._start + item.start * self._step,
-                stop=self._start + item.true_stop * self._step + 1,
-                step=self._step,
+                stop=self._start + item.stop * self._step,
+                step=lcm(self._step, item.step),
                 max_=self._max,
             )
 

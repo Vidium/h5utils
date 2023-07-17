@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Any, Generator
 import numpy as np
 from numpy import typing as npt
 
-import ch5mpy
 from ch5mpy.h5array.chunks.utils import _as_valid_dtype
 
 if TYPE_CHECKING:
@@ -104,11 +103,11 @@ class RepeatedArray:
         source_sel: tuple[slice, ...],
         dest_sel: tuple[slice, ...],
     ) -> npt.NDArray[Any]:
-        if isinstance(self._array, ch5mpy.H5Array):
-            self._array.read_direct(out, source_sel=source_sel, dest_sel=dest_sel)
+        # if isinstance(self._array, ch5mpy.H5Array):
+        #     self._array.read_direct(out, source_sel=source_sel, dest_sel=dest_sel)
 
-        else:
-            out[dest_sel] = self._array[source_sel]
+        # else:
+        out[dest_sel] = self._array[source_sel]
 
         return _as_valid_dtype(out, self._array.dtype)[dest_sel]
 

@@ -28,9 +28,7 @@ def _get3(arr: H5Array[Any] | Number | str | None) -> list[Any] | None:
     if len(arr) <= 6:
         return list(arr)
 
-    res = list(arr[[0, 1, 2, -3, -2, -1]])
-    res.insert(3, None)
-    return res
+    return list(arr[[0, 1, 2]]) + [None] + list(arr[[-3, -2, -1]])
 
 
 def _print3(lst: list[Any] | None, end: str = "\n", before: str = "", sep: str = ",") -> str:

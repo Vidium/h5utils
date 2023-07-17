@@ -151,6 +151,21 @@ def test_equal(small_array):
     assert np.array_equal(np.equal(small_array, 2), [False, True, False, False, False])
 
 
+def test_equal_other_shape(small_array):
+    assert np.array_equal(
+        small_array == np.array([1, 2, 3, 4, 5]).reshape((-1, 1)),
+        np.array(
+            [
+                [True, False, False, False, False],
+                [False, True, False, False, False],
+                [False, False, True, False, False],
+                [False, False, False, True, False],
+                [False, False, False, False, True],
+            ]
+        ),
+    )
+
+
 def test_equal_view(array):
     subarr = array[[[0], [1], [2]], [0, 1]]
     assert np.all(subarr == np.array([[0, 1], [10, 11], [20, 21]]))

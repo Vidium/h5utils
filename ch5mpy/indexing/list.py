@@ -27,12 +27,12 @@ class ListIndex:
         flat_elements_repr = str(self._elements).replace("\n", "")
         return f"ListIndex({flat_elements_repr} | ndim={self.ndim})"
 
-    def __getitem__(self, item: SELECTION_ELEMENT | tuple[SELECTION_ELEMENT, ...]) -> ListIndex:
+    def __getitem__(self, item: int | SELECTION_ELEMENT | tuple[int | SELECTION_ELEMENT, ...]) -> ListIndex:
         from ch5mpy.indexing.special import NewAxisType
 
         if isinstance(item, tuple):
             if any(isinstance(e, NewAxisType) for e in item):
-                raise RuntimeError
+                return ListIndex(self._elements[None])
 
             casted_items: tuple[slice | npt.NDArray[np.int_], ...] = tuple(
                 i.as_array() if isinstance(i, ListIndex) else i.as_slice() for i in item  # type: ignore[union-attr]
@@ -42,6 +42,9 @@ class ListIndex:
 
         if isinstance(item, NewAxisType):
             raise RuntimeError
+
+        if self.ndim == 0 and item == 0:
+            return ListIndex(self._elements)
 
         return ListIndex(self._elements[item])
 
@@ -107,9 +110,12 @@ class ListIndex:
         return elements
 
     def squeeze(self) -> ListIndex:
+        if self.size <= 1:
+            return self
+
         return ListIndex(np.squeeze(self._elements))
 
-    def expand(self, n: int) -> ListIndex:
+    def expand_to_dim(self, n: int) -> ListIndex:
         if n < self.ndim:
             raise RuntimeError
 
@@ -118,5 +124,11 @@ class ListIndex:
 
     def broadcast_to(self, shape: tuple[int, ...]) -> ListIndex:
         return ListIndex(np.broadcast_to(self._elements, shape))
+
+    def reshape(self, shape: tuple[int, ...]) -> ListIndex:
+        return ListIndex(self._elements.reshape(shape))
+
+    def flatten(self) -> ListIndex:
+        return ListIndex(self._elements.flatten())
 
     # endregion

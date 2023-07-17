@@ -367,3 +367,18 @@ def take(
         out[:] = arr[np.unravel_index(indices, arr.shape)]
 
     return out
+
+
+@implements(np.copyto)
+def copyto(
+    dst: H5Array[Any],
+    src: npt.ArrayLike,
+    casting: Literal["no", "equiv", "safe", "same_kind", "unsafe"] = "same_kind",
+    where: npt.NDArray[np.bool_] | Iterable[np.bool_] | bool = True,
+) -> None:
+    src = np.asanyarray(src)
+
+    if not np.can_cast(src.dtype, dst.dtype, casting):
+        raise TypeError(f"Cannot cast array data from {src.dtype} to {src.dtype} according to rule '{casting}'.")
+
+    dst[()] = np.broadcast_to(src, dst.shape)
