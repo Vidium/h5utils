@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from pathlib import Path
 
 import numpy as np
@@ -10,8 +6,6 @@ import pytest
 import ch5mpy
 
 
-# ====================================================
-# code
 def test_should_get_shape(array):
     assert array.shape == (10, 10)
 

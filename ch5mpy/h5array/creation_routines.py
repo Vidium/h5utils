@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from functools import partial
@@ -14,13 +10,11 @@ import numpy.typing as npt
 import ch5mpy
 from ch5mpy.write import _store_dataset
 
-# ====================================================
-# code
+
 _NoValue = object()
 
 
 class ArrayCreationFunc:
-
     # region magic methods
     def __init__(self, name: str) -> None:
         self._fill_value: Any = _NoValue
@@ -68,7 +62,6 @@ class ArrayCreationFunc:
 
 
 class ArrayCreationFuncWithFill(ArrayCreationFunc):
-
     # region magic methods
     def __init__(self, name: str, fill_value: Any):
         super().__init__(name)

@@ -1,13 +1,7 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 import numpy as np
 import pytest
 
 
-# ====================================================
-# code
 def test_str_array_dtype(str_array):
     assert str_array.dtype == np.dtype("<U3")
 

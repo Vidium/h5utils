@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 import numpy as np
@@ -22,8 +18,6 @@ if TYPE_CHECKING:
     from ch5mpy import H5Array
 
 
-# ====================================================
-# code
 def _cast_H5Array(obj: Any) -> H5Array[Any]:
     return obj  # type: ignore[no-any-return]
 

@@ -1,13 +1,7 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from ch5mpy.h5array.chunks.iter import _get_chunk_indices
 from ch5mpy.indexing.slice import FullSlice, SingleIndex
 
 
-# ====================================================
-# code
 def test_1d_smaller_than_nb_elements():
     assert _get_chunk_indices(10, (5,)) == ((FullSlice.whole_axis(5),),)
 

@@ -1,12 +1,6 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from ch5mpy.indexing.slice import FullSlice
 
 
-# ====================================================
-# code
 def test_true_stop_step1():
     f = FullSlice(0, 3, 1, 10)
     assert f.true_stop == 2

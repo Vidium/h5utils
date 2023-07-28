@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 import pytest
 from pathlib import Path
 
@@ -11,8 +7,6 @@ from ch5mpy import H5Array
 from ch5mpy import write_object
 
 
-# ====================================================
-# code
 class ComplexObject:
     def __init__(self, value: int):
         self.value = value

@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -17,8 +13,7 @@ from ch5mpy._typing import SELECTOR
 from ch5mpy.attributes import AttributeManager
 from ch5mpy.objects.pickle import PickleableH5Object
 
-# ====================================================
-# code
+
 _T = TypeVar("_T", bound=np.generic)
 _WT = TypeVar("_WT")
 ENCODING = Literal["ascii", "utf-8"]

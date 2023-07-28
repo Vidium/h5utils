@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from numbers import Number
@@ -19,8 +15,6 @@ if TYPE_CHECKING:
     from ch5mpy import H5Array
 
 
-# ====================================================
-# code
 _DT = TypeVar("_DT", bound=np.generic)
 INF = np.iinfo(int).max
 

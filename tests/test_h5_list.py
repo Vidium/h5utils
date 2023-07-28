@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from pathlib import Path
@@ -12,8 +8,6 @@ import pytest
 import ch5mpy as ch
 
 
-# ====================================================
-# code
 class O_:
     def __init__(self, v: float):
         self._v = v

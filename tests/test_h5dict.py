@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from pathlib import Path
@@ -13,8 +9,6 @@ import pytest
 from ch5mpy import File, H5Array, H5Dict, H5Mode, write_object
 
 
-# ====================================================
-# code
 @pytest.fixture
 def backed_dict() -> Generator[H5Dict, None, None]:
     data = {

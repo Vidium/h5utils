@@ -1,9 +1,3 @@
-# coding: utf-8
-# Created on 13/12/2022 14:52
-# Author : matteo
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from enum import Enum
@@ -16,8 +10,6 @@ from ch5mpy import File, Group
 from ch5mpy.write import write_dataset, write_object
 
 
-# ====================================================
-# code
 class State(Enum):
     RNA = "RNA"
 

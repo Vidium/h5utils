@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from typing import Any, Collection, Literal, cast
@@ -16,8 +12,6 @@ from ch5mpy.objects.dataset import Dataset
 from ch5mpy.objects.pickle import PickleableH5Object
 
 
-# ====================================================
-# code
 def _h5py_wrap_type(obj: Any) -> Any:
     """Produce our objects instead of h5py default objects"""
     if isinstance(obj, h5py.Dataset):

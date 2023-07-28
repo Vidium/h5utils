@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from typing import Any, TypeVar
@@ -17,8 +13,7 @@ from ch5mpy.h5array.array import as_array
 from ch5mpy.h5array.io import read_from_dataset, read_one_from_dataset, write_to_dataset
 from ch5mpy.objects import DatasetWrapper
 
-# ====================================================
-# code
+
 _T = TypeVar("_T", bound=np.generic)
 
 

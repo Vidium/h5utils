@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from numbers import Number
@@ -29,8 +25,6 @@ if TYPE_CHECKING:
     from ch5mpy.h5array.view import H5ArrayView
 
 
-# ====================================================
-# code
 _T = TypeVar("_T", bound=np.generic, covariant=True)
 
 

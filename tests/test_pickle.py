@@ -1,15 +1,9 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 import pickle
 import numpy as np
 
 from ch5mpy.write import write_object
 
 
-# ====================================================
-# code
 def test_should_pickle_dataset(group):
     write_object(group, "something", [1, 2, 3])
 

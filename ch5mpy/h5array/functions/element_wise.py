@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from functools import partial
@@ -20,8 +16,6 @@ if TYPE_CHECKING:
     from ch5mpy import H5Array
 
 
-# ====================================================
-# code
 # ufuncs ----------------------------------------------------------------------
 def H5_ufunc(
     a: H5Array[Any],

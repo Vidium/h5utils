@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from collections.abc import Iterable, KeysView, MutableMapping
@@ -19,8 +15,7 @@ from ch5mpy.options import _OPTIONS
 from ch5mpy.read import read_object
 from ch5mpy.write import write_object
 
-# ====================================================
-# code
+
 _T = TypeVar("_T")
 
 _NO_OBJECT = object()

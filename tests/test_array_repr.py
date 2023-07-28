@@ -1,14 +1,8 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 import numpy as np
 
 from ch5mpy.h5array.repr import print_dataset
 
 
-# ====================================================
-# code
 def test_repr_0D():
     assert print_dataset(np.array(1)) == "1\n"
 

@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from pathlib import Path
 from typing import Generator
 
@@ -12,8 +8,6 @@ import ch5mpy
 from ch5mpy import File, H5Array, H5Mode, write_object
 
 
-# ====================================================
-# code
 def test_array_equal(small_array):
     assert np.array_equal(small_array, [1, 2, 3, 4, 5])
 

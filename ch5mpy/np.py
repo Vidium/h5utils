@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from numbers import Number
@@ -11,8 +7,6 @@ import numpy as np
 import numpy.typing as npt
 
 
-# ====================================================
-# code
 def arange_nd(
     shape: tuple[int, ...],
     start: Number | None = None,

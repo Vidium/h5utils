@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from typing import Any
@@ -13,8 +9,6 @@ from ch5mpy.indexing import FullSlice, ListIndex, as_indexer
 from ch5mpy.indexing.selection import Selection
 
 
-# ====================================================
-# code
 def get_sel(*sel: int | list[Any] | slice | None, shape: tuple[int, ...]) -> Selection:
     return Selection(
         (as_indexer(s, max=max) for s, max in zip(sel, shape)),

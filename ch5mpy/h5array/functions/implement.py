@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 import importlib
@@ -13,8 +9,6 @@ from ch5mpy._typing import NP_FUNC
 from ch5mpy._typing import H5_FUNC
 
 
-# ====================================================
-# code
 HANDLED_FUNCTIONS: dict[NP_FUNC | NP_FUNC, H5_FUNC] = {}
 
 

@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 import pickle
@@ -14,8 +10,6 @@ from ch5mpy.h5array.array import H5Array
 from ch5mpy.objects import Dataset, Group
 
 
-# ====================================================
-# code
 def _handle_read_error(data: Group, error: Literal["ignore", "raise"], msg: str) -> ch5mpy.dict.H5Dict[Any]:
     if error == "raise":
         raise ValueError(msg)

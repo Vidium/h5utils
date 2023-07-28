@@ -1,13 +1,7 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 import ch5mpy as ch
 from ch5mpy.h5array.chunks.repeated_array import RepeatedArray
 
 
-# ====================================================
-# code
 def test_subset():
     arr = ch.arange_nd((8, 1, 6, 1))
     r_arr = RepeatedArray(arr, (8, 7, 6, 5))

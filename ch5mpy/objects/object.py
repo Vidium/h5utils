@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -15,8 +11,6 @@ if TYPE_CHECKING:
     from ch5mpy.attributes import AttributeManager
 
 
-# ====================================================
-# code
 class H5Object(ABC):
     """Base class for H5 objects."""
 
