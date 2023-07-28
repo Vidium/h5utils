@@ -10,11 +10,11 @@ import numpy as np
 import numpy.typing as npt
 
 import ch5mpy
+import ch5mpy.indexing as ci
 from ch5mpy import Dataset
 from ch5mpy._typing import NP_FUNC, SELECTOR
 from ch5mpy.h5array.array import as_array
 from ch5mpy.h5array.io import read_from_dataset, read_one_from_dataset, write_to_dataset
-from ch5mpy.indexing import FullSlice, Selection
 from ch5mpy.objects import DatasetWrapper
 
 # ====================================================
@@ -26,12 +26,12 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
     """A view on a H5Array."""
 
     # region magic methods
-    def __init__(self, dset: Dataset[_T] | DatasetWrapper[_T], sel: Selection):
+    def __init__(self, dset: Dataset[_T] | DatasetWrapper[_T], sel: ci.Selection):
         super().__init__(dset)
         self._selection = sel
 
     def __getitem__(self, index: SELECTOR | tuple[SELECTOR, ...]) -> _T | ch5mpy.H5Array[_T]:
-        selection = Selection.from_selector(index, self.shape)
+        selection = ci.Selection.from_selector(index, self.shape)
 
         if selection.is_empty:
             return H5ArrayView(dset=self._dset, sel=self._selection)
@@ -47,7 +47,7 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
         return H5ArrayView(dset=self._dset, sel=selection)
 
     def __setitem__(self, index: SELECTOR | tuple[SELECTOR, ...], value: Any) -> None:
-        selection = Selection.from_selector(index, self.shape)
+        selection = ci.Selection.from_selector(index, self.shape)
         write_to_dataset(self._dset, as_array(value, self.dtype), selection.cast_on(self._selection))
 
     def __len__(self) -> int:
@@ -66,10 +66,7 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
         for index, chunk in self.iter_chunks():
             func(chunk, value, out=chunk)
 
-            for dest_sel, source_sel in Selection(index, self.shape).cast_on(self._selection).iter_indexers():
-                # FIXME : can be slow in some cases (e.g. index is [column vector, 0] --> we loop over all pairs
-                #  (c, 0) for c in column vector / instead we could flatten the column vector and pass it as is)
-                # write back result into array
+            for dest_sel, source_sel in ci.Selection(index, self.shape).cast_on(self._selection).iter_indexers():
                 self._dset.write_direct(chunk, source_sel=source_sel, dest_sel=dest_sel)
 
         return self
@@ -79,7 +76,7 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
     # region interface
     def __array__(self, dtype: npt.DTypeLike | None = None) -> npt.NDArray[Any]:
         loading_array = np.empty(
-            self._selection.out_shape_squeezed,
+            self._selection.out_shape,
             dtype or self.dtype,
         )
         read_from_dataset(self._dset, self._selection, loading_array)
@@ -120,14 +117,14 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
     def read_direct(
         self,
         dest: npt.NDArray[_T],
-        source_sel: tuple[slice, ...],
-        dest_sel: tuple[slice, ...],
+        source_sel: tuple[int | slice, ...],
+        dest_sel: tuple[int | slice, ...],
     ) -> None:
-        dset = self._dset.asstr() if np.issubdtype(self.dtype, str) else self._dset
+        dataset = self._dset.asstr() if np.issubdtype(self.dtype, str) else self._dset
         read_from_dataset(
-            dset,
-            Selection(
-                (FullSlice.from_slice(sl, max_=axis_shape) for sl, axis_shape in zip(source_sel, dset.shape)),
+            dataset,
+            ci.Selection(
+                (ci.as_indexer(sl, max=axis_shape) for sl, axis_shape in zip(source_sel, self.shape)),
                 shape=self.shape,
             ).cast_on(self._selection),
             dest[dest_sel],

@@ -1,19 +1,12 @@
-# coding: utf-8
+from __future__ import annotations
 
-# ====================================================
-# imports
-from typing import Any
-from typing import Sequence  # noqa: F401
-from typing import Collection
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Collection, Sequence
 
 if TYPE_CHECKING:
-    from typing_extensions import TypeGuard  # noqa: F401
+    from typing_extensions import TypeGuard
 
 
-# ====================================================
-# code
-def is_sequence(obj: Any) -> "TypeGuard[Sequence[Any]]":
+def is_sequence(obj: Any) -> TypeGuard[Sequence[Any]]:
     """Is the object a sequence of objects ? (excluding strings and byte objects.)"""
     return (
         isinstance(obj, Collection)

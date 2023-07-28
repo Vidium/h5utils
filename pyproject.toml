@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ch5mpy"
 description = "Collection of helper tools for reading or writing to h5 files using the h5py library."
-version = "0.2.3rc1"
+version = "0.3.0rc1"
 requires-python = ">=3.7"
 license = {file = "LICENSE"}
 authors = [
@@ -69,6 +69,7 @@ paths = ["ch5mpy", "vulture_whitelist.py"]
 
 [tool.ruff]
 line-length = 120
+ignore = ["E701"]
 
 [tool.mypy]
 mypy_path = "stubs"

@@ -261,7 +261,10 @@ def sort(
 
 @implements(np.insert)
 def insert(
-    arr: H5Array[Any], obj: int | slice | Sequence[int], values: npt.ArrayLike, axis: int | None = None
+    arr: H5Array[Any],
+    obj: int | slice | Sequence[int],
+    values: npt.ArrayLike,
+    axis: int | None = None,
 ) -> H5Array[Any]:
     """/!\ Happens `in place` !"""
     if arr.ndim > 1 and axis is None:

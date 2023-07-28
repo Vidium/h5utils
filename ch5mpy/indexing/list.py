@@ -1,57 +1,38 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import numpy as np
 import numpy.typing as npt
 
-if TYPE_CHECKING:
-    from ch5mpy.indexing.typing import SELECTION_ELEMENT
+from ch5mpy.indexing.base import Indexer, as_indexer
 
 
-# ====================================================
-# code
-class ListIndex:
+class ListIndex(Indexer):
     # region magic methods
-    def __init__(self, elements: npt.NDArray[np.int_]):
+    def __init__(self, elements: npt.NDArray[np.int_], max: int):
         if elements.dtype != int:
-            raise RuntimeError
+            raise ValueError("Indexing elements should be integers.")
+        if elements.ndim == 0:
+            raise ValueError("Cannot build empty ListIndex, use EmptyList instead.")
 
         self._elements = np.array(elements)
+        self._max = max
+
+        if self._elements.min() < -max or self._elements.max() >= max:
+            raise IndexError(f"Selection {self._elements} is out of bounds for axis with size {max}.")
 
     def __repr__(self) -> str:
         flat_elements_repr = str(self._elements).replace("\n", "")
-        return f"ListIndex({flat_elements_repr} | ndim={self.ndim})"
+        return f"ListIndex({flat_elements_repr}, ndim={self.ndim} | {self._max})"
 
-    def __getitem__(self, item: int | SELECTION_ELEMENT | tuple[int | SELECTION_ELEMENT, ...]) -> ListIndex:
-        from ch5mpy.indexing.special import NewAxisType
+    def __getitem__(self, item: Indexer | tuple[Indexer, ...]) -> Indexer:
+        if not isinstance(item, tuple):
+            item = (item,)
 
-        if isinstance(item, tuple):
-            if any(isinstance(e, NewAxisType) for e in item):
-                return ListIndex(self._elements[None])
-
-            casted_items: tuple[slice | npt.NDArray[np.int_], ...] = tuple(
-                i.as_array() if isinstance(i, ListIndex) else i.as_slice() for i in item  # type: ignore[union-attr]
-            )
-
-            return ListIndex(self._elements[casted_items])
-
-        if isinstance(item, NewAxisType):
-            raise RuntimeError
-
-        if self.ndim == 0 and item == 0:
-            return ListIndex(self._elements)
-
-        return ListIndex(self._elements[item])
+        return as_indexer(self._elements[tuple(i.as_numpy_index() for i in item)], max=self._max)
 
     def __len__(self) -> int:
-        if self._elements.ndim == 0:
-            return 1
-
         return len(self._elements)
 
     def __eq__(self, other: Any) -> bool:
@@ -74,12 +55,8 @@ class ListIndex:
         return self._elements.ndim
 
     @property
-    def min(self) -> int:
-        return int(self._elements.min())
-
-    @property
     def max(self) -> int:
-        return int(self._elements.max())
+        return self._max
 
     @property
     def shape(self) -> tuple[int, ...]:
@@ -90,10 +67,8 @@ class ListIndex:
         return self._elements.size
 
     @property
-    def is_zero(self) -> bool:
-        return (self._elements.ndim == 0 and self._elements == 0) or (
-            self._elements.shape == (1,) and all(self._elements == 0)
-        )
+    def is_whole_axis(self) -> bool:
+        return np.array_equal(self._elements, np.arange(self._max))
 
     # endregion
 
@@ -109,26 +84,29 @@ class ListIndex:
 
         return elements
 
+    def as_numpy_index(self) -> npt.NDArray[np.int_]:
+        return self.__array__()
+
     def squeeze(self) -> ListIndex:
         if self.size <= 1:
             return self
 
-        return ListIndex(np.squeeze(self._elements))
+        return ListIndex(np.squeeze(self._elements), self._max)
 
     def expand_to_dim(self, n: int) -> ListIndex:
         if n < self.ndim:
             raise RuntimeError
 
         expanded_shape = (1,) * (n - self.ndim) + self.shape
-        return ListIndex(self._elements.reshape(expanded_shape))
+        return ListIndex(self._elements.reshape(expanded_shape), self._max)
 
     def broadcast_to(self, shape: tuple[int, ...]) -> ListIndex:
-        return ListIndex(np.broadcast_to(self._elements, shape))
+        return ListIndex(np.broadcast_to(self._elements, shape), self._max)
 
     def reshape(self, shape: tuple[int, ...]) -> ListIndex:
-        return ListIndex(self._elements.reshape(shape))
+        return ListIndex(self._elements.reshape(shape), self._max)
 
     def flatten(self) -> ListIndex:
-        return ListIndex(self._elements.flatten())
+        return ListIndex(self._elements.flatten(), self._max)
 
     # endregion

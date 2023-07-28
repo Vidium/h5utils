@@ -17,11 +17,6 @@ def test_true_stop_step3():
     assert f.true_stop == 11
 
 
-def test_true_stop_no_len():
-    f = FullSlice(0, 0, 1, 0)
-    assert f.true_stop == 0
-
-
 def test_length():
     f = FullSlice(0, 3, 1, 10)
     assert len(f) == 3

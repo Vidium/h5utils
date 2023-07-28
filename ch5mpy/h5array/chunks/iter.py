@@ -13,7 +13,7 @@ import numpy.typing as npt
 import ch5mpy
 from ch5mpy.h5array.chunks.repeated_array import RepeatedArray
 from ch5mpy.h5array.chunks.utils import _as_valid_dtype
-from ch5mpy.indexing import FullSlice, map_slice
+from ch5mpy.indexing import FullSlice, SingleIndex, map_slice
 
 if TYPE_CHECKING:
     from ch5mpy import H5Array
@@ -25,15 +25,17 @@ _DT = TypeVar("_DT", bound=np.generic)
 INF = np.iinfo(int).max
 
 
-def get_work_array(shape: tuple[int, ...], slicer: tuple[FullSlice, ...], dtype: np.dtype[_DT]) -> npt.NDArray[_DT]:
-    if len(slicer) == 1 and slicer[0].is_whole_axis:
+def get_work_array(
+    shape: tuple[int, ...], slicer: tuple[FullSlice | SingleIndex, ...], dtype: np.dtype[_DT]
+) -> npt.NDArray[_DT]:
+    if len(slicer) == 1 and isinstance(slicer[0], FullSlice) and slicer[0].is_whole_axis:
         return np.empty(shape, dtype=object if np.issubdtype(dtype, str) else dtype)
 
-    slicer_shape = tuple(len(s) for s in slicer)
+    slicer_shape = tuple(len(s) for s in slicer if not isinstance(s, SingleIndex))
     return np.empty(slicer_shape, dtype=object if np.issubdtype(dtype, str) else dtype)
 
 
-def _get_chunk_indices(chunk_size: int, shape: tuple[int, ...]) -> tuple[tuple[FullSlice, ...], ...]:
+def _get_chunk_indices(chunk_size: int, shape: tuple[int, ...]) -> tuple[tuple[FullSlice | SingleIndex, ...], ...]:
     # special case of 0D arrays
     if len(shape) == 0:
         raise ValueError("0D array")
@@ -72,7 +74,7 @@ def _get_chunk_indices(chunk_size: int, shape: tuple[int, ...]) -> tuple[tuple[F
     left_chunks = np.array(np.meshgrid(*map(range, left_shape))).T.reshape(-1, len(left_shape))
 
     return tuple(
-        tuple(FullSlice.one(_l, _s) for _l, _s in zip(left, shape)) + tuple(right)
+        tuple(SingleIndex(_l, _s) for _l, _s in zip(left, shape)) + tuple(right)
         for left in left_chunks
         for right in right_chunks
     )
@@ -92,7 +94,7 @@ class ChunkIterator:
 
     def __iter__(
         self,
-    ) -> Generator[tuple[tuple[FullSlice, ...], npt.NDArray[Any]], None, None]:
+    ) -> Generator[tuple[tuple[FullSlice | SingleIndex, ...], npt.NDArray[Any]], None, None]:
         for index in self._chunk_indices:
             work_subset = map_slice(index, shift_to_zero=True)
             self._array.read_direct(self._work_array, source_sel=map_slice(index), dest_sel=work_subset)
@@ -135,7 +137,7 @@ class PairedChunkIterator:
 
     def __iter__(
         self,
-    ) -> Generator[tuple[tuple[FullSlice, ...], npt.NDArray[Any], npt.NDArray[Any]], None, None]:
+    ) -> Generator[tuple[tuple[SingleIndex | FullSlice, ...], npt.NDArray[Any], npt.NDArray[Any]], None, None]:
         for index in self._chunk_indices:
             work_subset = map_slice(index, shift_to_zero=True)
             res_1 = self._arr_1.read(self._work_array_1, map_slice(index), work_subset)
@@ -150,7 +152,7 @@ class PairedChunkIterator:
 
 def iter_chunks_2(
     x1: npt.NDArray[Any] | H5Array[Any], x2: npt.NDArray[Any] | H5Array[Any]
-) -> Generator[tuple[tuple[FullSlice, ...], npt.NDArray[Any], npt.NDArray[Any] | Number], None, None,]:
+) -> Generator[tuple[tuple[SingleIndex | FullSlice, ...], npt.NDArray[Any], npt.NDArray[Any] | Number], None, None,]:
     # special case where x2 is a 0D array, iterate through chunks of x1 and always yield x2
     if x2.ndim == 0:
         if isinstance(x1, ch5mpy.H5Array):

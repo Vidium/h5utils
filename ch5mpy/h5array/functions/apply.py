@@ -1,12 +1,9 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
+from enum import Enum, auto
 from functools import partial
 from numbers import Number
-from typing import TYPE_CHECKING, Any, Iterable, Literal, Union
+from typing import TYPE_CHECKING, Any, Iterable, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -15,15 +12,21 @@ from numpy import _NoValue as NoValue  # type: ignore[attr-defined]
 import ch5mpy
 from ch5mpy._typing import NP_FUNC
 from ch5mpy.h5array.chunks.iter import iter_chunks_2
-from ch5mpy.indexing import FullSlice, map_slice
+from ch5mpy.indexing import FullSlice, SingleIndex, map_slice
 
 if TYPE_CHECKING:
     from ch5mpy import H5Array
 
 
-# ====================================================
-# code
 WHERE_SELECTION = Union[npt.NDArray[np.bool_], tuple[()]]
+
+
+class ApplyOperation(Enum):
+    set = auto()
+    iadd = auto()
+    imul = auto()
+    iand = auto()
+    ior = auto()
 
 
 class MaskWhere:
@@ -118,14 +121,14 @@ def _as_tuple(
 
 
 def _get_indices(
-    index: tuple[FullSlice, ...],
+    index: tuple[SingleIndex | FullSlice, ...],
     axis: tuple[int, ...],
     where_compute: MaskWhere,
     where_output: MaskWhere,
     output_ndim: int,
 ) -> tuple[WHERE_SELECTION, tuple[slice, ...] | tuple[()], WHERE_SELECTION]:
     # compute on whole array at once
-    if len(index) == 1 and index[0].is_whole_axis:
+    if len(index) == 1 and isinstance(index[0], FullSlice) and index[0].is_whole_axis:
         return where_compute[:], (), where_output[index]
 
     where_to_compute = where_compute[map_slice(index)]
@@ -140,7 +143,7 @@ def _get_indices(
 
 
 def _apply_operation(
-    operation: Literal["__set__", "__iadd__", "__imul__", "__iand__", "__ior__"],
+    operation: ApplyOperation,
     dest: H5Array[Any] | npt.NDArray[Any],
     chunk_selection: tuple[slice, ...] | tuple[()],
     where_to_output: WHERE_SELECTION,
@@ -149,35 +152,35 @@ def _apply_operation(
     if values.ndim == 0:
         values = values[()]
 
-    if operation == "__set__":
+    if operation is ApplyOperation.set:
         if dest.ndim == 0:
             dest[()] = values
 
         else:
             dest[chunk_selection][where_to_output] = values[where_to_output]
 
-    elif operation == "__iadd__":
+    elif operation is ApplyOperation.iadd:
         if dest.ndim == 0:
             dest[()] = values + dest[()]
 
         else:
             dest[chunk_selection][where_to_output] += values[where_to_output]
 
-    elif operation == "__imul__":
+    elif operation is ApplyOperation.imul:
         if dest.ndim == 0:
             dest *= values  # type: ignore[assignment]
 
         else:
             dest[chunk_selection][where_to_output] *= values[where_to_output]
 
-    elif operation == "__iand__":
+    elif operation is ApplyOperation.iand:
         if dest.ndim == 0:
             dest &= values  # type: ignore[assignment]
 
         else:
             dest[chunk_selection][where_to_output] &= values[where_to_output]
 
-    elif operation == "__ior__":
+    elif operation is ApplyOperation.ior:
         if dest.ndim == 0:
             dest |= values  # type: ignore[assignment]
 
@@ -190,7 +193,7 @@ def _apply_operation(
 
 def apply(
     func: partial[NP_FUNC],
-    operation: Literal["__set__", "__iadd__", "__imul__", "__iand__", "__ior__"],
+    operation: ApplyOperation,
     a: H5Array[Any],
     out: H5Array[Any] | npt.NDArray[Any] | None,
     *,
@@ -216,6 +219,36 @@ def apply(
                 dtype=output_array.dtype,
             )
             _apply_operation(operation, output_array, chunk_selection, where_to_output, result)
+
+    if out is None and output_array.ndim == 0:
+        return output_array[()]
+
+    return output_array
+
+
+def apply_everywhere(
+    func: partial[NP_FUNC],
+    operation: ApplyOperation,
+    a: H5Array[Any],
+    out: H5Array[Any] | npt.NDArray[Any] | None,
+    *,
+    dtype: npt.DTypeLike | None,
+    initial: int | float | complex | NoValue,
+    default_0D_output: bool = True,
+) -> Any:
+    dtype = a.dtype if dtype is None else dtype
+    axis = _as_tuple(func.keywords.get("axis", None), a.ndim, default_0D_output)
+    output_array = _get_output_array(out, a.shape, axis, func.keywords.get("keepdims", False), dtype, initial)
+
+    where_compute = MaskWhere(True, a.shape)
+    where_output = MaskWhere(True, output_array.shape)
+
+    for index, chunk in a.iter_chunks(keepdims=True):
+        where_to_compute, chunk_selection, where_to_output = _get_indices(
+            index, axis, where_compute, where_output, output_array.ndim
+        )
+        result = np.array(func(chunk), dtype=output_array.dtype)
+        _apply_operation(operation, output_array, chunk_selection, where_to_output, result)
 
     if out is None and output_array.ndim == 0:
         return output_array[()]
@@ -251,21 +284,11 @@ def _get_str_dtype(
     raise NotImplementedError
 
 
-def _largest_shape(shape_a: tuple[int, ...], shape_b: tuple[int, ...]) -> tuple[int, ...]:
-    if len(shape_a) > len(shape_b):
-        return shape_a
-
-    if len(shape_b) > len(shape_a):
-        return shape_b
-
-    return max(shape_a, shape_b)
-
-
 def str_apply_2(
     func: NP_FUNC,
     a: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_],
     b: Any,
-) -> npt.NDArray[Any] | bool:
+) -> npt.NDArray[Any] | H5Array[Any] | bool:
     if not isinstance(a, (np.ndarray, ch5mpy.H5Array)):
         a = np.array(a, dtype=str)
 
@@ -275,7 +298,7 @@ def str_apply_2(
     if b.dtype == object:
         b = b.astype(str)
 
-    output_array = np.empty(_largest_shape(a.shape, b.shape), dtype=_get_str_dtype(a, b, func))
+    output_array = _get_output_array_2(None, a.shape, b.shape, _get_str_dtype(a, b, func), None)
 
     if not np.issubdtype(b.dtype, str):
         try:
@@ -339,7 +362,7 @@ def apply_2(
                 ),
                 dtype=output_array.dtype,
             )
-            _apply_operation("__set__", output_array, chunk_selection, where_to_output, result)
+            _apply_operation(ApplyOperation.set, output_array, chunk_selection, where_to_output, result)
 
     if out is None and output_array.ndim == 0:
         return output_array[()]

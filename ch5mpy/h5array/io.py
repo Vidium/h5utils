@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from typing import Any, Generator, TypeVar, cast
@@ -12,18 +8,16 @@ from numpy import typing as npt
 from ch5mpy.indexing.selection import Selection
 from ch5mpy.objects import Dataset, DatasetWrapper
 
-# ====================================================
-# code
 _DT = TypeVar("_DT", bound=np.generic)
 
 
 class IterWithFinalReordering:
     def __init__(self, gen: Generator[Any, Any, Any]):
         self.gen = gen
-        self.value = None
+        self.final_reordering: tuple[npt.NDArray[np.int_] | slice, ...] | None = None
 
     def __iter__(self) -> Generator[Any, Any, Any]:
-        self.value = yield from self.gen
+        self.final_reordering = yield from self.gen
 
 
 def read_from_dataset(
@@ -39,14 +33,13 @@ def read_from_dataset(
     if not loading_array.size:
         return
 
-    reordering = IterWithFinalReordering(selection.iter_indexers())
-    for dataset_idx, loading_array_idx in reordering:
+    indexers = IterWithFinalReordering(selection.iter_indexers())
+    for dataset_idx, loading_array_idx in indexers:
         # TODO : would be nice to be able to pass an array with random order in `dest_sel`
         dataset.read_direct(loading_array, source_sel=dataset_idx, dest_sel=loading_array_idx)
 
-    # reorder values in loading_array if needed
-    if loading_array.ndim > 0:
-        loading_array[:] = loading_array[reordering.value]
+    if indexers.final_reordering is not None:
+        loading_array[:] = loading_array[indexers.final_reordering]
 
 
 def read_one_from_dataset(
@@ -69,5 +62,5 @@ def write_to_dataset(
     if values.size == np.prod(selection_shape) and values.shape != selection_shape:
         values = values.reshape(selection_shape)
 
-    for dataset_idx, array_idx in selection.iter_indexers():
+    for dataset_idx, array_idx in selection.iter_indexers(can_reorder=False):
         dataset.write_direct(values, source_sel=array_idx, dest_sel=dataset_idx)

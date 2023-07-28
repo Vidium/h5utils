@@ -13,7 +13,7 @@ import numpy.typing as npt
 from numpy import _NoValue as NoValue  # type: ignore[attr-defined]
 
 from ch5mpy._typing import NP_FUNC
-from ch5mpy.h5array.functions.apply import apply
+from ch5mpy.h5array.functions.apply import ApplyOperation, apply, apply_everywhere
 from ch5mpy.h5array.functions.implement import implements, register
 
 if TYPE_CHECKING:
@@ -33,7 +33,7 @@ def H5_ufunc(
 ) -> Any:
     return apply(
         partial(np_ufunc, dtype=dtype),
-        "__set__",
+        ApplyOperation.set,
         a,
         out=None if out is None else out[0],
         dtype=dtype,
@@ -89,7 +89,7 @@ def isfinite(
 ) -> Any:
     return apply(
         partial(np.isfinite),
-        "__set__",
+        ApplyOperation.set,
         a,
         out=None if out is None else out[0],
         dtype=bool,
@@ -108,7 +108,7 @@ def isinf(
 ) -> Any:
     return apply(
         partial(np.isinf),
-        "__set__",
+        ApplyOperation.set,
         a,
         out=None if out is None else out[0],
         dtype=bool,
@@ -127,7 +127,7 @@ def isnan(
 ) -> Any:
     return apply(
         partial(np.isnan),
-        "__set__",
+        ApplyOperation.set,
         a,
         out=None if out is None else out[0],
         dtype=bool,
@@ -139,28 +139,26 @@ def isnan(
 
 @implements(np.isneginf)
 def isneginf(a: H5Array[Any], out: tuple[H5Array[Any] | npt.NDArray[Any]] | None = None) -> Any:
-    return apply(
+    return apply_everywhere(
         partial(np.isneginf),
-        "__set__",
+        ApplyOperation.set,
         a,
         out=None if out is None else out[0],
         dtype=bool,
         initial=NoValue,
-        where=NoValue,
         default_0D_output=False,
     )
 
 
 @implements(np.isposinf)
 def isposinf(a: H5Array[Any], out: tuple[H5Array[Any] | npt.NDArray[Any]] | None = None) -> Any:
-    return apply(
+    return apply_everywhere(
         partial(np.isposinf),
-        "__set__",
+        ApplyOperation.set,
         a,
         out=None if out is None else out[0],
         dtype=bool,
         initial=NoValue,
-        where=NoValue,
         default_0D_output=False,
     )
 
@@ -180,7 +178,7 @@ def prod(
 
     return apply(
         partial(np.prod, keepdims=keepdims, dtype=dtype, axis=axis),
-        "__imul__",
+        ApplyOperation.imul,
         a,
         out,
         dtype=dtype,
@@ -203,7 +201,7 @@ def sum_(
 
     return apply(
         partial(np.sum, keepdims=keepdims, dtype=dtype, axis=axis),
-        "__iadd__",
+        ApplyOperation.iadd,
         a,
         out,
         dtype=dtype,
@@ -241,7 +239,13 @@ def amax(
     where: npt.NDArray[np.bool_] | Iterable[np.bool_] | int | bool | NoValue = NoValue,
 ) -> npt.NDArray[np.number[Any]] | np.number[Any]:
     return apply(  # type: ignore[no-any-return]
-        partial(np.amax, keepdims=keepdims, axis=axis), "__set__", a, out, dtype=None, initial=initial, where=where
+        partial(np.amax, keepdims=keepdims, axis=axis),
+        ApplyOperation.set,
+        a,
+        out,
+        dtype=None,
+        initial=initial,
+        where=where,
     )
 
 
@@ -256,7 +260,7 @@ def amin(
 ) -> npt.NDArray[np.number[Any]] | np.number[Any]:
     return apply(  # type: ignore[no-any-return]
         partial(np.amin, keepdims=keepdims, axis=axis),
-        "__set__",
+        ApplyOperation.set,
         a,
         out,
         dtype=None,
@@ -276,7 +280,7 @@ def all_(
 ) -> npt.NDArray[Any] | bool:
     return apply(  # type: ignore[no-any-return]
         partial(np.all, keepdims=keepdims, axis=axis),
-        "__iand__",
+        ApplyOperation.iand,
         a,
         out,
         dtype=bool,
@@ -296,7 +300,7 @@ def any_(
 ) -> npt.NDArray[Any] | bool:
     return apply(  # type: ignore[no-any-return]
         partial(np.any, keepdims=keepdims, axis=axis),
-        "__ior__",
+        ApplyOperation.ior,
         a,
         out,
         dtype=bool,

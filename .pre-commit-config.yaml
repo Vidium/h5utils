@@ -2,7 +2,7 @@ fail_fast: true
 
 repos:
   - repo: https://github.com/ambv/black
-    rev: 23.3.0
+    rev: 23.7.0
     hooks:
       - id: black
         args: [--line-length=120]

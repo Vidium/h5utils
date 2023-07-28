@@ -166,9 +166,32 @@ def test_equal_other_shape(small_array):
     )
 
 
+def test_equal_other_shape_str(str_array):
+    assert np.array_equal(
+        str_array == np.array(["a", "bc", "d", "efg", "h"]).reshape((-1, 1)),
+        np.array(
+            [
+                [True, False, False, False, False],
+                [False, True, False, False, False],
+                [False, False, True, False, False],
+                [False, False, False, True, False],
+                [False, False, False, False, True],
+            ]
+        ),
+    )
+
+
 def test_equal_view(array):
     subarr = array[[[0], [1], [2]], [0, 1]]
     assert np.all(subarr == np.array([[0, 1], [10, 11], [20, 21]]))
+
+
+def test_equal_view_other_shape(small_array):
+    subarr = small_array[[3, 2, 4]]
+    assert np.array_equal(
+        subarr == np.array([3, 5, 4]).reshape((-1, 1)),
+        np.array([[False, True, False], [False, False, True], [True, False, False]]),
+    )
 
 
 def test_equal_2d_array(array):

@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from pathlib import Path
@@ -13,8 +9,6 @@ from ch5mpy.objects import File, Group, H5Object
 from ch5mpy.read import read_object
 from ch5mpy.write import write_object
 
-# ====================================================
-# code
 _T = TypeVar("_T")
 
 

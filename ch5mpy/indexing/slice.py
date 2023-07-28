@@ -1,55 +1,45 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from math import lcm
-from typing import TYPE_CHECKING, Any, Iterable, Literal
+from typing import Any, Iterable, Literal
 
 import numpy as np
 import numpy.typing as npt
 
-from ch5mpy.indexing.list import ListIndex
-
-if TYPE_CHECKING:
-    from ch5mpy.indexing.typing import SELECTION_ELEMENT
-
-
-# ====================================================
-# code
-def _positive(value: int, max_: int) -> int:
-    return value if value >= 0 else max_ + value
+from ch5mpy.indexing.base import Indexer, as_indexer
+from ch5mpy.indexing.single import SingleIndex
+from ch5mpy.indexing.special import NewAxis
 
 
-class FullSlice:
+def _positive(value: int, max: int) -> int:
+    return value if value >= 0 else max + value
+
+
+class FullSlice(Indexer):
     # region magic methods
-    def __new__(cls, start: int | None, stop: int | None, step: int | None, max_: int):
-        if start is not None and step is not None and np.sign(start) * np.sign(step) == -1:
-            # /!\ np.sign(0) is 0 --> so when signs are different -- excluding 0 -- their product is -1
-            return ListIndex(np.arange(start, max_ if stop is None else stop, step))
-
-        return super().__new__(cls)
-
     def __init__(
         self,
         start: int | None,
         stop: int | None,
         step: int | None,
-        max_: int,
+        max: int,
     ):
         if step == 0:
             raise ValueError("FullSlice step cannot be zero.")
 
         start = 0 if start is None else start
-        stop = max_ if stop is None else stop
+        stop = max if stop is None else stop
 
-        self._start = _positive(0 if start is None else start, max_)
-        self._step = 1 if step is None else step
-        self._stop = _positive(min(stop, max_), max_)
-        self._max = max_
+        self._start = _positive(0 if start is None else start, max)
+        self._step = 1 if step is None else abs(step)
+        self._stop = _positive(min(stop, max), max)
+        self._max = max
 
-        assert self._max >= self._start and self._max >= self._stop
+        if self._max < self._start and self._max < self._stop:
+            raise IndexError(f"Selection {slice(start, stop, step)} is out of bounds for axis with size {max}.")
+
+        if len(self) == 0:
+            raise ValueError("FullSlice cannot have length 0.")
 
     def __repr__(self) -> str:
         if self.is_one_element:
@@ -80,21 +70,19 @@ class FullSlice:
 
         return (self.true_stop - self._start) // self._step + 1
 
-    def __getitem__(self, item: SELECTION_ELEMENT) -> ListIndex | FullSlice:
-        from ch5mpy.indexing.special import NewAxisType
-
+    def __getitem__(self, item: Indexer) -> Indexer:
         if isinstance(item, FullSlice):
             return FullSlice(
                 start=self._start + item.start * self._step,
                 stop=self._start + item.stop * self._step,
                 step=lcm(self._step, item.step),
-                max_=self._max,
+                max=self._max,
             )
 
-        if isinstance(item, NewAxisType):
+        if item is NewAxis:
             raise RuntimeError
 
-        return ListIndex(np.array(self)[item])
+        return as_indexer(np.array(self)[item.as_numpy_index()], max=self._max)
 
     def __array__(self, dtype: npt.DTypeLike | None = None) -> npt.NDArray[Any]:
         return np.array(range(self.start, self._stop, self._step), dtype=dtype)
@@ -116,8 +104,7 @@ class FullSlice:
         if self._start == self._stop:
             return self._stop
 
-        last = np.arange(self._stop - self._step, self._stop, dtype=int)
-        return int(last[last % self._step == self._start % self._step][-1])
+        return self._start + (self._stop - 1 - self._start) // self._step * self._step
 
     @property
     def step(self) -> int:
@@ -150,20 +137,22 @@ class FullSlice:
 
     # region methods
     @classmethod
-    def whole_axis(cls, max_: int) -> FullSlice:
-        return FullSlice(0, max_, 1, max_)
+    def whole_axis(cls, max: int) -> FullSlice:
+        return FullSlice(0, max, 1, max)
 
     @classmethod
-    def one(cls, element: int, max_: int | None = None) -> FullSlice:
-        max_ = element + 1 if max_ is None else max_
-        return FullSlice(element, element + 1, 1, max_)
+    def one(cls, element: int, max: int) -> FullSlice:
+        return FullSlice(element, element + 1, 1, max)
 
     @classmethod
-    def from_slice(cls, s: slice | range, max_: int) -> FullSlice:
-        return FullSlice(s.start, s.stop, s.step, max_)
+    def from_slice(cls, s: slice | range, max: int) -> FullSlice:
+        return FullSlice(s.start, s.stop, s.step, max)
 
     def as_slice(self) -> slice:
         return slice(self.start, self.stop, self.step)
+
+    def as_numpy_index(self) -> slice:
+        return self.as_slice()
 
     def shift_to_zero(self) -> FullSlice:
         return FullSlice(0, self.stop - self.start, self.step, self._max)
@@ -171,9 +160,9 @@ class FullSlice:
     # endregion
 
 
-def map_slice(index: Iterable[FullSlice], shift_to_zero: bool = False) -> tuple[slice, ...]:
+def map_slice(index: Iterable[FullSlice | SingleIndex], shift_to_zero: bool = False) -> tuple[slice, ...]:
     if shift_to_zero:
-        return tuple(fs.shift_to_zero().as_slice() for fs in index)
+        return tuple(fs.shift_to_zero().as_slice() for fs in index if isinstance(fs, FullSlice))
 
     else:
         return tuple(fs.as_slice() for fs in index)

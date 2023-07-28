@@ -322,6 +322,7 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
             TypeError: if the H5Array does not wrap a chunked Dataset.
         """
         self._resize(amount, axis)
+        self[0]
 
     def contract(self, amount: int, axis: int | tuple[int, ...] | None = None) -> None:
         """
@@ -375,8 +376,8 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     def read_direct(
         self,
         dest: npt.NDArray[_T],
-        source_sel: tuple[slice, ...],
-        dest_sel: tuple[slice, ...],
+        source_sel: tuple[int | slice, ...],
+        dest_sel: tuple[int | slice, ...],
     ) -> None:
         dset = self._dset.asstr() if np.issubdtype(self.dtype, str) else self._dset
         dset.read_direct(dest, source_sel=source_sel, dest_sel=dest_sel)

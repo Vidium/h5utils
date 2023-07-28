@@ -1,7 +1,3 @@
-# coding: utf-8
-
-# ====================================================
-# imports
 from __future__ import annotations
 
 from itertools import zip_longest
@@ -16,8 +12,6 @@ if TYPE_CHECKING:
     from ch5mpy import H5Array
 
 
-# ====================================================
-# code
 def _as_range(s: slice) -> range:
     return range(s.start or 0, s.stop, s.step or 1)
 
@@ -100,8 +94,8 @@ class RepeatedArray:
     def read(
         self,
         out: npt.NDArray[Any],
-        source_sel: tuple[slice, ...],
-        dest_sel: tuple[slice, ...],
+        source_sel: tuple[int | slice, ...],
+        dest_sel: tuple[int | slice, ...],
     ) -> npt.NDArray[Any]:
         # if isinstance(self._array, ch5mpy.H5Array):
         #     self._array.read_direct(out, source_sel=source_sel, dest_sel=dest_sel)

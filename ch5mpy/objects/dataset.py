@@ -274,8 +274,8 @@ class Dataset(PickleableH5Object, h5py.Dataset, Generic[_T]):
     def write_direct(
         self,
         source: npt.NDArray[Any],
-        source_sel: tuple[int | slice | Collection[int], ...] | None = None,
-        dest_sel: tuple[int | slice | Collection[int], ...] | None = None,
+        source_sel: tuple[int | slice | Collection[int] | None, ...] | None = None,
+        dest_sel: tuple[int | slice | Collection[int] | None, ...] | None = None,
     ) -> None:
         if not source.flags.carray:
             # ensure 'C' memory layout
