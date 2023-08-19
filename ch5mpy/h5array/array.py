@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from numbers import Number
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Collection, Iterator, Literal, SupportsIndex, TypeVar
+from typing import TYPE_CHECKING, Any, Collection, Iterator, Literal, SupportsIndex, TypeVar, cast
 
 import numpy as np
 import numpy.lib.mixins
@@ -38,6 +38,16 @@ def as_array(values: Any, dtype: np.dtype[Any]) -> npt.NDArray[Any]:
 
     except ValueError:
         raise ValueError(f"Couldn't set value of type {type(values)} in H5Array of type {dtype}.")
+
+
+def as_python_scalar(value: np.number[Any]) -> int | float:
+    if isinstance(value, np.integer):
+        return int(value)
+
+    if isinstance(value, np.floating):
+        return float(value)
+
+    raise TypeError(f"Cannot convert {type(value)} to Python scalar.")
 
 
 def _dtype_repr(dset: Dataset[Any] | DatasetWrapper[Any]) -> str:
@@ -404,5 +414,14 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
         mode: Literal["raise", "wrap", "clip"] = "raise",
     ) -> npt.NDArray[_T]:
         return np.take(self, indices, axis=axis, mode=mode)
+
+    def item(self, *args: int) -> int | float:
+        if args == () and self._dset.size != 1:
+            raise ValueError("can only convert an H5Array of size 1 to a Python scalar")
+
+        for a in args:
+            assert isinstance(a, (int, np.integer))
+
+        return as_python_scalar(cast(np.number[Any], self.__getitem__(args)))
 
     # endregion

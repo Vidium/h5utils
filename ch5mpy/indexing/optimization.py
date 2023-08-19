@@ -1,9 +1,11 @@
 from itertools import chain
 
 import numpy as np
+from typing import cast
 
 from ch5mpy.indexing.base import Indexer
 from ch5mpy.indexing.list import ListIndex
+from ch5mpy.indexing.single import SingleIndex
 from ch5mpy.indexing.slice import FullSlice
 from ch5mpy.indexing.special import EmptyList, NewAxis
 from ch5mpy.indexing.utils import takewhile_inclusive
@@ -15,10 +17,13 @@ class Vector:
         self._index = index
         self._max = index.max
 
+    def __repr__(self) -> str:
+        return f"Vector({self._index})"
+
     # endregion
 
     # region methods
-    def as_slice(self) -> FullSlice | ListIndex:
+    def try_as_slice(self) -> FullSlice | None:
         array = self._index.as_array(flattened=True)
         array[array < 0] += self._index.max
 
@@ -29,9 +34,14 @@ class Vector:
 
         # check all steps are equal and > 0
         if steps[0] <= 0 or np.any(steps != steps[0]):
-            return self._index
+            return None
 
         return FullSlice(array[0], array[-1] + steps[0], steps[0], max=self._index.max)
+
+    def drop_axes(self, n: int) -> ListIndex:
+        n = min(self._index.ndim - 1, n)
+
+        return cast(ListIndex, self._index[(SingleIndex(0, max=self._max),) * n])
 
     # endregion
 
@@ -47,17 +57,21 @@ class VectorEnsembl:
     def convert(self) -> tuple[FullSlice | ListIndex, ...]:
         converted_vectors: tuple[FullSlice | ListIndex, ...] = ()
         can_convert = True
+        drop_n_axes = 0
 
         for vector in self._vectors:
             if can_convert:
-                converted = vector.as_slice()
-                if isinstance(converted, ListIndex):
+                converted = vector.try_as_slice()
+                if converted is None:
                     can_convert = False
+                    converted_vectors += (vector.drop_axes(drop_n_axes),)
+
+                else:
+                    drop_n_axes += 1
+                    converted_vectors += (converted,)
 
             else:
-                converted = vector._index
-
-            converted_vectors += (converted,)
+                converted_vectors += (vector.drop_axes(drop_n_axes),)
 
         return converted_vectors
 

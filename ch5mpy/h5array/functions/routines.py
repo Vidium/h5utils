@@ -10,6 +10,7 @@ from numpy._typing import _ArrayLikeInt_co
 import ch5mpy
 from ch5mpy._typing import NP_FUNC
 from ch5mpy.h5array.functions.implement import implements
+from ch5mpy.h5array.functions.two_arrays import ensure_h5array_first
 
 if TYPE_CHECKING:
     from ch5mpy import H5Array
@@ -379,3 +380,16 @@ def copyto(
         raise TypeError(f"Cannot cast array data from {src.dtype} to {src.dtype} according to rule '{casting}'.")
 
     dst[()] = np.broadcast_to(src, dst.shape)
+
+
+@implements(np.may_share_memory)
+def may_share_memory(a: H5Array[Any] | npt.NDArray[Any], b: H5Array[Any] | npt.NDArray[Any]) -> bool:
+    a_, b_ = ensure_h5array_first(a, b)
+
+    if not isinstance(b_, ch5mpy.H5Array):
+        return False
+
+    if a_._dset is b_._dset:
+        return True
+
+    return False

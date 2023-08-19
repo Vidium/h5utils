@@ -47,6 +47,9 @@ class AttributeManager:
         if value is None:
             self._attrs[name] = _NONE_VALUE
 
+        if isinstance(value, bytes):
+            self._attrs[name] = np.void(value)
+
         else:
             try:
                 self._attrs[name] = value

@@ -4,6 +4,7 @@ from collections.abc import Iterable, KeysView, MutableMapping
 from itertools import islice
 from pathlib import Path
 from typing import Any, ItemsView, Iterator, TypeVar, Union, ValuesView, cast
+from types import TracebackType
 
 import numpy as np
 from h5py._hl.base import ItemsViewHDF5
@@ -14,7 +15,6 @@ from ch5mpy.objects import AsStrWrapper, Dataset, File, Group, H5Object
 from ch5mpy.options import _OPTIONS
 from ch5mpy.read import read_object
 from ch5mpy.write import write_object
-
 
 _T = TypeVar("_T")
 
@@ -157,10 +157,12 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
         )
 
     def __setitem__(self, key: str, value: Any) -> None:
+        value_is_empty_dict = isinstance(value, dict) and value == {}
+
         if callable(value):
             value(name=key, loc=self._file)
 
-        elif _diff(self.get(key, _NO_OBJECT), value):
+        elif value_is_empty_dict or _diff(self.get(key, _NO_OBJECT), value):
             write_object(self, key, value, overwrite=True)
 
     def __delitem__(self, key: str) -> None:
@@ -180,6 +182,14 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
 
     def __deepcopy__(self, _memo: dict[Any, Any]) -> dict[str, Any]:
         return self.copy()
+
+    def __enter__(self) -> H5Dict[_T]:
+        return self
+
+    def __exit__(
+        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None
+    ) -> None:
+        self.close()
 
     # endregion
 

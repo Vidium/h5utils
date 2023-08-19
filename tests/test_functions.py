@@ -564,3 +564,15 @@ def test_ravel(small_large_array) -> None:
 
 def test_take(small_large_array) -> None:
     assert np.array_equal(np.take(small_large_array, [[0, 1], [2, 3]]), np.array([[0, 1], [2, 3]]))
+
+
+def test_may_not_share_memory(small_array) -> None:
+    assert not np.may_share_memory(small_array, np.array([1, 2, 3]))
+
+
+def test_may_share_memory(small_array) -> None:
+    assert np.may_share_memory(small_array, small_array)
+
+
+def test_may_share_memory_view(small_array) -> None:
+    assert np.may_share_memory(small_array, small_array[1:3])
