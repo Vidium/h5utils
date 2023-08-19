@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ch5mpy"
 description = "Collection of helper tools for reading or writing to h5 files using the h5py library."
-version = "0.3.0rc1"
+version = "0.3.0"
 requires-python = ">=3.7"
 license = {file = "LICENSE"}
 authors = [
