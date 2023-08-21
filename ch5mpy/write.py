@@ -153,7 +153,10 @@ def write_object(
     if isinstance(loc, ch5mpy.dict.H5Dict):
         loc = loc.file
 
-    if hasattr(obj, "__h5_write__"):
+    if callable(obj):
+        obj(name=name, loc=loc)
+
+    elif hasattr(obj, "__h5_write__"):
         group = loc.create_group(name, overwrite=overwrite, track_order=True) if name else loc
         obj.__h5_write__(ch5mpy.dict.H5Dict(group))
         group.attrs["__h5_type__"] = "object"

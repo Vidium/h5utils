@@ -159,10 +159,7 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
     def __setitem__(self, key: str, value: Any) -> None:
         value_is_empty_dict = isinstance(value, dict) and value == {}
 
-        if callable(value):
-            value(name=key, loc=self._file)
-
-        elif value_is_empty_dict or _diff(self.get(key, _NO_OBJECT), value):
+        if value_is_empty_dict or _diff(self.get(key, _NO_OBJECT), value):
             write_object(self, key, value, overwrite=True)
 
     def __delitem__(self, key: str) -> None:

@@ -49,7 +49,7 @@ class ArrayCreationFunc:
     # endregion
 
     # region methods
-    def p(
+    def anonymous(
         self,
         shape: int | tuple[int, ...],
         dtype: npt.DTypeLike = np.float64,
@@ -95,7 +95,7 @@ class _ArrayCreationFuncProtocol(Protocol):
     ) -> ch5mpy.H5Array[Any]:
         ...
 
-    def p(
+    def anonymous(
         self,
         shape: int | tuple[int, ...],
         dtype: npt.DTypeLike = np.float64,
@@ -105,18 +105,18 @@ class _ArrayCreationFuncProtocol(Protocol):
         ...
 
 
-def with_partial(acf: ArrayCreationFunc) -> Callable[[Callable[..., Any]], _ArrayCreationFuncProtocol]:
-    """Add a `.p()` method to a function for partial calls."""
+def with_anonymous(acf: ArrayCreationFunc) -> Callable[[Callable[..., Any]], _ArrayCreationFuncProtocol]:
+    """Add a `.anonymous()` method to a function for delaying the array creation to when the location is known."""
 
     def decorator(func: Callable[..., Any]) -> _ArrayCreationFuncProtocol:
         setattr(func, "acf", acf)
-        setattr(func, "p", acf.p)
+        setattr(func, "anonymous", acf.anonymous)
         return cast(_ArrayCreationFuncProtocol, func)
 
     return decorator
 
 
-@with_partial(ArrayCreationFuncWithFill("empty", None))
+@with_anonymous(ArrayCreationFuncWithFill("empty", None))
 def empty(
     shape: int | tuple[int, ...],
     name: str,
@@ -128,7 +128,7 @@ def empty(
     return empty.acf(shape, name, loc, dtype, chunks, maxshape)
 
 
-@with_partial(ArrayCreationFuncWithFill("zeros", 0))
+@with_anonymous(ArrayCreationFuncWithFill("zeros", 0))
 def zeros(
     shape: int | tuple[int, ...],
     name: str,
@@ -140,7 +140,7 @@ def zeros(
     return zeros.acf(shape, name, loc, dtype, chunks, maxshape)
 
 
-@with_partial(ArrayCreationFuncWithFill("ones", 1))
+@with_anonymous(ArrayCreationFuncWithFill("ones", 1))
 def ones(
     shape: int | tuple[int, ...],
     name: str,
@@ -152,7 +152,7 @@ def ones(
     return ones.acf(shape, name, loc, dtype, chunks, maxshape)
 
 
-@with_partial(ArrayCreationFunc("full"))
+@with_anonymous(ArrayCreationFunc("full"))
 def full(
     shape: int | tuple[int, ...],
     fill_value: Any,
