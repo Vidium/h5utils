@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from itertools import repeat
 from typing import TYPE_CHECKING, Any, Iterable, Literal, Sequence, SupportsIndex, cast
+from packaging import version
 
 import numpy as np
 import numpy.typing as npt
@@ -17,6 +18,7 @@ if TYPE_CHECKING:
 
 
 _NAN_PLACEHOLDER = object()
+_NUMPY_VERSION = version.parse(np.__version__)
 
 
 @implements(np.unique)
@@ -218,16 +220,24 @@ def concatenate(
         raise NotImplementedError
 
 
-@implements(np.hstack)
-def hstack(
-    tup: Iterable[H5Array[Any] | npt.NDArray[Any]],
-    *,
-    dtype: npt.DTypeLike | None = None,
-    casting: str = "same_kind",
-) -> npt.NDArray[Any]:
-    return np.hstack(  # type: ignore[no-any-return, call-overload]
-        [np.array(a) for a in tup], dtype=dtype, casting=casting
-    )
+if _NUMPY_VERSION >= version.parse("1.24"):
+
+    @implements(np.hstack)
+    def hstack(
+        tup: Iterable[H5Array[Any] | npt.NDArray[Any]],
+        *,
+        dtype: npt.DTypeLike | None = None,
+        casting: str = "same_kind",
+    ) -> npt.NDArray[Any]:
+        return np.hstack(  # type: ignore[no-any-return, call-overload]
+            [np.array(a) for a in tup], dtype=dtype, casting=casting
+        )
+
+else:
+
+    @implements(np.hstack)
+    def hstack(tup: Iterable[H5Array[Any] | npt.NDArray[Any]]) -> npt.NDArray[Any]:
+        return np.hstack([np.array(a) for a in tup])
 
 
 @implements(np.vstack)

@@ -75,5 +75,8 @@ ignore = ["E701"]
 mypy_path = "stubs"
 
 [[tool.mypy.overrides]]
-module = ['h5py']
+module = [
+    'h5py',
+    'packaging'
+]
 ignore_missing_imports = true
