@@ -49,7 +49,7 @@ class ArrayCreationFuncRandom(ArrayCreationFunc):
         chunks: bool | tuple[int, ...] = True,
         maxshape: int | tuple[int | None, ...] | None = None,
     ) -> partial[ch5mpy.H5Array[Any]]:
-        return super().anonymous(dims, None, dtype, chunks, maxshape)
+        return partial(self.__call__, *dims, dtype=dtype, chunks=chunks, maxshape=maxshape)
 
     # endregion
 
