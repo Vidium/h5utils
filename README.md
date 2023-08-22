@@ -517,3 +517,52 @@ Sorting, searching, and counting
 - [ ] np.extract
 - [ ] np.count_nonzero
 
+Random
+- [x] beta
+- [x] binomial
+- [x] bytes
+- [x] chisquare
+- [x] choice
+- [x] dirichlet
+- [x] exponential
+- [x] f
+- [x] gamma
+- [x] get_state
+- [x] geometric
+- [x] gumbel
+- [x] hypergeometric
+- [x] laplace
+- [x] logistic
+- [x] lognormal
+- [x] logseries
+- [x] multinomial
+- [x] multivariate_normal
+- [x] negative_binomial
+- [x] noncentral_chisquare
+- [x] noncentral_f
+- [x] normal
+- [x] pareto
+- [x] permutation
+- [x] poisson
+- [x] power
+- [x] rand
+- [x] randint
+- [x] randn
+- [x] random
+- [x] random_integers
+- [x] random_sample
+- [x] rayleigh
+- [x] seed
+- [x] set_state
+- [x] shuffle
+- [x] standard_cauchy
+- [x] standard_exponential
+- [x] standard_gamma
+- [x] standard_normal
+- [x] standard_t
+- [x] triangular
+- [x] uniform
+- [x] vonmises
+- [x] wald
+- [x] weibull
+- [x] zipf
