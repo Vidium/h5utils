@@ -128,7 +128,16 @@ class H5DictItemsView(ItemsView[str, _T]):
 def _diff(a: Any, b: Any) -> bool:
     if a is _NO_OBJECT:
         return True
+
+    if isinstance(a, np.ndarray) and isinstance(b, np.ndarray):
+        if a.shape != b.shape:
+            return True
+
     return bool(np.array(a != b).any())
+
+
+def _set_in(h5dict: H5Dict[Any], key: str, value: Any) -> None:
+    h5dict[key] = value
 
 
 class H5Dict(H5Object, MutableMapping[str, _T]):
@@ -159,7 +168,15 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
     def __setitem__(self, key: str, value: Any) -> None:
         value_is_empty_dict = isinstance(value, dict) and value == {}
 
-        if value_is_empty_dict or _diff(self.get(key, _NO_OBJECT), value):
+        if isinstance(value, (dict, H5Dict)) and key in self._file.keys() and isinstance(sub_dict := self[key], H5Dict):
+            for self_key in sub_dict.keys():
+                if self_key not in value.keys():
+                    del sub_dict[self_key]
+
+            for sub_key, sub_value in value.items():
+                _set_in(sub_dict, sub_key, sub_value)
+
+        elif value_is_empty_dict or _diff(self.get(key, _NO_OBJECT), value):
             ch5mpy.write.write_object(self, key, value, overwrite=True)
 
     def __delitem__(self, key: str) -> None:

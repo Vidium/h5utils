@@ -106,6 +106,15 @@ def test_backed_dict_can_set_new_dict(backed_dict):
     )
 
 
+def test_backed_dict_can_replace_dict(backed_dict):
+    backed_dict["c"] = {"d2": "test", "e": np.arange(10, 20)}
+
+    assert isinstance(backed_dict["c"], H5Dict)
+    assert "d" not in backed_dict["c"].keys()
+    assert backed_dict["c"]["d2"] == "test"
+    assert np.array_equal(backed_dict["c"]["e"], np.arange(10, 20))
+
+
 def test_backed_dict_can_delete_regular_value(backed_dict):
     del backed_dict["a"]
 
