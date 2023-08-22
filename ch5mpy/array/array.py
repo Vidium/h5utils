@@ -9,20 +9,20 @@ import numpy.lib.mixins
 import numpy.typing as npt
 from numpy._typing import _ArrayLikeInt_co
 
+import ch5mpy.write
 from ch5mpy._typing import NP_FUNC, SELECTOR
-from ch5mpy.h5array import repr
-from ch5mpy.h5array.chunks.iter import ChunkIterator, PairedChunkIterator
-from ch5mpy.h5array.functions import HANDLED_FUNCTIONS
-from ch5mpy.h5array.io import read_one_from_dataset, write_to_dataset
+from ch5mpy.array import repr
+from ch5mpy.array.chunks.iter import ChunkIterator, PairedChunkIterator
+from ch5mpy.array.functions import HANDLED_FUNCTIONS
+from ch5mpy.array.io import read_one_from_dataset, write_to_dataset
 from ch5mpy.indexing import Selection, map_slice
 from ch5mpy.names import H5Mode
 from ch5mpy.objects import Dataset, DatasetWrapper, File, Group, H5Object
 from ch5mpy.options import _OPTIONS
-from ch5mpy.write import write_dataset
 
 if TYPE_CHECKING:
     from ch5mpy.attributes import AttributeManager
-    from ch5mpy.h5array.view import H5ArrayView
+    from ch5mpy.array.view import H5ArrayView
 
 
 _T = TypeVar("_T", bound=np.generic, covariant=True)
@@ -90,7 +90,7 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
         return repr.print_dataset(self, sep="")
 
     def __getitem__(self, index: SELECTOR | tuple[SELECTOR, ...]) -> _T | H5Array[_T] | H5ArrayView[_T]:
-        from ch5mpy.h5array.view import H5ArrayView
+        from ch5mpy.array.view import H5ArrayView
 
         selection = Selection.from_selector(index, self._dset.shape)
 
@@ -353,7 +353,9 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
             del file[name]
 
             # FIXME : conversion to np happens anyway but might be expensive, could we save data without conversion ?
-            write_dataset(file, name, np.array(new_dset), chunks=new_dset.chunks, maxshape=new_dset.maxshape)
+            ch5mpy.write.write_dataset(
+                file, name, np.array(new_dset), chunks=new_dset.chunks, maxshape=new_dset.maxshape
+            )
 
             if file[name].dtype == object:
                 self._dset = file[name].asstr()

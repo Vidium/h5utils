@@ -45,6 +45,10 @@ class SingleIndex(Indexer):
     def is_whole_axis(self) -> bool:
         return self._max == 1
 
+    @property
+    def max(self) -> int:
+        return self._max
+
     # endregion
 
     # region methods

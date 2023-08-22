@@ -6,7 +6,7 @@ from typing import Any, Literal, cast
 import numpy as np
 
 import ch5mpy.dict
-from ch5mpy.h5array.array import H5Array
+from ch5mpy.array.array import H5Array
 from ch5mpy.objects import Dataset, Group
 
 

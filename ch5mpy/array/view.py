@@ -9,8 +9,8 @@ import ch5mpy
 import ch5mpy.indexing as ci
 from ch5mpy import Dataset
 from ch5mpy._typing import NP_FUNC, SELECTOR
-from ch5mpy.h5array.array import as_array
-from ch5mpy.h5array.io import read_from_dataset, read_one_from_dataset, write_to_dataset
+from ch5mpy.array.array import as_array
+from ch5mpy.array.io import read_from_dataset, read_one_from_dataset, write_to_dataset
 from ch5mpy.objects import DatasetWrapper
 
 

@@ -9,7 +9,7 @@ from typing import TypeVar
 from typing import Iterable
 from typing import TYPE_CHECKING
 
-from ch5mpy.h5array.functions.implement import implements
+from ch5mpy.array.functions.implement import implements
 
 if TYPE_CHECKING:
     from ch5mpy import H5Array

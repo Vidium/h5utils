@@ -9,8 +9,8 @@ import numpy.typing as npt
 from numpy import _NoValue as NoValue  # type: ignore[attr-defined]
 
 from ch5mpy._typing import NP_FUNC
-from ch5mpy.h5array.functions.apply import ApplyOperation, apply, apply_everywhere
-from ch5mpy.h5array.functions.implement import implements, register
+from ch5mpy.array.functions.apply import ApplyOperation, apply, apply_everywhere
+from ch5mpy.array.functions.implement import implements, register
 
 if TYPE_CHECKING:
     from ch5mpy import H5Array

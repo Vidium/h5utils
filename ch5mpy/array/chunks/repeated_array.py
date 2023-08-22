@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Generator
 import numpy as np
 from numpy import typing as npt
 
-from ch5mpy.h5array.chunks.utils import _as_valid_dtype
+from ch5mpy.array.chunks.utils import _as_valid_dtype
 
 if TYPE_CHECKING:
     from ch5mpy import H5Array

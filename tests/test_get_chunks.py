@@ -1,4 +1,4 @@
-from ch5mpy.h5array.chunks.iter import _get_chunk_indices
+from ch5mpy.array.chunks.iter import _get_chunk_indices
 from ch5mpy.indexing.slice import FullSlice, SingleIndex
 
 

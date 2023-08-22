@@ -1,5 +1,5 @@
 import ch5mpy as ch
-from ch5mpy.h5array.chunks.repeated_array import RepeatedArray
+from ch5mpy.array.chunks.repeated_array import RepeatedArray
 
 
 def test_subset():

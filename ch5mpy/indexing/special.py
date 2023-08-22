@@ -93,6 +93,10 @@ class EmptyList(Indexer):
     def is_whole_axis(self) -> bool:
         return self._max == 0
 
+    @property
+    def max(self) -> int:
+        return self._max
+
     # endregion
 
     # region methods

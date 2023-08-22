@@ -9,12 +9,12 @@ from types import TracebackType
 import numpy as np
 from h5py._hl.base import ItemsViewHDF5
 
-from ch5mpy.h5array import H5Array
+import ch5mpy.write
+from ch5mpy.array import H5Array
 from ch5mpy.names import H5Mode
 from ch5mpy.objects import AsStrWrapper, Dataset, File, Group, H5Object
 from ch5mpy.options import _OPTIONS
 from ch5mpy.read import read_object
-from ch5mpy.write import write_object
 
 _T = TypeVar("_T")
 
@@ -151,7 +151,7 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
     def __getitem__(self, key: str) -> _T:
         return cast(_T, read_object(self._file[key], error=_OPTIONS["error_mode"]))
 
-    def __matmul__(self, key: str) -> H5Dict[_T] | Group:
+    def __matmul__(self, key: str) -> H5Dict[_T]:
         return read_object(  # type: ignore[no-any-return]
             self._file[key], error=_OPTIONS["error_mode"], read_object=False
         )
@@ -160,7 +160,7 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
         value_is_empty_dict = isinstance(value, dict) and value == {}
 
         if value_is_empty_dict or _diff(self.get(key, _NO_OBJECT), value):
-            write_object(self, key, value, overwrite=True)
+            ch5mpy.write.write_object(self, key, value, overwrite=True)
 
     def __delitem__(self, key: str) -> None:
         del self._file[key]

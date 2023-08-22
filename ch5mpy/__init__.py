@@ -3,10 +3,11 @@ try:
 except ImportError:  # for Python<3.8
     import importlib_metadata as metadata  # type: ignore[no-redef]
 
+import ch5mpy.functions.random
+from ch5mpy.array.array import H5Array
 from ch5mpy.attributes import AttributeManager
 from ch5mpy.dict import H5Dict
-from ch5mpy.h5array.array import H5Array
-from ch5mpy.h5array.creation_routines import empty, full, ones, zeros
+from ch5mpy.functions.creation_routines import empty, full, ones, zeros
 from ch5mpy.list import H5List
 from ch5mpy.names import H5Mode
 from ch5mpy.np import arange_nd
@@ -19,6 +20,8 @@ from ch5mpy.write import (
     write_object,
     write_objects,
 )
+
+random = ch5mpy.functions.random
 
 __all__ = [
     "File",

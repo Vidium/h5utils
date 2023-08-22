@@ -7,8 +7,8 @@ import numpy as np
 import numpy.typing as npt
 
 import ch5mpy
-from ch5mpy.h5array.chunks.repeated_array import RepeatedArray
-from ch5mpy.h5array.chunks.utils import _as_valid_dtype
+from ch5mpy.array.chunks.repeated_array import RepeatedArray
+from ch5mpy.array.chunks.utils import _as_valid_dtype
 from ch5mpy.indexing import FullSlice, SingleIndex, map_slice
 
 if TYPE_CHECKING:

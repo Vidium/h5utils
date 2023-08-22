@@ -11,7 +11,7 @@ from numpy import _NoValue as NoValue  # type: ignore[attr-defined]
 
 import ch5mpy
 from ch5mpy._typing import NP_FUNC
-from ch5mpy.h5array.chunks.iter import iter_chunks_2
+from ch5mpy.array.chunks.iter import iter_chunks_2
 from ch5mpy.indexing import FullSlice, SingleIndex, map_slice
 
 if TYPE_CHECKING:

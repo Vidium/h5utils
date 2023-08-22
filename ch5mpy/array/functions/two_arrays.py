@@ -9,9 +9,9 @@ from typing import Iterable
 from typing import TYPE_CHECKING
 
 import ch5mpy
-from ch5mpy.h5array.functions.apply import apply_2
-from ch5mpy.h5array.functions.apply import str_apply_2
-from ch5mpy.h5array.functions.implement import implements
+from ch5mpy.array.functions.apply import apply_2
+from ch5mpy.array.functions.apply import str_apply_2
+from ch5mpy.array.functions.implement import implements
 
 
 if TYPE_CHECKING:

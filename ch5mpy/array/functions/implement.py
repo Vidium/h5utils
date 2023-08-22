@@ -28,7 +28,7 @@ def register(function: partial[H5_FUNC], implements: NP_FUNC) -> None:
 
 
 # manually import function implementations otherwise they are never imported
-importlib.__import__("ch5mpy.h5array.functions.routines")
-importlib.__import__("ch5mpy.h5array.functions.creation_routines")
-importlib.__import__("ch5mpy.h5array.functions.two_arrays")
-importlib.__import__("ch5mpy.h5array.functions.element_wise")
+importlib.__import__("ch5mpy.array.functions.routines")
+importlib.__import__("ch5mpy.array.functions.creation_routines")
+importlib.__import__("ch5mpy.array.functions.two_arrays")
+importlib.__import__("ch5mpy.array.functions.element_wise")

@@ -9,8 +9,8 @@ from numpy._typing import _ArrayLikeInt_co
 
 import ch5mpy
 from ch5mpy._typing import NP_FUNC
-from ch5mpy.h5array.functions.implement import implements
-from ch5mpy.h5array.functions.two_arrays import ensure_h5array_first
+from ch5mpy.array.functions.implement import implements
+from ch5mpy.array.functions.two_arrays import ensure_h5array_first
 
 if TYPE_CHECKING:
     from ch5mpy import H5Array

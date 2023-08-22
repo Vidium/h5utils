@@ -1,6 +1,6 @@
 import numpy as np
 
-from ch5mpy.h5array.repr import print_dataset
+from ch5mpy.array.repr import print_dataset
 
 
 def test_repr_0D():

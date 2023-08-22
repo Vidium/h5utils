@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, SupportsIndex
+from typing import Any, SupportsIndex, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -58,7 +58,25 @@ def boolean_array_as_indexer(
     return tuple(ci.ListIndex(e, max=s) for e, s in zip(np.where(mask), shape))
 
 
-def as_indexer(obj: SupportsIndex | npt.NDArray[np.int_] | list[int] | slice | None, max: int) -> Indexer:
+@overload
+def as_indexer(obj: None, max: int) -> ci.NewAxisType:
+    ...
+
+
+@overload
+def as_indexer(obj: list[int] | slice | range, max: int) -> ci.LengthedIndexer:
+    ...
+
+
+@overload
+def as_indexer(obj: npt.NDArray[np.int_] | SupportsIndex, max: int) -> ci.LengthedIndexer | ci.SingleIndex:
+    ...
+
+
+def as_indexer(
+    obj: SupportsIndex | npt.NDArray[np.int_] | list[int] | slice | range | None,
+    max: int,
+) -> Indexer:
     if obj is None:
         return ci.NewAxis
 
