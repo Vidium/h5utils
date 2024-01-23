@@ -19,11 +19,16 @@ def _handle_read_error(data: Group, error: Literal["ignore", "raise"], msg: str)
 
 
 def read_object(
-    data: Dataset[Any] | Group, error: Literal["ignore", "raise"] = "raise", read_object: bool = True
+    data: Dataset[Any] | Group,
+    error: Literal["ignore", "raise"] = "raise",
+    read_object: bool = True,
 ) -> Any:
     """Read an object from a .h5 file"""
     if not isinstance(data, (Dataset, Group)):
         raise ValueError(f"Cannot read object from '{type(data)}'.")
+
+    if not data.file.id.valid:
+        raise OSError("Cannot read data from closed file.")
 
     if isinstance(data, Group):
         h5_type = data.attrs.get("__h5_type__", "<UNKNOWN>")

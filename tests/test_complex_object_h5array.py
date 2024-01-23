@@ -20,7 +20,7 @@ def co_array() -> H5Array:
     data = [1, 2, 3, 4, 5, 6, 7]
 
     with File("h5_str_array", H5Mode.WRITE_TRUNCATE) as h5_file:
-        write_object(h5_file, "data", data)
+        write_object(data, h5_file, "data")
 
     yield H5Array(File("h5_str_array", H5Mode.READ_WRITE)["data"]).maptype(ComplexObject)
 

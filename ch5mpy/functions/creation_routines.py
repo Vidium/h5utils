@@ -8,7 +8,7 @@ import numpy as np
 import numpy.typing as npt
 
 import ch5mpy
-from ch5mpy.write import _store_dataset
+from ch5mpy.io.write import _store_dataset
 
 
 class ArrayCreationFunc:
@@ -25,6 +25,7 @@ class ArrayCreationFunc:
         fill_value: Any,
         name: str,
         loc: str | Path | ch5mpy.File | ch5mpy.Group,
+        *,
         dtype: npt.DTypeLike = np.float64,
         chunks: bool | tuple[int, ...] = True,
         maxshape: int | tuple[int | None, ...] | None = None,
@@ -35,12 +36,12 @@ class ArrayCreationFunc:
             loc = ch5mpy.File(loc, mode=ch5mpy.H5Mode.READ_WRITE_CREATE)
 
         dset = _store_dataset(
-            loc, name, shape=shape, dtype=dtype, chunks=chunks, maxshape=maxshape, fill_value=fill_value
+            None, loc, name, shape=shape, dtype=dtype, chunks=chunks, maxshape=maxshape, fill_value=fill_value
         )
 
         return ch5mpy.H5Array(dset)
 
-    def anonymous(
+    def defer(
         self,
         shape: int | tuple[int, ...],
         fill_value: Any,
@@ -64,16 +65,19 @@ class ArrayCreationFuncWithFill(ArrayCreationFunc):
         shape: int | tuple[int, ...],
         name: str,
         loc: str | Path | ch5mpy.File | ch5mpy.Group,
+        *,
         dtype: npt.DTypeLike = np.float64,
         chunks: bool | tuple[int, ...] = True,
         maxshape: int | tuple[int | None, ...] | None = None,
     ) -> ch5mpy.H5Array[Any]:
-        return super().__call__(shape, self._fill_value, name, loc, dtype, chunks, maxshape)
+        return super().__call__(
+            name=name, loc=loc, shape=shape, fill_value=self._fill_value, dtype=dtype, chunks=chunks, maxshape=maxshape
+        )
 
     # endregion
 
     # region methods
-    def anonymous(  # type: ignore[override]
+    def defer(  # type: ignore[override]
         self,
         shape: int | tuple[int, ...],
         dtype: npt.DTypeLike = np.float64,

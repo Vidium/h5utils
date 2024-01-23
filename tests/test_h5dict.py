@@ -19,7 +19,7 @@ def backed_dict() -> Generator[H5Dict, None, None]:
     }
 
     with File("backed_dict", H5Mode.WRITE_TRUNCATE) as h5_file:
-        write_object(h5_file, "uns", data)
+        write_object(data, h5_file, "uns")
 
     yield H5Dict(File("backed_dict", H5Mode.READ_WRITE)["uns"])
 
@@ -136,8 +136,8 @@ def test_backed_dict_can_delete_dict(backed_dict):
 def test_backed_dict_can_close_file(backed_dict):
     backed_dict.close()
 
-    with pytest.raises(ValueError):
-        _ = backed_dict["x"]
+    with pytest.raises(KeyError):
+        _ = backed_dict["a"]
 
 
 def test_backed_dict_copy_should_be_regular_dict(backed_dict):

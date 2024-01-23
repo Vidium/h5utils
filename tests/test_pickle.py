@@ -1,11 +1,11 @@
 import pickle
 import numpy as np
 
-from ch5mpy.write import write_object
+from ch5mpy import write_object
 
 
 def test_should_pickle_dataset(group):
-    write_object(group, "something", [1, 2, 3])
+    write_object([1, 2, 3], group, "something")
 
     pickled_obj = pickle.dumps(group["something"], protocol=pickle.HIGHEST_PROTOCOL)
     unpickled_obj = pickle.loads(pickled_obj)
@@ -14,7 +14,7 @@ def test_should_pickle_dataset(group):
 
 
 def test_should_pickle_dict(group):
-    write_object(group, "something", {"a": 1, "b": "2"})
+    write_object({"a": 1, "b": "2"}, group, "something")
 
     pickled_obj = pickle.dumps(group["something"], protocol=pickle.HIGHEST_PROTOCOL)
     unpickled_obj = pickle.loads(pickled_obj)

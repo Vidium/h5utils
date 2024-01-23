@@ -54,7 +54,7 @@ class H5Object(ABC):
 
     @property
     def attributes(self) -> AttributeManager:
-        return self.file.attrs
+        return self._file.attrs
 
     # endregion
 

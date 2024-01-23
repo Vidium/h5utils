@@ -21,7 +21,7 @@ def small_array() -> Generator[H5Array, None, None]:
     data = [1.0, 2.0, 3.0, 4.0, 5.0]
 
     with File("h5_s_array", H5Mode.WRITE_TRUNCATE) as h5_file:
-        write_object(h5_file, "data", data)
+        write_object(data, h5_file, "data")
 
     yield H5Array(File("h5_s_array", H5Mode.READ_WRITE)["data"])
 
@@ -31,7 +31,7 @@ def small_array() -> Generator[H5Array, None, None]:
 @pytest.fixture
 def empty_array() -> Generator[H5Array, None, None]:
     with File("h5_e_array", H5Mode.WRITE_TRUNCATE) as h5_file:
-        write_object(h5_file, "data", np.empty((0, 1)))
+        write_object(np.empty((0, 1)), h5_file, "data")
 
     yield H5Array(File("h5_e_array", H5Mode.READ_WRITE)["data"])
 
@@ -43,7 +43,7 @@ def array() -> Generator[H5Array, None, None]:
     data = np.arange(100.0).reshape((10, 10))
 
     with File("h5_array", H5Mode.WRITE_TRUNCATE) as h5_file:
-        write_object(h5_file, "data", data)
+        write_object(data, h5_file, "data")
 
     yield H5Array(File("h5_array", H5Mode.READ_WRITE)["data"])
 
@@ -55,7 +55,7 @@ def chunked_array() -> Generator[H5Array, None, None]:
     data = np.arange(100.0).reshape((10, 10))
 
     with File("h5_array", H5Mode.WRITE_TRUNCATE) as h5_file:
-        write_object(h5_file, "data", data, chunks=(3, 3))
+        write_object(data, h5_file, "data", chunks=(3, 3))
 
     yield H5Array(File("h5_array", H5Mode.READ_WRITE)["data"])
 
@@ -67,7 +67,7 @@ def small_large_array() -> Generator[H5Array, None, None]:
     data = np.arange(3 * 4 * 5).reshape((3, 4, 5))
 
     with File("h5_sl_array", H5Mode.WRITE_TRUNCATE) as h5_file:
-        write_object(h5_file, "data", data)
+        write_object(data, h5_file, "data")
 
     yield H5Array(File("h5_sl_array", H5Mode.READ_WRITE)["data"])
 
@@ -79,7 +79,7 @@ def large_array() -> Generator[H5Array, None, None]:
     data = np.arange(20_000 * 10_000).reshape((20_000, 10_000))
 
     with File("h5_large_array", H5Mode.WRITE_TRUNCATE) as h5_file:
-        write_object(h5_file, "data", data)
+        write_object(data, h5_file, "data")
 
     yield H5Array(File("h5_large_array", H5Mode.READ_WRITE)["data"])
 
@@ -91,7 +91,7 @@ def str_array() -> Generator[H5Array, None, None]:
     data = ["a", "bc", "d", "efg", "h"]
 
     with File("h5_str_array", H5Mode.WRITE_TRUNCATE) as h5_file:
-        write_object(h5_file, "data", data)
+        write_object(data, h5_file, "data")
 
     yield H5Array(File("h5_str_array", H5Mode.READ_WRITE)["data"])
 

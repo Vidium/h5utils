@@ -9,7 +9,7 @@ import numpy.lib.mixins
 import numpy.typing as npt
 from numpy._typing import _ArrayLikeInt_co
 
-import ch5mpy.write
+import ch5mpy.io
 from ch5mpy._typing import NP_FUNC, SELECTOR
 from ch5mpy.array import repr
 from ch5mpy.array.chunks.iter import ChunkIterator, PairedChunkIterator
@@ -353,9 +353,7 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
             del file[name]
 
             # FIXME : conversion to np happens anyway but might be expensive, could we save data without conversion ?
-            ch5mpy.write.write_dataset(
-                file, name, np.array(new_dset), chunks=new_dset.chunks, maxshape=new_dset.maxshape
-            )
+            ch5mpy.io.write_dataset(np.array(new_dset), file, name, chunks=new_dset.chunks, maxshape=new_dset.maxshape)
 
             if file[name].dtype == object:
                 self._dset = file[name].asstr()

@@ -5,6 +5,7 @@ from typing import Any, Callable, Iterable, SupportsIndex, Union
 
 from numpy._typing import _ArrayLikeInt_co
 
+
 SELECTOR = Union[
     None,
     EllipsisType,

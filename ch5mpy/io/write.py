@@ -12,15 +12,18 @@ from tqdm.auto import tqdm
 import ch5mpy.dict
 from ch5mpy.objects import Dataset, File, Group
 from ch5mpy.utils import is_sequence
+from ch5mpy.types import SupportsH5ReadWrite
+
+from ch5mpy.functions.types import AnonymousArrayCreationFunc
 
 if TYPE_CHECKING:
     from ch5mpy import H5Array
 
 
 def _store_dataset(
+    array: npt.NDArray[Any] | H5Array[Any] | None,
     loc: Group | File,
     name: str,
-    array: npt.NDArray[Any] | H5Array[Any] | None = None,
     shape: tuple[int, ...] | None = None,
     dtype: npt.DTypeLike | None = None,
     chunks: bool | tuple[int, ...] = True,
@@ -28,6 +31,9 @@ def _store_dataset(
     fill_value: Any = None,
 ) -> Dataset[Any]:
     """Store a dataset."""
+    if not loc.file.id.valid:
+        raise OSError("Cannot write data to closed file.")
+
     if dtype is None:
         if array is not None:
             dtype = array.dtype
@@ -84,9 +90,9 @@ def _has_dataset_attributes(obj: Any) -> bool:
 
 
 def write_dataset(
+    obj: Any,
     loc: Group | File | ch5mpy.dict.H5Dict[Any],
     name: str,
-    obj: Any,
     *,
     chunks: bool | tuple[int, ...] = True,
     maxshape: tuple[int, ...] | None = None,
@@ -124,7 +130,7 @@ def write_dataset(
         # a different array was stored, delete it before storing the new array
         del loc[name]
 
-    _store_dataset(loc, name, array, chunks=chunks, maxshape=maxshape)
+    _store_dataset(array, loc, name, chunks=chunks, maxshape=maxshape)
 
 
 def write_datasets(
@@ -136,13 +142,13 @@ def write_datasets(
 ) -> None:
     """Write multiple array-like objects to H5 datasets."""
     for name, obj in kwargs.items():
-        write_dataset(loc, name, obj, chunks=chunks, maxshape=maxshape)
+        write_dataset(obj, loc, name, chunks=chunks, maxshape=maxshape)
 
 
 def write_object(
+    obj: Any,
     loc: Group | File | ch5mpy.dict.H5Dict[Any],
     name: str,
-    obj: Any,
     *,
     chunks: bool | tuple[int, ...] = True,
     maxshape: tuple[int, ...] | None = None,
@@ -153,10 +159,10 @@ def write_object(
     if isinstance(loc, ch5mpy.dict.H5Dict):
         loc = loc.file
 
-    if callable(obj):
+    if isinstance(obj, AnonymousArrayCreationFunc):
         obj(name=name, loc=loc)
 
-    elif hasattr(obj, "__h5_write__"):
+    elif isinstance(obj, SupportsH5ReadWrite):
         group = loc.create_group(name, overwrite=overwrite, track_order=True) if name else loc
         obj.__h5_write__(ch5mpy.dict.H5Dict(group))
         group.attrs["__h5_type__"] = "object"
@@ -167,7 +173,7 @@ def write_object(
         write_objects(group, **obj, chunks=chunks, maxshape=maxshape, progress=progress)
 
     elif is_sequence(obj):
-        write_dataset(loc, name, obj, chunks=chunks, maxshape=maxshape)
+        write_dataset(obj, loc, name, chunks=chunks, maxshape=maxshape)
 
     elif isinstance(obj, (Number, str)):
         if name in loc and overwrite:
@@ -190,8 +196,16 @@ def write_objects(
     maxshape: tuple[int, ...] | None = None,
     overwrite: bool = False,
     progress: tqdm[Any] | None = None,
-    **kwargs: Any,
+    **kwargs: SupportsH5ReadWrite,
 ) -> None:
     """Write multiple objects of any type to a H5 file."""
     for name, obj in kwargs.items():
-        write_object(loc, name, obj, chunks=chunks, maxshape=maxshape, overwrite=overwrite, progress=progress)
+        write_object(
+            obj,
+            loc,
+            name,
+            chunks=chunks,
+            maxshape=maxshape,
+            overwrite=overwrite,
+            progress=progress,
+        )

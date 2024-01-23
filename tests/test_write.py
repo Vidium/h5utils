@@ -6,8 +6,7 @@ from typing import Any
 import numpy as np
 import pytest
 
-from ch5mpy import File, Group
-from ch5mpy.write import write_dataset, write_object
+from ch5mpy import File, Group, write_dataset, write_object
 
 
 class State(Enum):
@@ -45,14 +44,14 @@ def test_should_write_complex_objects_as_strings_in_attributes(group):
     ],
 )
 def test_should_write_array(group, array, expected):
-    write_dataset(group, "something", array)
+    write_dataset(array, group, "something")
 
     assert "something" in group.keys()
     assert np.all(group["something"][()] == expected)
 
 
 def test_should_write_dict_of_arrays(group):
-    write_dataset(group, "some_dict", {"some_a": [1, 2, 3], "some_b": ["a", "b", "c"]})
+    write_dataset({"some_a": [1, 2, 3], "some_b": ["a", "b", "c"]}, group, "some_dict")
 
     assert np.all(group["some_dict"]["some_a"][()] == [1, 2, 3])
     assert np.all(group["some_dict"]["some_b"][()] == [b"a", b"b", b"c"])
@@ -74,6 +73,6 @@ def are_equal(obj1: Any, obj2: File | Group) -> bool:
     ],
 )
 def test_write_object(group, name, obj):
-    write_object(group, name, obj)
+    write_object(obj, group, name)
 
     assert are_equal(obj, group[name])

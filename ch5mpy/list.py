@@ -6,10 +6,10 @@ from typing import Any, Generic, Iterator, TypeVar, cast
 from ch5mpy.dict import H5Dict
 from ch5mpy.names import H5Mode
 from ch5mpy.objects import File, Group, H5Object
-from ch5mpy.read import read_object
-from ch5mpy.write import write_object
+from ch5mpy.io import read_object, write_object, write_objects
+from ch5mpy.types import SupportsH5ReadWrite
 
-_T = TypeVar("_T")
+_T = TypeVar("_T", bound=SupportsH5ReadWrite)
 
 
 def _get_group(file: File | Group, name: str) -> tuple[File | Group, str]:
@@ -81,7 +81,7 @@ class H5List(H5Object, Generic[_T]):
         return H5List(src)
 
     @classmethod
-    def write(cls, lst: list[Any], path: str | Path | File | Group, name: str = "") -> None:
+    def write(cls, lst: list[SupportsH5ReadWrite], path: str | Path | File | Group, name: str = "") -> None:
         """
         Write a list to a .h5 file as a H5List.
 
@@ -105,8 +105,14 @@ class H5List(H5Object, Generic[_T]):
         dest = dest.create_group(group_name)
         dest.attrs["__h5_type__"] = "list"
 
-        for index, obj in enumerate(lst):
-            write_object(dest, str(index), obj, chunks=True)
+        write_objects(
+            dest,
+            chunks=True,
+            maxshape=None,
+            overwrite=False,
+            progress=None,
+            **dict(map(lambda x: (str(x[0]), x[1]), enumerate(lst))),
+        )
 
     # endregion
 
@@ -117,7 +123,7 @@ class H5List(H5Object, Generic[_T]):
     def to_dict(self) -> H5Dict[_T]:
         return H5Dict(self._file)
 
-    def append(self, value: None) -> None:
-        write_object(self._file, str(len(self)), value, chunks=True)
+    def append(self, value: Any) -> None:
+        write_object(value, self._file, str(len(self)), chunks=True)
 
     # endregion

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, KeysView, MutableMapping
 from itertools import islice
+from functools import partial
 from pathlib import Path
 from typing import Any, ItemsView, Iterator, TypeVar, Union, ValuesView, cast
 from types import TracebackType
@@ -9,14 +10,14 @@ from types import TracebackType
 import numpy as np
 from h5py._hl.base import ItemsViewHDF5
 
-import ch5mpy.write
+from . import io
+from ch5mpy.types import SupportsH5ReadWrite
 from ch5mpy.array import H5Array
 from ch5mpy.names import H5Mode
 from ch5mpy.objects import AsStrWrapper, Dataset, File, Group, H5Object
 from ch5mpy.options import _OPTIONS
-from ch5mpy.read import read_object
 
-_T = TypeVar("_T")
+_T = TypeVar("_T", bound=SupportsH5ReadWrite)
 
 _NO_OBJECT = object()
 
@@ -56,7 +57,7 @@ def _get_repr(items: ItemsViewHDF5[str, Group | Dataset[Any]]) -> str:
                     + (
                         _get_group_repr(v)
                         if _is_group(v)
-                        else repr(read_object(v, error="ignore")).replace("\n", "\n\t")
+                        else repr(io.read_object(v, error="ignore")).replace("\n", "\n\t")
                     )
                     for k, v in islice(items, 0, 10)
                 ]
@@ -68,7 +69,7 @@ def _get_repr(items: ItemsViewHDF5[str, Group | Dataset[Any]]) -> str:
                     + (
                         _get_group_repr(v)
                         if _is_group(v)
-                        else repr(read_object(v, error="ignore")).replace("\n", "\n\t")
+                        else repr(io.read_object(v, error="ignore")).replace("\n", "\n\t")
                     )
                     for k, v in islice(items, len(items) - 10, None)
                 ]
@@ -81,7 +82,11 @@ def _get_repr(items: ItemsViewHDF5[str, Group | Dataset[Any]]) -> str:
         + ",\n\t".join(
             [
                 f"{k}: "
-                + (_get_group_repr(v) if _is_group(v) else repr(read_object(v, error="ignore")).replace("\n", "\n\t"))
+                + (
+                    _get_group_repr(v)
+                    if _is_group(v)
+                    else repr(io.read_object(v, error="ignore")).replace("\n", "\n\t")
+                )
                 for k, v in items
             ]
         )
@@ -102,7 +107,7 @@ class H5DictValuesView(ValuesView[_T]):
 
     def __iter__(self) -> Iterator[_T]:
         return (
-            read_object(v, error=_OPTIONS["error_mode"])
+            io.read_object(v, error=_OPTIONS["error_mode"])
             for v in cast(Iterator[Union[Group, Dataset[Any]]], super().__iter__())
         )
 
@@ -118,7 +123,7 @@ class H5DictItemsView(ItemsView[str, _T]):
 
     def __iter__(self) -> Iterator[tuple[str, _T]]:
         return (
-            (k, read_object(v, error=_OPTIONS["error_mode"]))
+            (k, io.read_object(v, error=_OPTIONS["error_mode"]))
             for k, v in cast(Iterator[tuple[str, Union[Group, Dataset[Any]]]], super().__iter__())
         )
 
@@ -134,10 +139,6 @@ def _diff(a: Any, b: Any) -> bool:
             return True
 
     return bool(np.array(a != b).any())
-
-
-def _set_in(h5dict: H5Dict[Any], key: str, value: Any) -> None:
-    h5dict[key] = value
 
 
 class H5Dict(H5Object, MutableMapping[str, _T]):
@@ -158,14 +159,18 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
         return f"H5Dict{_get_note(self.annotation)}{_get_repr(self._file.items())}"
 
     def __getitem__(self, key: str) -> _T:
-        return cast(_T, read_object(self._file[key], error=_OPTIONS["error_mode"]))
+        return cast(_T, io.read_object(self._file[key], error=_OPTIONS["error_mode"]))
 
     def __matmul__(self, key: str) -> H5Dict[_T]:
-        return read_object(  # type: ignore[no-any-return]
+        return io.read_object(  # type: ignore[no-any-return]
             self._file[key], error=_OPTIONS["error_mode"], read_object=False
         )
 
-    def __setitem__(self, key: str, value: Any) -> None:
+    def __setitem__(
+        self,
+        key: str,
+        value: dict[str, Any] | H5Dict[Any] | partial[H5Array[Any]] | SupportsH5ReadWrite,
+    ) -> None:
         value_is_empty_dict = isinstance(value, dict) and value == {}
 
         if isinstance(value, (dict, H5Dict)) and key in self._file.keys() and isinstance(sub_dict := self[key], H5Dict):
@@ -174,10 +179,10 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
                     del sub_dict[self_key]
 
             for sub_key, sub_value in value.items():
-                _set_in(sub_dict, sub_key, sub_value)
+                sub_dict[sub_key] = sub_value
 
         elif value_is_empty_dict or _diff(self.get(key, _NO_OBJECT), value):
-            ch5mpy.write.write_object(self, key, value, overwrite=True)
+            io.write_object(value, self, key, overwrite=True)
 
     def __delitem__(self, key: str) -> None:
         del self._file[key]
@@ -201,7 +206,10 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
         return self
 
     def __exit__(
-        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None
+        self,
+        _exc_type: type[BaseException] | None,
+        _exc_val: BaseException | None,
+        _exc_tb: TracebackType | None,
     ) -> None:
         self.close()
 
@@ -209,7 +217,12 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
 
     # region class methods
     @classmethod
-    def read(cls, path: str | Path | File | Group, name: str | None = None, mode: H5Mode = H5Mode.READ) -> H5Dict[Any]:
+    def read(
+        cls,
+        path: str | Path | File | Group,
+        name: str | None = None,
+        mode: H5Mode = H5Mode.READ,
+    ) -> H5Dict[Any]:
         file = File(path, mode=mode) if isinstance(path, (str, Path)) else path
 
         if name is not None:
@@ -234,7 +247,7 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
 
         if res is default:
             return default
-        return read_object(res, error=_OPTIONS["error_mode"])
+        return io.read_object(res, error=_OPTIONS["error_mode"])
 
     def rename(self, name: str, new_name: str) -> None:
         self._file.move(name, new_name)

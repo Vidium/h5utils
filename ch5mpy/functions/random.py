@@ -7,8 +7,8 @@ from functools import partial
 from typing import Any
 
 import ch5mpy
-from ch5mpy.functions.creation_routines import ArrayCreationFunc
 from ch5mpy.indexing import map_slice
+from ch5mpy.functions.creation_routines import ArrayCreationFunc
 
 
 class ArrayCreationFuncRandom(ArrayCreationFunc):
@@ -26,7 +26,7 @@ class ArrayCreationFuncRandom(ArrayCreationFunc):
         chunks: bool | tuple[int, ...] = True,
         maxshape: int | tuple[int | None, ...] | None = None,
     ) -> ch5mpy.H5Array[Any]:
-        arr = super().__call__(dims, None, name, loc, dtype, chunks, maxshape)
+        arr = super().__call__(dims, None, name, loc, dtype=dtype, chunks=chunks, maxshape=maxshape)
 
         for index, chunk in arr.iter_chunks():
             chunk = self._random_func(*chunk.shape)
@@ -42,7 +42,7 @@ class ArrayCreationFuncRandom(ArrayCreationFunc):
     # endregion
 
     # region methods
-    def anonymous(  # type: ignore[override]
+    def anonymous(
         self,
         *dims: int,
         dtype: npt.DTypeLike = np.float64,

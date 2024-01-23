@@ -203,7 +203,7 @@ def test_equal_with_broadcast():
     data = np.ones((10, 2))
 
     with File("h5_equal_array", H5Mode.WRITE_TRUNCATE) as h5_file:
-        write_object(h5_file, "data", data)
+        write_object(data, h5_file, "data")
 
     arr = H5Array(File("h5_equal_array", H5Mode.READ_WRITE)["data"])
 
@@ -251,7 +251,7 @@ def repeating_array() -> Generator[H5Array, None, None]:
     data = np.array([[1.0, 2, 1, 1, 2, 1], [2, 1, 0, 1, 1, 2]])
 
     with File("h5_r_array", H5Mode.WRITE_TRUNCATE) as h5_file:
-        write_object(h5_file, "data", data)
+        write_object(data, h5_file, "data")
 
     yield H5Array(File("h5_r_array", H5Mode.READ_WRITE)["data"])
 

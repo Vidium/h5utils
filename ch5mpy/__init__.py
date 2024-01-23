@@ -1,9 +1,10 @@
 try:
     from importlib import metadata
 except ImportError:  # for Python<3.8
-    import importlib_metadata as metadata  # type: ignore[no-redef]
+    import importlib_metadata as metadata  # type: ignore[no-redef, import-not-found]
 
 import ch5mpy.functions.random
+import ch5mpy.dict
 from ch5mpy.array.array import H5Array
 from ch5mpy.attributes import AttributeManager
 from ch5mpy.dict import H5Dict
@@ -13,8 +14,8 @@ from ch5mpy.names import H5Mode
 from ch5mpy.np import arange_nd
 from ch5mpy.objects import Dataset, File, Group
 from ch5mpy.options import options, set_options
-from ch5mpy.read import read_object
-from ch5mpy.write import (
+from ch5mpy.io import (
+    read_object,
     write_dataset,
     write_datasets,
     write_object,
