@@ -301,3 +301,34 @@ def any_(
         initial=False,
         where=where,
     )
+
+
+@implements(np.diff)
+def diff(
+    a: H5Array[Any],
+    n: int = 1,
+    axis: int = -1,
+    prepend: npt.NDArray[Any] | NoValue = NoValue,
+    append: npt.NDArray[Any] | NoValue = NoValue,
+) -> npt.NDArray[Any] | H5Array[Any]:
+    if a.ndim != 1 or axis not in (0, -1):
+        raise NotImplementedError
+
+    if n == 0:
+        return a
+
+    if n > 1:
+        raise NotImplementedError
+
+    prepend = np.array([], dtype=a.dtype) if prepend == NoValue else np.atleast_1d(prepend).astype(a.dtype)
+    append = np.array([], dtype=a.dtype) if append == NoValue else np.atleast_1d(append).astype(a.dtype)
+
+    output_array = np.empty(len(a) + len(prepend) + len(append) - 1, dtype=a.dtype)
+
+    for index, chunk_start, chunk_end in a[:-1].iter_chunks_with(a[1:]):
+        output_array[len(prepend) : len(prepend) + len(a)][index] = chunk_end - chunk_start
+
+    output_array[: len(prepend)] = np.diff(np.r_[prepend, a[0]])
+    output_array[len(prepend) + len(a) - 1 :] = np.diff(np.r_[a[-1], append])
+
+    return output_array

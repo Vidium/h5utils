@@ -22,6 +22,8 @@ from ch5mpy.io import (
     write_objects,
 )
 
+from ch5mpy import indexing
+
 random = ch5mpy.functions.random
 
 __all__ = [
@@ -45,6 +47,7 @@ __all__ = [
     "full",
     "options",
     "set_options",
+    "indexing",
 ]
 
 __version__ = metadata.version("ch5mpy")

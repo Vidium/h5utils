@@ -1,3 +1,0 @@
-from . import _objects as __h5py__objects
-
-class GroupID(__h5py__objects.ObjectID): ...

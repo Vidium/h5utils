@@ -48,7 +48,14 @@ def test_sum_axis_0(small_large_array):
     with ch5mpy.options(max_memory=str(3 * small_large_array.dtype.itemsize)):
         assert np.array_equal(
             np.sum(small_large_array, axis=0),
-            np.array([[60, 63, 66, 69, 72], [75, 78, 81, 84, 87], [90, 93, 96, 99, 102], [105, 108, 111, 114, 117]]),
+            np.array(
+                [
+                    [60, 63, 66, 69, 72],
+                    [75, 78, 81, 84, 87],
+                    [90, 93, 96, 99, 102],
+                    [105, 108, 111, 114, 117],
+                ]
+            ),
         )
 
 
@@ -56,14 +63,26 @@ def test_sum_axis_2(small_large_array):
     with ch5mpy.options(max_memory=str(3 * small_large_array.dtype.itemsize)):
         assert np.array_equal(
             np.sum(small_large_array, axis=2),
-            np.array([[10.0, 35.0, 60.0, 85.0], [110.0, 135.0, 160.0, 185.0], [210.0, 235.0, 260.0, 285.0]]),
+            np.array(
+                [
+                    [10.0, 35.0, 60.0, 85.0],
+                    [110.0, 135.0, 160.0, 185.0],
+                    [210.0, 235.0, 260.0, 285.0],
+                ]
+            ),
         )
 
 
 def test_sum_where(small_large_array):
     assert np.array_equal(
         np.sum(small_large_array, axis=1, where=[True, False, False, True, True]),
-        np.array([[30.0, 0.0, 0.0, 42.0, 46.0], [110.0, 0.0, 0.0, 122.0, 126.0], [190.0, 0.0, 0.0, 202.0, 206.0]]),
+        np.array(
+            [
+                [30.0, 0.0, 0.0, 42.0, 46.0],
+                [110.0, 0.0, 0.0, 122.0, 126.0],
+                [190.0, 0.0, 0.0, 202.0, 206.0],
+            ]
+        ),
     )
 
 
@@ -71,7 +90,13 @@ def test_sum_where_multiple_rows(small_large_array):
     with ch5mpy.options(max_memory=str(40 * small_large_array.dtype.itemsize)):
         assert np.array_equal(
             np.sum(small_large_array, axis=1, where=[True, False, False, True, True]),
-            np.array([[30.0, 0.0, 0.0, 42.0, 46.0], [110.0, 0.0, 0.0, 122.0, 126.0], [190.0, 0.0, 0.0, 202.0, 206.0]]),
+            np.array(
+                [
+                    [30.0, 0.0, 0.0, 42.0, 46.0],
+                    [110.0, 0.0, 0.0, 122.0, 126.0],
+                    [190.0, 0.0, 0.0, 202.0, 206.0],
+                ]
+            ),
         )
 
 
@@ -79,7 +104,13 @@ def test_sum_where_few_elements(small_large_array):
     with ch5mpy.options(max_memory=str(3 * small_large_array.dtype.itemsize)):
         assert np.array_equal(
             np.sum(small_large_array, axis=1, where=[True, False, False, True, True]),
-            np.array([[30.0, 0.0, 0.0, 42.0, 46.0], [110.0, 0.0, 0.0, 122.0, 126.0], [190.0, 0.0, 0.0, 202.0, 206.0]]),
+            np.array(
+                [
+                    [30.0, 0.0, 0.0, 42.0, 46.0],
+                    [110.0, 0.0, 0.0, 122.0, 126.0],
+                    [190.0, 0.0, 0.0, 202.0, 206.0],
+                ]
+            ),
         )
 
 
@@ -90,7 +121,20 @@ def test_all(array):
 def test_all_axis_keepdims(array):
     assert np.array_equal(
         np.all(array, axis=1, keepdims=True),
-        np.array([[False], [True], [True], [True], [True], [True], [True], [True], [True], [True]]),
+        np.array(
+            [
+                [False],
+                [True],
+                [True],
+                [True],
+                [True],
+                [True],
+                [True],
+                [True],
+                [True],
+                [True],
+            ]
+        ),
     )
 
 
@@ -115,8 +159,23 @@ def test_trunc(array):
 
 def test_prod(array):
     assert np.array_equal(
-        np.prod(array, axis=0, where=[True, False, False, False, False, True, True, True, True, True]),
-        [0, 1, 1, 1, 1, 6393838623046875, 9585618768101376, 13865696119905399, 19511273389031424, 26853950884211451],
+        np.prod(
+            array,
+            axis=0,
+            where=[True, False, False, False, False, True, True, True, True, True],
+        ),
+        [
+            0,
+            1,
+            1,
+            1,
+            1,
+            6393838623046875,
+            9585618768101376,
+            13865696119905399,
+            19511273389031424,
+            26853950884211451,
+        ],
     )
 
 
@@ -224,7 +283,8 @@ def test_multiply(small_array):
 
 def test_multiply_where(small_array):
     assert np.array_equal(
-        np.multiply(small_array, [2, 3, 4, 5, 6], where=[True, False, False, True, True]), [2, 2, 3, 20, 30]
+        np.multiply(small_array, [2, 3, 4, 5, 6], where=[True, False, False, True, True]),
+        [2, 2, 3, 20, 30],
     )
 
 
@@ -242,7 +302,8 @@ def test_isinf_out(small_array):
 
 def test_logical_and(small_array):
     assert np.array_equal(
-        np.logical_and(small_array, [True, True, False, False, True]), [True, True, False, False, True]
+        np.logical_and(small_array, [True, True, False, False, True]),
+        [True, True, False, False, True],
     )
 
 
@@ -352,7 +413,10 @@ def test_mean(array):
 
 
 def test_mean_on_columns(array):
-    assert np.array_equal(np.mean(array, axis=1), [4.5, 14.5, 24.5, 34.5, 44.5, 54.5, 64.5, 74.5, 84.5, 94.5])
+    assert np.array_equal(
+        np.mean(array, axis=1),
+        [4.5, 14.5, 24.5, 34.5, 44.5, 54.5, 64.5, 74.5, 84.5, 94.5],
+    )
 
 
 def test_insert_1D(small_array):
@@ -380,7 +444,13 @@ def test_insert_3D(small_large_array):
     assert np.array_equal(
         small_large_array,
         [
-            [[0, 1, 2, 3, 4], [-1, -1, -1, -1, -1], [5, 6, 7, 8, 9], [10, 11, 12, 13, 14], [15, 16, 17, 18, 19]],
+            [
+                [0, 1, 2, 3, 4],
+                [-1, -1, -1, -1, -1],
+                [5, 6, 7, 8, 9],
+                [10, 11, 12, 13, 14],
+                [15, 16, 17, 18, 19],
+            ],
             [
                 [20, 21, 22, 23, 24],
                 [-1, -1, -1, -1, -1],
@@ -576,3 +646,11 @@ def test_may_share_memory(small_array) -> None:
 
 def test_may_share_memory_view(small_array) -> None:
     assert np.may_share_memory(small_array, small_array[1:3])
+
+
+def test_diff(small_array) -> None:
+    assert np.array_equal(np.diff(small_array), [1.0, 1.0, 1.0, 1.0])
+
+
+def test_diff_with_prepend_and_append(small_array) -> None:
+    assert np.array_equal(np.diff(small_array, prepend=0, append=[7, 10]), [1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 3.0])

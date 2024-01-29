@@ -4,10 +4,8 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.1.14
     hooks:
-      # Run the linter.
       - id: ruff
         args: [--exclude, vulture_whitelist.py]
-      # Run the formatter.
       - id: ruff-format
         args: [--exclude, vulture_whitelist.py]
 
@@ -24,16 +22,22 @@ repos:
     hooks:
       - id: pylint
         args: [--disable=all, --enable=unused-import]
-        language_version: python3.9
+        language_version: python3.10
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.8.0
     hooks:
       - id: mypy
-        exclude: (^tests/)|(vulture_whitelist.py)|(^docs/)
-        args: [--strict]
-        additional_dependencies: [numpy==1.24.2, types-tqdm]
+        entry: env MYPYPATH=~/git/h5py-stubs mypy
+        args: [--strict, "ch5mpy"]
         language_version: python3.10
+        pass_filenames: false
+        additional_dependencies: [
+          "numpy",
+          "types-tqdm",
+          "h5py-stubs",
+          "packaging",
+        ]
 
   - repo: local
     hooks:

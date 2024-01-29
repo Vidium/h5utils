@@ -38,7 +38,7 @@ class AttributeManager:
         if isinstance(value, np.void):
             return pickle.loads(value.tobytes())
 
-        if value == _NONE_VALUE:
+        if isinstance(value, str) and value == _NONE_VALUE:
             return None
 
         return value

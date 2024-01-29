@@ -472,8 +472,8 @@ Array manipulation routines
 - [x] np.concatenate
 - [ ] np.stack
 - [ ] np.block
-- [ ] np.vstack
-- [ ] np.hstack
+- [x] np.vstack
+- [x] np.hstack
 - [ ] np.dstack
 - [ ] np.column_stack
 - [ ] np.row_stack
@@ -566,3 +566,6 @@ Random
 - [x] wald
 - [x] weibull
 - [x] zipf
+
+Misc
+- [ ] np.ndim

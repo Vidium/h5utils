@@ -7,7 +7,10 @@ def test_1d_smaller_than_nb_elements():
 
 
 def test_1d_greater_than_nb_elements():
-    assert _get_chunk_indices(10, (15,)) == ((FullSlice(0, 10, 1, 15),), (FullSlice(10, 15, 1, 15),))
+    assert _get_chunk_indices(10, (15,)) == (
+        (FullSlice(0, 10, 1, 15),),
+        (FullSlice(10, 15, 1, 15),),
+    )
 
 
 def test_1d_greater_than_nb_elements_multiple():

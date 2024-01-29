@@ -1,3 +1,0 @@
-class ObjectID(object):
-    @property
-    def valid(self) -> bool: ...

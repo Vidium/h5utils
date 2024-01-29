@@ -20,7 +20,9 @@ INF = np.iinfo(int).max
 
 
 def get_work_array(
-    shape: tuple[int, ...], slicer: tuple[FullSlice | SingleIndex, ...], dtype: np.dtype[_DT]
+    shape: tuple[int, ...],
+    slicer: tuple[FullSlice | SingleIndex, ...],
+    dtype: np.dtype[_DT],
 ) -> npt.NDArray[_DT]:
     if len(slicer) == 1 and isinstance(slicer[0], FullSlice) and slicer[0].is_whole_axis:
         return np.empty(shape, dtype=object if np.issubdtype(dtype, str) else dtype)
@@ -29,7 +31,10 @@ def get_work_array(
     return np.empty(slicer_shape, dtype=object if np.issubdtype(dtype, str) else dtype)
 
 
-def _get_chunk_indices(chunk_size: int, shape: tuple[int, ...]) -> tuple[tuple[FullSlice | SingleIndex, ...], ...]:
+def _get_chunk_indices(
+    chunk_size: int,
+    shape: tuple[int, ...],
+) -> tuple[tuple[FullSlice | SingleIndex, ...], ...]:
     # special case of 0D arrays
     if len(shape) == 0:
         raise ValueError("0D array")
@@ -43,39 +48,82 @@ def _get_chunk_indices(chunk_size: int, shape: tuple[int, ...]) -> tuple[tuple[F
     if chunk_size <= 1:
         raise ValueError("Slicing is impossible because of insufficient allowed memory usage.")
 
-    block_axes = int(np.argmax(~(np.cumprod(rev_shape + (np.inf,)) <= chunk_size)))
-    size_block = chunk_size // np.cumprod(rev_shape)[block_axes - 1] if block_axes else min(rev_shape[0], chunk_size)
-
-    if size_block == 0:
-        block_axes = max(0, block_axes - 1)
-
-    if block_axes == len(shape):
-        # all array can be read at once
-        return (tuple(FullSlice.whole_axis(s) for s in shape),)
-
-    whole_axes = tuple(FullSlice.whole_axis(s) for s in rev_shape[:block_axes][::-1])
-    iter_axis = rev_shape[block_axes]
-
-    right_chunks = tuple(
-        (FullSlice(s, min(s + size_block, iter_axis), 1, iter_axis), *whole_axes)
-        for s in range(0, iter_axis, size_block)
+    # We will iterate over chunks as large as possible whithin the max number of elements (chunk_size)
+    # When possible, a chunk will select a whole axis. If possible, multiple axes will be selected.
+    # We first compute the chunk dimension (how many axes can be selected at once) and adjust the chunk size to count
+    # how many indices of the iteration axis can be selected at once.
+    #
+    # Example : (shape = (4, 2), chunk_size = 4)
+    #  [[1, 2],    ] first chunk = [[1, 2],
+    #   [3, 4],    ]                [3, 4]]
+    #   [5, 6],                                 ] second chunk = [[5, 6],
+    #   [7, 8]]                                 ]                 [7, 8]]
+    # -> whole axis #1 can be selected at once, the iteration axis is axis #0
+    # -> we can select 2 indices of axis #0 so the new chunk_size is 2
+    chunk_ndim = int(np.argmax(~(np.cumprod(rev_shape + (np.inf,)) <= chunk_size)))
+    chunk_size = (
+        chunk_size // np.cumprod(rev_shape)[chunk_ndim - 1] if chunk_ndim > 0 else min(rev_shape[0], chunk_size)
     )
 
-    if block_axes + 1 == len(shape):
-        return right_chunks
+    if chunk_size == 0:
+        chunk_ndim = max(0, chunk_ndim - 1)
 
-    left_shape = shape[: -(block_axes + 1)]
+    # if the whole array can be read at once, select it all
+    if chunk_ndim == len(shape):
+        return (tuple(FullSlice.whole_axis(s) for s in shape),)
+
+    # select whole of axes that fit within a chunk
+    whole_axes = tuple(FullSlice.whole_axis(s) for s in rev_shape[:chunk_ndim][::-1])
+    iter_axis_len = rev_shape[chunk_ndim]
+
+    # get chunk indices over the iteration axis
+    iter_axis_chunks = tuple(
+        (
+            FullSlice(s, min(s + chunk_size, iter_axis_len), 1, iter_axis_len),
+            *whole_axes,
+        )
+        for s in range(0, iter_axis_len, chunk_size)
+    )
+
+    # if iteration axis is the first axis, return chunk indices
+    if chunk_ndim + 1 == len(shape):
+        return iter_axis_chunks
+
+    # if there are more axes, we must also select each index in those axes one by one
+    left_shape = shape[: -(chunk_ndim + 1)]
     left_chunks = np.array(np.meshgrid(*map(range, left_shape))).T.reshape(-1, len(left_shape))
 
     return tuple(
-        tuple(SingleIndex(_l, _s) for _l, _s in zip(left, shape)) + tuple(right)
+        tuple(SingleIndex(_l, _s) for _l, _s in zip(left, shape)) + tuple(iter_axis_chunk)
         for left in left_chunks
-        for right in right_chunks
+        for iter_axis_chunk in iter_axis_chunks
     )
 
 
 class ChunkIterator:
-    def __init__(self, array: H5Array[Any], keepdims: bool = False):
+    def __init__(
+        self,
+        array: H5Array[Any],
+        keepdims: bool = False,
+    ):
+        """
+        Iterate by chunks over data in an array.
+
+        Args:
+            array: H5Array to iterate over
+            keepdims: whether to ... (default: False)
+            overlap: number of elements to overlap between chunks (default: 0)
+                It can be a single integer if the array is 1-dimensional, it must be a tuple of length equal to the
+                number of dimensions otherwise. Each element in the tuple indicates how many elements must overlap on
+                each axis.
+                Example:
+                array: [[1, 2, 3],    overlap = (1, 1)    and chunksize = (2, 2)
+                        [4, 5, 6],
+                        [7, 8, 9]]
+
+                chunk #1 = [[1, 2],    chunk #2 = [[2, 3],     chunk #3 = [[4, 5],
+                            [4, 5]]                [5, 6]]                 [7, 8]]
+        """
         self._array = array
         self._keepdims = keepdims
 
@@ -131,7 +179,11 @@ class PairedChunkIterator:
 
     def __iter__(
         self,
-    ) -> Generator[tuple[tuple[SingleIndex | FullSlice, ...], npt.NDArray[Any], npt.NDArray[Any]], None, None]:
+    ) -> Generator[
+        tuple[tuple[SingleIndex | FullSlice, ...], npt.NDArray[Any], npt.NDArray[Any]],
+        None,
+        None,
+    ]:
         for index in self._chunk_indices:
             work_subset = map_slice(index, shift_to_zero=True)
             res_1 = self._arr_1.read(self._work_array_1, map_slice(index), work_subset)
@@ -146,7 +198,11 @@ class PairedChunkIterator:
 
 def iter_chunks_2(
     x1: npt.NDArray[Any] | H5Array[Any], x2: npt.NDArray[Any] | H5Array[Any]
-) -> Generator[tuple[tuple[SingleIndex | FullSlice, ...], npt.NDArray[Any], npt.NDArray[Any] | Number], None, None,]:
+) -> Generator[
+    tuple[tuple[SingleIndex | FullSlice, ...], npt.NDArray[Any], npt.NDArray[Any] | Number],
+    None,
+    None,
+]:
     # special case where x2 is a 0D array, iterate through chunks of x1 and always yield x2
     if x2.ndim == 0:
         if isinstance(x1, ch5mpy.H5Array):

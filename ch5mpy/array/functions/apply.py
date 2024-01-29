@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import Enum, auto
 from functools import partial
 from numbers import Number
-from typing import TYPE_CHECKING, Any, Iterable, Union
+from typing import TYPE_CHECKING, Any, Iterable
 
 import numpy as np
 import numpy.typing as npt
@@ -16,9 +16,6 @@ from ch5mpy.indexing import FullSlice, SingleIndex, map_slice
 
 if TYPE_CHECKING:
     from ch5mpy import H5Array
-
-
-WHERE_SELECTION = Union[npt.NDArray[np.bool_], tuple[()]]
 
 
 class ApplyOperation(Enum):
@@ -41,9 +38,9 @@ class MaskWhere:
     def __repr__(self) -> str:
         return f"MaskWhere({self._where})"
 
-    def __getitem__(self, item: tuple[Any, ...] | slice) -> WHERE_SELECTION:
+    def __getitem__(self, item: tuple[Any, ...] | slice) -> npt.NDArray[np.bool_] | None:
         if self._where is None:
-            return ()
+            return None
 
         return self._where[item]
 
@@ -126,7 +123,7 @@ def _get_indices(
     where_compute: MaskWhere,
     where_output: MaskWhere,
     output_ndim: int,
-) -> tuple[WHERE_SELECTION, tuple[slice, ...] | tuple[()], WHERE_SELECTION]:
+) -> tuple[npt.NDArray[np.bool_] | None, tuple[slice, ...], npt.NDArray[np.bool_] | None]:
     # compute on whole array at once
     if len(index) == 1 and isinstance(index[0], FullSlice) and index[0].is_whole_axis:
         return where_compute[:], (), where_output[index]
@@ -135,7 +132,7 @@ def _get_indices(
 
     # 0D output array (no chunk selection, no where selection)
     if output_ndim == 0:
-        return where_to_compute, (), ()
+        return where_to_compute, (), None
 
     # nD output array
     selected_index = map_slice(tuple(e for i, e in enumerate(index) if i not in axis))
@@ -146,7 +143,7 @@ def _apply_operation(
     operation: ApplyOperation,
     dest: H5Array[Any] | npt.NDArray[Any],
     chunk_selection: tuple[slice, ...] | tuple[()],
-    where_to_output: WHERE_SELECTION,
+    where_to_output: npt.NDArray[np.bool_] | None,
     values: npt.NDArray[Any],
 ) -> None:
     if values.ndim == 0:
@@ -215,7 +212,7 @@ def apply(
                 index, axis, where_compute, where_output, output_array.ndim
             )
             result = np.array(
-                func(chunk, where=True if where_to_compute == () else where_to_compute),
+                func(chunk, where=True if where_to_compute is None else where_to_compute),
                 dtype=output_array.dtype,
             )
             _apply_operation(operation, output_array, chunk_selection, where_to_output, result)
@@ -244,9 +241,7 @@ def apply_everywhere(
     where_output = MaskWhere(True, output_array.shape)
 
     for index, chunk in a.iter_chunks(keepdims=True):
-        where_to_compute, chunk_selection, where_to_output = _get_indices(
-            index, axis, where_compute, where_output, output_array.ndim
-        )
+        _, chunk_selection, where_to_output = _get_indices(index, axis, where_compute, where_output, output_array.ndim)
         result = np.array(func(chunk), dtype=output_array.dtype)
         _apply_operation(operation, output_array, chunk_selection, where_to_output, result)
 
@@ -289,25 +284,22 @@ def str_apply_2(
     a: str | npt.NDArray[np.str_] | Iterable[str] | H5Array[np.str_],
     b: Any,
 ) -> npt.NDArray[Any] | H5Array[Any] | bool:
-    if not isinstance(a, (np.ndarray, ch5mpy.H5Array)):
-        a = np.array(a, dtype=str)
+    a_arr = a if isinstance(a, (np.ndarray, ch5mpy.H5Array)) else np.array(a, dtype=str)
+    b_arr = b if isinstance(b, (np.ndarray, ch5mpy.H5Array)) else np.array(b)
 
-    if not isinstance(b, (np.ndarray, ch5mpy.H5Array)):
-        b = np.array(b)
+    if b_arr.dtype == object:
+        b_arr = b_arr.astype(str)
 
-    if b.dtype == object:
-        b = b.astype(str)
+    output_array = _get_output_array_2(None, a_arr.shape, b_arr.shape, _get_str_dtype(a_arr, b_arr, func), None)
 
-    output_array = _get_output_array_2(None, a.shape, b.shape, _get_str_dtype(a, b, func), None)
-
-    if not np.issubdtype(b.dtype, str):
+    if not np.issubdtype(b_arr.dtype, str):
         try:
             return {np.char.equal: False, np.char.not_equal: True}[func]
 
         except KeyError:
-            raise TypeError(f"'{func}' not supported between arrays with dtypes {a.dtype} and {b.dtype}.")
+            raise TypeError(f"'{func}' not supported between arrays with dtypes {a_arr.dtype} and {b_arr.dtype}.")
 
-    for index, chunk_x1, chunk_x2 in iter_chunks_2(a, b):
+    for index, chunk_x1, chunk_x2 in iter_chunks_2(a_arr, b_arr):
         output_array[map_slice(index)] = func(chunk_x1, chunk_x2)
 
     return output_array
@@ -358,11 +350,17 @@ def apply_2(
                 func(
                     chunk_x1,
                     chunk_x2,
-                    where=True if where_to_compute == () else where_to_compute,
+                    where=True if where_to_compute is None else where_to_compute,
                 ),
                 dtype=output_array.dtype,
             )
-            _apply_operation(ApplyOperation.set, output_array, chunk_selection, where_to_output, result)
+            _apply_operation(
+                ApplyOperation.set,
+                output_array,
+                chunk_selection,
+                where_to_output,
+                result,
+            )
 
     if out is None and output_array.ndim == 0:
         return output_array[()]
