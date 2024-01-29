@@ -654,3 +654,7 @@ def test_diff(small_array) -> None:
 
 def test_diff_with_prepend_and_append(small_array) -> None:
     assert np.array_equal(np.diff(small_array, prepend=0, append=[7, 10]), [1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 3.0])
+
+
+def test_ndim(small_array):
+    assert np.ndim(small_array) == 1

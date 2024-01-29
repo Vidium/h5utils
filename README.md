@@ -315,7 +315,7 @@ Mathematical functions
 - [ ] np.cumsum
 - [ ] np.nancumprod
 - [ ] np.nancumsum
-- [ ] np.diff
+- [x] np.diff
 - [ ] np.ediff1d
 - [ ] np.gradient
 - [ ] np.cross
@@ -568,4 +568,4 @@ Random
 - [x] zipf
 
 Misc
-- [ ] np.ndim
+- [x] np.ndim
