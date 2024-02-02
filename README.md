@@ -483,7 +483,7 @@ Array manipulation routines
 - [ ] np.hsplit
 - [ ] np.vsplit
 - [ ] np.tile
-- [ ] np.repeat
+- [x] np.repeat
 - [x] np.delete
 - [x] np.insert
 - [ ] np.append

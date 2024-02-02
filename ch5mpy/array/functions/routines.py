@@ -254,6 +254,12 @@ def vstack(
     return np.vstack(map(np.array, tup))  # type: ignore[no-any-return, call-overload]
 
 
+@implements(np.repeat)
+def repeat_(a: H5Array[Any], repeats: _ArrayLikeInt_co, axis: SupportsIndex | None = None) -> npt.NDArray[Any]:
+    # FIXME: custom implementation to be more memory efficient (avoid importing a into RAM)
+    return np.repeat(np.array(a), repeats, axis)
+
+
 @implements(np.sort)
 def sort(
     a: H5Array[Any],
