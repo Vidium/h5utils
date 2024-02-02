@@ -8,6 +8,7 @@ import numpy as np
 import ch5mpy.dict
 from ch5mpy.array.array import H5Array
 from ch5mpy.objects import Dataset, Group
+from ch5mpy.types import SupportsH5Read
 
 
 def _handle_read_error(data: Group, error: Literal["ignore", "raise"], msg: str) -> ch5mpy.dict.H5Dict[Any]:
@@ -40,7 +41,7 @@ def read_object(
             return _handle_read_error(data, error, "Cannot read object with unknown class.")
 
         data_class = pickle.loads(h5_class)
-        if not hasattr(data_class, "__h5_read__"):
+        if not issubclass(data_class, SupportsH5Read):
             return _handle_read_error(
                 data,
                 error,

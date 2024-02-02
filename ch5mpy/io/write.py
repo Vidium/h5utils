@@ -12,7 +12,7 @@ from tqdm.auto import tqdm
 import ch5mpy.dict
 from ch5mpy.objects import Dataset, File, Group
 from ch5mpy.utils import is_sequence
-from ch5mpy.types import SupportsH5ReadWrite
+from ch5mpy.types import SupportsH5Write
 
 from ch5mpy.functions.types import AnonymousArrayCreationFunc
 
@@ -162,7 +162,7 @@ def write_object(
     if isinstance(obj, AnonymousArrayCreationFunc):
         obj(name=name, loc=loc)
 
-    elif isinstance(obj, SupportsH5ReadWrite):
+    elif isinstance(obj, SupportsH5Write):
         group = loc.create_group(name, overwrite=overwrite, track_order=True) if name else loc
         obj.__h5_write__(ch5mpy.dict.H5Dict(group))
         group.attrs["__h5_type__"] = "object"
@@ -175,15 +175,18 @@ def write_object(
     elif is_sequence(obj):
         write_dataset(obj, loc, name, chunks=chunks, maxshape=maxshape)
 
-    elif isinstance(obj, (Number, str)):
-        if name in loc and overwrite:
-            del loc[name]
-
-        loc[name] = obj
-
     else:
-        loc[name] = np.void(pickle.dumps(obj, protocol=pickle.HIGHEST_PROTOCOL))
-        loc[name].attrs["__h5_type__"] = "pickle"
+        name = name or "/"
+
+        if isinstance(obj, (Number, str)):
+            if name in loc and overwrite:
+                del loc[name]
+
+            loc[name] = obj
+
+        else:
+            loc[name] = np.void(pickle.dumps(obj, protocol=pickle.HIGHEST_PROTOCOL))
+            loc[name].attrs["__h5_type__"] = "pickle"
 
     if progress is not None:
         progress.update()
@@ -196,7 +199,7 @@ def write_objects(
     maxshape: tuple[int, ...] | None = None,
     overwrite: bool = False,
     progress: tqdm[Any] | None = None,
-    **kwargs: SupportsH5ReadWrite,
+    **kwargs: SupportsH5Write,
 ) -> None:
     """Write multiple objects of any type to a H5 file."""
     for name, obj in kwargs.items():

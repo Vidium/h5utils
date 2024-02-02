@@ -21,6 +21,7 @@ from ch5mpy.io import (
     write_object,
     write_objects,
 )
+from ch5mpy.types import SupportsH5ReadWrite, SupportsH5Write, SupportsH5Read
 
 from ch5mpy import indexing
 
@@ -47,6 +48,9 @@ __all__ = [
     "full",
     "options",
     "set_options",
+    "SupportsH5Write",
+    "SupportsH5Read",
+    "SupportsH5ReadWrite",
     "indexing",
 ]
 
