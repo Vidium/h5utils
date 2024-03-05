@@ -176,23 +176,32 @@ def test_should_cast_shape(previous_selection: Selection, selection: Selection, 
             get_sel([[0], [2], [5]], [0, 1], shape=(10, 10)),
             True,
             (
-                ((0, 0), (0, 0)),
-                ((0, 1), (0, 1)),
-                ((2, 0), (1, 0)),
-                ((2, 1), (1, 1)),
-                ((5, 0), (2, 0)),
-                ((5, 1), (2, 1)),
+                ((0, 0), slice(None), (0, 0)),
+                ((0, 1), slice(None), (0, 1)),
+                ((2, 0), slice(None), (1, 0)),
+                ((2, 1), slice(None), (1, 1)),
+                ((5, 0), slice(None), (2, 0)),
+                ((5, 1), slice(None), (2, 1)),
             ),
         ],
-        [get_sel([[0], [2], [5]], 0, shape=(10, 10)), True, (((np.array([0, 2, 5]), 0), (slice(None), 0)),)],
-        [get_sel([54, 50, 52], shape=(100, 10)), False, (((54,), (0,)), ((50,), (1,)), ((52,), (2,)))],
+        [
+            get_sel([[0], [2], [5]], 0, shape=(10, 10)),
+            True,
+            (((np.array([0, 2, 5]), 0), slice(None), (slice(None), 0)),),
+        ],
+        [
+            get_sel([54, 50, 52], shape=(100, 10)),
+            False,
+            (((54,), slice(None), (0,)), ((50,), slice(None), (1,)), ((52,), slice(None), (2,))),
+        ],
     ],
 )
 def test_should_iter(selection: Selection, can_reorder, expected):
     indexers = tuple(selection.iter_indexers(can_reorder=can_reorder))
 
     assert len(indexers) == len(expected)
-    for (dest_idx, load_idx), (exp_dest_idx, exp_load_idx) in zip(indexers, expected):
+    for (dest_idx, dset_expand, load_idx), (exp_dest_idx, exp_dset_expand, exp_load_idx) in zip(indexers, expected):
+        assert dset_expand == exp_dset_expand
         assert _equal(dest_idx, exp_dest_idx) and _equal(load_idx, exp_load_idx)
 
 

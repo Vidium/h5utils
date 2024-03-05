@@ -355,6 +355,12 @@ def test_unique_not_equal_nan_with_counts(repeating_array):
     assert np.array_equal(counts, [1, 5, 4, 1, 1])
 
 
+def test_unique_from_view_repeating_index(small_array):
+    sub_arr = small_array[[0, 0, 2, 2]]
+    unique = np.unique(sub_arr)
+    assert np.array_equal(unique, [1, 3])
+
+
 def test_in1d_np_in_h5(small_array):
     with ch5mpy.options(max_memory=3 * small_array.dtype.itemsize):
         assert np.array_equal(np.in1d([4, 1, 7], small_array), [True, True, False])

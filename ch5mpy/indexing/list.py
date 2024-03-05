@@ -11,7 +11,7 @@ from ch5mpy.indexing.base import Indexer, as_indexer
 class ListIndex(Indexer):
     # region magic methods
     def __init__(self, elements: npt.NDArray[np.int_], max: int):
-        if elements.dtype != int:
+        if not np.issubdtype(elements.dtype, np.integer):
             raise ValueError("Indexing elements should be integers.")
         if elements.ndim == 0:
             raise ValueError("Cannot build empty ListIndex, use EmptyList instead.")

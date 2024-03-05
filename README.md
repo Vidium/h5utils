@@ -489,7 +489,7 @@ Array manipulation routines
 - [ ] np.append
 - [ ] np.resize
 - [ ] np.trim_zeros
-- [ ] np.unique
+- [x] np.unique
 - [ ] np.flip
 - [ ] np.fliplr
 - [ ] np.flipud

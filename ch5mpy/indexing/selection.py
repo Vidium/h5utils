@@ -90,7 +90,8 @@ def _as_indexers(indices: tuple[SELECTOR, ...], shape: tuple[int, ...]) -> Gener
 
             if index.dtype == np.bool_:
                 for indexer in boolean_array_as_indexer(
-                    index, tuple(next(shape_it) for _ in range(index.ndim))  # type: ignore[arg-type]
+                    index,  # type: ignore[arg-type]
+                    tuple(next(shape_it) for _ in range(index.ndim)),
                 ):
                     yield indexer
 
@@ -237,6 +238,12 @@ class Selection:
         enforce_1d: bool = False,
         for_h5: bool = False,
     ) -> tuple[int | npt.NDArray[np.int_] | slice | None, ...]:
+        """Get indexers for reading data in a h5py Dataset from a Selection.
+        Args:
+            sorted:
+            enforce_1d:
+            for_h5: skip new axes, transform lists of 1 element into single integer index
+        """
         if for_h5:
             return tuple(
                 get_indexer(i, sorted=sorted, enforce_1d=enforce_1d, for_h5=True)
@@ -377,6 +384,7 @@ class Selection:
     ) -> Generator[
         tuple[
             tuple[int | npt.NDArray[np.int_] | slice | None, ...],
+            slice | npt.NDArray[np.int_],
             tuple[int | npt.NDArray[np.int_] | slice, ...],
         ],
         None,
@@ -388,6 +396,7 @@ class Selection:
         if not len(list_indices):
             yield (
                 self.get_indexers(for_h5=True),
+                slice(None),
                 self._get_loading_sel(),
             )
             return None
@@ -396,14 +405,29 @@ class Selection:
             list_ = self._indices[list_indices[0]]
             assert isinstance(list_, ListIndex)
 
+            unique_list, inverse = np.unique(list_, return_inverse=True)
+
             already_sorted = np.array_equal(list_.as_array(sorted=True), list_.as_array())
+            already_unique = len(unique_list) == len(list_)
 
             if can_reorder or already_sorted:
                 if list_.ndim == 1:
-                    yield (
-                        self.get_indexers(sorted=True, enforce_1d=True),
-                        self._get_loading_sel(),
-                    )
+                    indices = self.get_indexers(sorted=True, enforce_1d=True)
+
+                    if already_unique:
+                        yield (
+                            indices,
+                            slice(None),
+                            self._get_loading_sel(),
+                        )
+
+                    else:
+                        indices = indices[: list_indices[0]] + (unique_list,) + indices[list_indices[0] + 1 :]
+                        yield (
+                            indices,
+                            inverse,
+                            self._get_loading_sel(),
+                        )
 
                 elif list_.squeeze().ndim == 1:
                     extra_before = len(tuple(takewhile(lambda x: x == 1, list_.shape[:-1])))
@@ -411,6 +435,7 @@ class Selection:
 
                     yield (
                         self.get_indexers(sorted=True, enforce_1d=True),
+                        slice(None),
                         self._get_loading_sel(extra_before, extra_after),
                     )
 
@@ -433,7 +458,7 @@ class Selection:
 
         # long indexing -------------------------------------------------------
         if not self.out_shape_squeezed:
-            yield (self.get_indexers(for_h5=True), ())
+            yield (self.get_indexers(for_h5=True), slice(None), ())
             return None
 
         indices_dataset = [
@@ -451,7 +476,7 @@ class Selection:
             )
             loading_sel = tuple(self._get_loading_sel_iter(index_loading, list_indices))
 
-            yield dataset_sel, loading_sel
+            yield dataset_sel, slice(None), loading_sel
 
         return None
 

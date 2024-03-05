@@ -24,7 +24,9 @@ def read_from_dataset(
     dataset: Dataset[_DT] | DatasetWrapper[_DT],
     selection: Selection,
     loading_array: npt.NDArray[_DT],
+    expand_sel: slice,
 ) -> None:
+    # FIXME: unused expand_sel
     if not dataset.size:
         if loading_array.size:
             raise ValueError("Reading from empty dataset.")
@@ -34,9 +36,11 @@ def read_from_dataset(
         return
 
     indexers = IterWithFinalReordering(selection.iter_indexers())
-    for dataset_idx, loading_array_idx in indexers:
+    for dataset_idx, dataset_expand_idx, loading_array_idx in indexers:
         # TODO : would be nice to be able to pass an array with random order in `dest_sel`
-        dataset.read_direct(loading_array, source_sel=dataset_idx, dest_sel=loading_array_idx)
+        dataset.read_direct(
+            loading_array, source_sel=dataset_idx, dest_sel=loading_array_idx, expand_sel=dataset_expand_idx
+        )
 
     if indexers.final_reordering is not None:
         loading_array[:] = loading_array[indexers.final_reordering]
@@ -48,7 +52,7 @@ def read_one_from_dataset(
     dtype: np.dtype[_DT],
 ) -> _DT:
     loading_array = np.empty((), dtype=dtype)
-    read_from_dataset(dataset, selection, loading_array)
+    read_from_dataset(dataset, selection, loading_array, expand_sel=slice(None))
     return cast(_DT, loading_array[()])
 
 
@@ -62,5 +66,5 @@ def write_to_dataset(
     if values.size == np.prod(selection_shape) and values.shape != selection_shape:
         values = values.reshape(selection_shape)
 
-    for dataset_idx, array_idx in selection.iter_indexers(can_reorder=False):
+    for dataset_idx, _, array_idx in selection.iter_indexers(can_reorder=False):
         dataset.write_direct(values, source_sel=array_idx, dest_sel=dataset_idx)

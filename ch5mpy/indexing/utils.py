@@ -8,3 +8,7 @@ def takewhile_inclusive(predicate: Callable[[Any], bool], it: Iterable[Any]) -> 
 
         if e is None or not predicate(e):
             break
+
+
+def positive_slice_index(value: int, max: int) -> int:
+    return value if value >= 0 else max + value

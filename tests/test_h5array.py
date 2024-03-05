@@ -420,7 +420,7 @@ def test_inplace_type_casting(array: ch5mpy.H5Array):
     assert array.dtype == np.dtype("<U4")
 
 
-# FIXME
+# FIXME: can't get nice repr to work
 @pytest.mark.xfail
 def test_repr_3d_array():
     path = Path("f.h5")

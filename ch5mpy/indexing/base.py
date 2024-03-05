@@ -7,6 +7,7 @@ import numpy as np
 import numpy.typing as npt
 
 import ch5mpy.indexing as ci
+from ch5mpy.indexing.utils import positive_slice_index
 
 
 class Indexer(ABC):
@@ -89,7 +90,7 @@ def as_indexer(
         if np.sign(start) * np.sign(step) == -1:
             return ci.ListIndex(np.arange(start, stop, step), max=max)
 
-        if stop == start:
+        if start == positive_slice_index(stop, max):
             return ci.EmptyList(max=max)
 
         return ci.FullSlice(start, stop, step, max=max)

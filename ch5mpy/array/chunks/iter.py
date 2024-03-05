@@ -139,7 +139,9 @@ class ChunkIterator:
     ) -> Generator[tuple[tuple[FullSlice | SingleIndex, ...], npt.NDArray[Any]], None, None]:
         for index in self._chunk_indices:
             work_subset = map_slice(index, shift_to_zero=True)
-            self._array.read_direct(self._work_array, source_sel=map_slice(index), dest_sel=work_subset)
+            self._array.read_direct(
+                self._work_array, source_sel=map_slice(index), dest_sel=work_subset, expand_sel=slice(None)
+            )
 
             # cast to str if needed
             res = _as_valid_dtype(self._work_array, self._array.dtype)[work_subset]
@@ -169,10 +171,14 @@ class PairedChunkIterator:
             arr_2.chunk_size if isinstance(arr_2, ch5mpy.H5Array) else INF,
         )
 
-        self._chunk_indices = _get_chunk_indices(chunk_size, shape=arr_1.shape)
-
-        self._work_array_1 = get_work_array(broadcasted_shape, self._chunk_indices[0], dtype=arr_1.dtype)
-        self._work_array_2 = get_work_array(broadcasted_shape, self._chunk_indices[0], dtype=arr_2.dtype)
+        if np.prod(broadcasted_shape) > 0:
+            self._chunk_indices = _get_chunk_indices(chunk_size, shape=arr_1.shape)
+            self._work_array_1 = get_work_array(broadcasted_shape, self._chunk_indices[0], dtype=arr_1.dtype)
+            self._work_array_2 = get_work_array(broadcasted_shape, self._chunk_indices[0], dtype=arr_2.dtype)
+        else:
+            self._chunk_indices = ()
+            self._work_array_1 = np.empty(0)
+            self._work_array_2 = np.empty(0)
 
     def __repr__(self) -> str:
         return f"<PairedChunkIterator over 2 {self._arr_1.shape} arrays>"

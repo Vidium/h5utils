@@ -9,10 +9,7 @@ import numpy.typing as npt
 from ch5mpy.indexing.base import Indexer, as_indexer
 from ch5mpy.indexing.single import SingleIndex
 from ch5mpy.indexing.special import NewAxis
-
-
-def _positive(value: int, max: int) -> int:
-    return value if value >= 0 else max + value
+from ch5mpy.indexing.utils import positive_slice_index
 
 
 class FullSlice(Indexer):
@@ -30,9 +27,9 @@ class FullSlice(Indexer):
         start = 0 if start is None else start
         stop = max if stop is None else stop
 
-        self._start = _positive(0 if start is None else start, max)
+        self._start = positive_slice_index(0 if start is None else start, max)
         self._step = 1 if step is None else abs(step)
-        self._stop = _positive(min(stop, max), max)
+        self._stop = min(positive_slice_index(stop, max), max)
         self._max = max
 
         if self._max < self._start and self._max < self._stop:

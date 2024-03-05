@@ -6,6 +6,7 @@ from typing import Any, Collection, Generic, Literal, TypeVar, cast
 import h5py
 import numpy as np
 import numpy.typing as npt
+from numpy._typing import _ArrayLikeInt_co
 from h5py.h5t import check_string_dtype
 
 import ch5mpy
@@ -78,11 +79,15 @@ class DatasetWrapper(ABC, Generic[_WT]):
         dest: npt.NDArray[Any],
         source_sel: tuple[int | slice | Collection[int], ...] | None = None,
         dest_sel: tuple[int | slice | Collection[int], ...] | None = None,
+        expand_sel: _ArrayLikeInt_co | slice = slice(None),
     ) -> None:
         source_sel = () if source_sel is None else source_sel
         dest_sel = () if dest_sel is None else dest_sel
 
-        dest[dest_sel] = self[source_sel]
+        if isinstance(expand_sel, slice) and expand_sel == slice(None):
+            dest[dest_sel] = self[source_sel]
+        else:
+            dest[dest_sel] = np.atleast_1d(self[source_sel])[expand_sel]
 
     # endregion
 
@@ -113,25 +118,6 @@ class AsStrWrapper(DatasetWrapper[str]):
             return str_dset.dtype
 
         return np.dtype(f"<U{len(str_dset)}")
-
-    # endregion
-
-    # region methods
-    def read_direct(
-        self,
-        dest: npt.NDArray[Any],
-        source_sel: tuple[int | slice | Collection[int], ...] | None = None,
-        dest_sel: tuple[int | slice | Collection[int], ...] | None = None,
-    ) -> None:
-        source_sel = () if source_sel is None else source_sel
-        dest_sel = () if dest_sel is None else dest_sel
-
-        values = self[source_sel]
-
-        if isinstance(values, np.ndarray) and values.size == 1:
-            values = values.flatten()[0]
-
-        dest[dest_sel] = values
 
     # endregion
 
@@ -265,6 +251,19 @@ class Dataset(PickleableH5Object, h5py.Dataset, Generic[_T]):
     def maptype(self, otype: type[Any]) -> AsObjectWrapper[Any]:
         # noinspection PyTypeChecker
         return AsObjectWrapper(self, otype)
+
+    def read_direct(
+        self,
+        dest: npt.NDArray[Any],
+        source_sel: tuple[int | slice | Collection[int], ...] | None = None,
+        dest_sel: tuple[int | slice | Collection[int], ...] | None = None,
+        expand_sel: _ArrayLikeInt_co | slice = slice(None),
+    ) -> None:
+        # FIXME: find better way (here we have to load data to RAM before writing to dest)
+        source_sel = () if source_sel is None else source_sel
+        dest_sel = () if dest_sel is None else dest_sel
+
+        dest[dest_sel] = np.atleast_1d(self[source_sel])[expand_sel]
 
     def write_direct(
         self,

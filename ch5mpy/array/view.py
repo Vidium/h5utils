@@ -61,7 +61,7 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
         for index, chunk in self.iter_chunks():
             func(chunk, value, out=chunk)
 
-            for dest_sel, source_sel in ci.Selection(index, self.shape).cast_on(self._selection).iter_indexers():
+            for dest_sel, _, source_sel in ci.Selection(index, self.shape).cast_on(self._selection).iter_indexers():
                 self._dset.write_direct(chunk, source_sel=source_sel, dest_sel=dest_sel)
 
         return self
@@ -74,7 +74,7 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
             self._selection.out_shape,
             dtype or self.dtype,
         )
-        read_from_dataset(self._dset, self._selection, loading_array)
+        read_from_dataset(self._dset, self._selection, loading_array, expand_sel=slice(None))
 
         return loading_array.reshape(self.shape)
 
@@ -114,6 +114,7 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
         dest: npt.NDArray[_T],
         source_sel: tuple[int | slice, ...],
         dest_sel: tuple[int | slice, ...],
+        expand_sel: slice,
     ) -> None:
         dataset = self._dset.asstr() if np.issubdtype(self.dtype, str) else self._dset
         read_from_dataset(
@@ -123,6 +124,7 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
                 shape=self.shape,
             ).cast_on(self._selection),
             dest[dest_sel],
+            expand_sel,
         )
 
     # endregion
