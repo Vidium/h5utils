@@ -40,7 +40,11 @@ def read_object(
         if h5_class is None:
             return _handle_read_error(data, error, "Cannot read object with unknown class.")
 
-        data_class = pickle.loads(h5_class)
+        try:
+            data_class = pickle.loads(h5_class)
+        except ModuleNotFoundError as e:
+            return _handle_read_error(data, error, e.msg)
+
         if not issubclass(data_class, SupportsH5Read):
             return _handle_read_error(
                 data,

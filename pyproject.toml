@@ -25,15 +25,11 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 line-length = 120
-exclude = [
-    "vulture_whitelist.py",
-]
+extend-select = ["I"]
+exclude = ["vulture_whitelist.py"]
 
 [tool.vulture]
-paths = [
-    "ch5mpy",
-    "vulture_whitelist.py"
-]
+paths = ["ch5mpy", "vulture_whitelist.py"]
 
 [tool.mypy]
 strict = true
