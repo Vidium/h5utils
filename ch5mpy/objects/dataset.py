@@ -6,14 +6,13 @@ from typing import Any, Collection, Generic, Literal, TypeVar, cast
 import h5py
 import numpy as np
 import numpy.typing as npt
-from numpy._typing import _ArrayLikeInt_co
 from h5py.h5t import check_string_dtype
+from numpy._typing import _ArrayLikeInt_co
 
 import ch5mpy
 from ch5mpy._typing import SELECTOR
 from ch5mpy.attributes import AttributeManager
 from ch5mpy.objects.pickle import PickleableH5Object
-
 
 _T = TypeVar("_T", bound=np.generic)
 _WT = TypeVar("_WT")
@@ -213,6 +212,10 @@ class Dataset(PickleableH5Object, h5py.Dataset, Generic[_T]):
     def file(self) -> ch5mpy.File:
         with h5py._objects.phil:  # type: ignore[attr-defined]
             return ch5mpy.File(self.id)
+
+    @property
+    def attributes(self) -> AttributeManager:
+        return self.file.attrs
 
     @property
     def dtype(self) -> np.dtype[_T]:
