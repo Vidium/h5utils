@@ -224,6 +224,11 @@ def test_subset_0d(array):
     assert repr(subset) == "H5Array([], shape=(0, 10), dtype=float64)"
 
 
+def test_subset_end(small_array):
+    subset = small_array[-2:]
+    assert np.array_equal(subset, [4, 5])
+
+
 def test_subset_1d_0d(array):
     subset = array[np.ix_([0, 1, 2], [])]
     assert subset.shape == (3, 0)

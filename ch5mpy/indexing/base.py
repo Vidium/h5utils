@@ -86,10 +86,6 @@ def as_indexer(
         step = 1 if obj.step is None else obj.step
         stop = max if obj.stop is None else obj.stop
 
-        # /!\ np.sign(0) is 0 --> so when signs are different -- excluding 0 -- their product is -1
-        if np.sign(start) * np.sign(step) == -1:
-            return ci.ListIndex(np.arange(start, stop, step), max=max)
-
         if start == positive_slice_index(stop, max):
             return ci.EmptyList(max=max)
 
