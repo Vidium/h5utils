@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pickle
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ItemsView
 
 import numpy as np
 from h5py._hl.attrs import AttributeManager as H5Attrs
@@ -62,11 +62,17 @@ class AttributeManager:
     def __delitem__(self, name: str) -> None:
         del self._attrs[name]
 
+    def __len__(self) -> int:
+        return len(self._attrs.keys())
+
     # endregion
 
     # region attributes
     def keys(self) -> KeysViewHDF5[str]:
         return self._attrs.keys()
+
+    def items(self) -> ItemsView[str, Any]:
+        return self.as_dict().items()
 
     # endregion
 
