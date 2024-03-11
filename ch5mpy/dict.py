@@ -1,21 +1,22 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, KeysView, MutableMapping
-from itertools import islice
 from functools import partial
+from itertools import islice
 from pathlib import Path
-from typing import Any, ItemsView, Iterator, TypeVar, Union, ValuesView, cast
 from types import TracebackType
+from typing import Any, ItemsView, Iterator, TypeVar, Union, ValuesView, cast
 
 import numpy as np
 from h5py._hl.base import ItemsViewHDF5
 
-from . import io
-from ch5mpy.types import SupportsH5ReadWrite
 from ch5mpy.array import H5Array
 from ch5mpy.names import H5Mode
 from ch5mpy.objects import AsStrWrapper, Dataset, File, Group, H5Object
 from ch5mpy.options import _OPTIONS
+from ch5mpy.types import SupportsH5ReadWrite
+
+from . import io
 
 _T = TypeVar("_T", bound=SupportsH5ReadWrite)
 
@@ -212,6 +213,16 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
         _exc_tb: TracebackType | None,
     ) -> None:
         self.close()
+
+    # endregion
+
+    # region
+    @property
+    def parent(self) -> H5Dict[_T] | None:
+        if isinstance(self._file, File):
+            return None
+        # TODO: update stubs
+        return H5Dict(self._file.parent)  # type: ignore[attr-defined]
 
     # endregion
 
