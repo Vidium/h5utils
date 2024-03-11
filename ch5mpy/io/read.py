@@ -11,12 +11,14 @@ from ch5mpy.objects import Dataset, Group
 from ch5mpy.types import SupportsH5Read
 
 
-def _handle_read_error(data: Group, error: Literal["ignore", "raise"], msg: str) -> ch5mpy.dict.H5Dict[Any]:
-    if error == "raise":
-        raise ValueError(msg)
+def _handle_read_error(
+    error: BaseException, data: Group, error_mode: Literal["ignore", "raise"]
+) -> ch5mpy.dict.H5Dict[Any]:
+    if error_mode == "raise":
+        raise error
 
     else:
-        return ch5mpy.dict.H5Dict(data, annotation=f"Failed reading object: {msg}")
+        return ch5mpy.dict.H5Dict(data, annotation=f"Failed reading object: {error}")
 
 
 def read_object(
@@ -38,25 +40,27 @@ def read_object(
 
         h5_class = data.attrs.get("__h5_class__", None)
         if h5_class is None:
-            return _handle_read_error(data, error, "Cannot read object with unknown class.")
+            return _handle_read_error(ValueError("Cannot read object with unknown class."), data, error)
 
         try:
             data_class = pickle.loads(h5_class)
         except ModuleNotFoundError as e:
-            return _handle_read_error(data, error, e.msg)
+            return _handle_read_error(e, data, error)
 
         if not issubclass(data_class, SupportsH5Read):
             return _handle_read_error(
+                ValueError(
+                    f"Don't know how to read {data_class} since it does not implement " f"the '__h5_read__' method."
+                ),
                 data,
                 error,
-                f"Don't know how to read {data_class} since it does not implement " f"the '__h5_read__' method.",
             )
 
         try:
             return data_class.__h5_read__(ch5mpy.dict.H5Dict(data))
 
         except Exception as e:
-            return _handle_read_error(data, error, str(e))
+            return _handle_read_error(e, data, error)
 
     if data.ndim == 0:
         if np.issubdtype(data.dtype, np.void):
