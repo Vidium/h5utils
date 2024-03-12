@@ -1,13 +1,9 @@
 from __future__ import annotations
 
-import numpy as np
+from typing import TYPE_CHECKING, Any, Iterable, Literal, TypeVar
 
+import numpy as np
 import numpy.typing as npt
-from typing import Any
-from typing import Literal
-from typing import TypeVar
-from typing import Iterable
-from typing import TYPE_CHECKING
 
 from ch5mpy.array.functions.implement import implements
 

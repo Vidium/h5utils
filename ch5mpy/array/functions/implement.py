@@ -2,12 +2,9 @@ from __future__ import annotations
 
 import importlib
 from functools import partial
-
 from typing import Callable
 
-from ch5mpy._typing import NP_FUNC
-from ch5mpy._typing import H5_FUNC
-
+from ch5mpy._typing import H5_FUNC, NP_FUNC
 
 HANDLED_FUNCTIONS: dict[NP_FUNC | NP_FUNC, H5_FUNC] = {}
 

@@ -8,7 +8,6 @@ import numpy as np
 import numpy.typing as npt
 
 import ch5mpy
-from ch5mpy.io.write import _store_dataset
 
 
 class ArrayCreationFunc:
@@ -35,7 +34,7 @@ class ArrayCreationFunc:
         if not isinstance(loc, ch5mpy.Group):
             loc = ch5mpy.File(loc, mode=ch5mpy.H5Mode.READ_WRITE_CREATE)
 
-        dset = _store_dataset(
+        dset = ch5mpy.store_dataset(
             None, loc, name, shape=shape, dtype=dtype, chunks=chunks, maxshape=maxshape, fill_value=fill_value
         )
 

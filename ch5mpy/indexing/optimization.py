@@ -1,7 +1,7 @@
 from itertools import chain
+from typing import cast
 
 import numpy as np
-from typing import cast
 
 from ch5mpy.indexing.base import Indexer
 from ch5mpy.indexing.list import ListIndex

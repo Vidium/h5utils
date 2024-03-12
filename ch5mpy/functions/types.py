@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable, Any
 from pathlib import Path
+from typing import Any, Protocol, runtime_checkable
 
 import ch5mpy
 

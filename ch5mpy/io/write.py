@@ -10,17 +10,16 @@ from h5py import string_dtype
 from tqdm.auto import tqdm
 
 import ch5mpy.dict
+from ch5mpy.functions import AnonymousArrayCreationFunc
 from ch5mpy.objects import Dataset, File, Group
-from ch5mpy.utils import is_sequence
 from ch5mpy.types import SupportsH5Write
-
-from ch5mpy.functions.types import AnonymousArrayCreationFunc
+from ch5mpy.utils import is_sequence
 
 if TYPE_CHECKING:
     from ch5mpy import H5Array
 
 
-def _store_dataset(
+def store_dataset(
     array: npt.NDArray[Any] | H5Array[Any] | None,
     loc: Group | File,
     name: str,
@@ -130,7 +129,7 @@ def write_dataset(
         # a different array was stored, delete it before storing the new array
         del loc[name]
 
-    _store_dataset(array, loc, name, chunks=chunks, maxshape=maxshape)
+    store_dataset(array, loc, name, chunks=chunks, maxshape=maxshape)
 
 
 def write_datasets(

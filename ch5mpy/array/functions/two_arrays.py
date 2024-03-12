@@ -1,18 +1,14 @@
 from __future__ import annotations
 
-import numpy as np
 from numbers import Number
+from typing import TYPE_CHECKING, Any, Iterable
 
+import numpy as np
 import numpy.typing as npt
-from typing import Any
-from typing import Iterable
-from typing import TYPE_CHECKING
 
 import ch5mpy
-from ch5mpy.array.functions.apply import apply_2
-from ch5mpy.array.functions.apply import str_apply_2
+from ch5mpy.array.functions.apply import apply_2, str_apply_2
 from ch5mpy.array.functions.implement import implements
-
 
 if TYPE_CHECKING:
     from ch5mpy import H5Array

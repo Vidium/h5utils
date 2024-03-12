@@ -21,8 +21,8 @@ from ch5mpy.objects import Dataset, DatasetWrapper, File, Group, H5Object
 from ch5mpy.options import _OPTIONS
 
 if TYPE_CHECKING:
-    from ch5mpy.attributes import AttributeManager
     from ch5mpy.array.view import H5ArrayView
+    from ch5mpy.attributes import AttributeManager
 
 
 _T = TypeVar("_T", bound=np.generic, covariant=True)

@@ -13,7 +13,6 @@ from ch5mpy.array.array import as_array
 from ch5mpy.array.io import read_from_dataset, read_one_from_dataset, write_to_dataset
 from ch5mpy.objects import DatasetWrapper
 
-
 _T = TypeVar("_T", bound=np.generic)
 
 

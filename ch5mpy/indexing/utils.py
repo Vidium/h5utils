@@ -1,4 +1,4 @@
-from typing import Callable, Any, Iterable, Generator
+from typing import Any, Callable, Generator, Iterable
 
 
 def takewhile_inclusive(predicate: Callable[[Any], bool], it: Iterable[Any]) -> Generator[Any, None, None]:

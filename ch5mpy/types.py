@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import runtime_checkable, Protocol, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+
 from typing_extensions import Self
 
 if TYPE_CHECKING:

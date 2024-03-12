@@ -5,8 +5,8 @@ from typing import Any, Literal, cast
 
 import numpy as np
 
+import ch5mpy
 import ch5mpy.dict
-from ch5mpy.array.array import H5Array
 from ch5mpy.objects import Dataset, Group
 from ch5mpy.types import SupportsH5Read
 
@@ -71,4 +71,4 @@ def read_object(
 
         return data[()]
 
-    return H5Array(data)
+    return ch5mpy.H5Array(data)

@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-import numpy as np
-import numpy.typing as npt
-from pathlib import Path
 from functools import partial
+from pathlib import Path
 from typing import Any
 
+import numpy as np
+import numpy.typing as npt
+
 import ch5mpy
-from ch5mpy.indexing import map_slice
 from ch5mpy.functions.creation_routines import ArrayCreationFunc
+from ch5mpy.indexing import map_slice
 
 
 class ArrayCreationFuncRandom(ArrayCreationFunc):

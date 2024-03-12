@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from itertools import repeat
 from typing import TYPE_CHECKING, Any, Iterable, Literal, Sequence, SupportsIndex, cast
-from packaging import version
 
 import numpy as np
 import numpy.typing as npt
 from numpy._typing import _ArrayLikeInt_co
+from packaging import version
 
 import ch5mpy
 from ch5mpy._typing import NP_FUNC

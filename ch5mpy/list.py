@@ -4,9 +4,9 @@ from pathlib import Path
 from typing import Any, Generic, Iterator, TypeVar, cast
 
 from ch5mpy.dict import H5Dict
+from ch5mpy.io import read_object, write_object, write_objects
 from ch5mpy.names import H5Mode
 from ch5mpy.objects import File, Group, H5Object
-from ch5mpy.io import read_object, write_object, write_objects
 from ch5mpy.types import SupportsH5ReadWrite
 
 _T = TypeVar("_T", bound=SupportsH5ReadWrite)
