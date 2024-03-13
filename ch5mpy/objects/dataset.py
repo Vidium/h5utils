@@ -266,7 +266,10 @@ class Dataset(PickleableH5Object, h5py.Dataset, Generic[_T]):
         source_sel = () if source_sel is None else source_sel
         dest_sel = () if dest_sel is None else dest_sel
 
-        dest[dest_sel] = np.atleast_1d(self[source_sel])[expand_sel]
+        if isinstance(expand_sel, slice) and expand_sel == slice(None):
+            dest[dest_sel] = self[source_sel]
+        else:
+            dest[dest_sel] = np.atleast_1d(self[source_sel])[expand_sel]
 
     def write_direct(
         self,
