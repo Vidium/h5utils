@@ -24,9 +24,7 @@ def read_from_dataset(
     dataset: Dataset[_DT] | DatasetWrapper[_DT],
     selection: Selection,
     loading_array: npt.NDArray[_DT],
-    expand_sel: slice,
 ) -> None:
-    # FIXME: unused expand_sel
     if not dataset.size:
         if loading_array.size:
             raise ValueError("Reading from empty dataset.")
@@ -52,7 +50,7 @@ def read_one_from_dataset(
     dtype: np.dtype[_DT],
 ) -> _DT:
     loading_array = np.empty((), dtype=dtype)
-    read_from_dataset(dataset, selection, loading_array, expand_sel=slice(None))
+    read_from_dataset(dataset, selection, loading_array)
     return cast(_DT, loading_array[()])
 
 

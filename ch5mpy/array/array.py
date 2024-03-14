@@ -382,10 +382,9 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
         dest: npt.NDArray[_T],
         source_sel: tuple[int | slice, ...],
         dest_sel: tuple[int | slice, ...],
-        expand_sel: slice,
     ) -> None:
         dset = self._dset.asstr() if np.issubdtype(self.dtype, str) else self._dset
-        dset.read_direct(dest, source_sel=source_sel, dest_sel=dest_sel, expand_sel=expand_sel)
+        dset.read_direct(dest, source_sel=source_sel, dest_sel=dest_sel)
 
     def copy(self) -> npt.NDArray[_T]:
         return np.copy(self)

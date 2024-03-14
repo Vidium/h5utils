@@ -48,6 +48,10 @@ class Group(PickleableH5Object, h5py.Group):
         with h5py._objects.phil:  # type: ignore[attr-defined]
             return File(self.id)
 
+    @property
+    def parent(self) -> Group:
+        return Group(super().parent.id)
+
     # endregion
 
     # region methods

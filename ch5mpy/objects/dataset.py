@@ -15,7 +15,7 @@ from ch5mpy.attributes import AttributeManager
 from ch5mpy.objects.pickle import PickleableH5Object
 
 _T = TypeVar("_T", bound=np.generic)
-_WT = TypeVar("_WT")
+_WT = TypeVar("_WT", bound=np.generic, covariant=True)
 ENCODING = Literal["ascii", "utf-8"]
 ERROR_METHOD = Literal[
     "backslashreplace",
@@ -37,6 +37,9 @@ class DatasetWrapper(ABC, Generic[_WT]):
     @abstractmethod
     def __getitem__(self, item: SELECTOR | tuple[SELECTOR, ...]) -> Any:
         pass
+
+    def __setitem__(self, item: SELECTOR, value: Any) -> None:
+        raise NotImplementedError
 
     def __getattr__(self, attr: str) -> Any:
         # If method/attribute is not defined here, pass the call to the wrapped dataset.
@@ -91,15 +94,15 @@ class DatasetWrapper(ABC, Generic[_WT]):
     # endregion
 
 
-class AsStrWrapper(DatasetWrapper[str]):
+class AsStrWrapper(DatasetWrapper[np.str_]):
     """Wrapper to decode strings on reading the dataset"""
 
     # region magic methods
-    def __getitem__(self, args: SELECTOR | tuple[SELECTOR, ...]) -> npt.NDArray[np.str_] | str:
+    def __getitem__(self, args: SELECTOR | tuple[SELECTOR, ...]) -> npt.NDArray[np.str_] | np.str_:
         subset = self._dset[args]
 
         if isinstance(subset, bytes):
-            return subset.decode()
+            return np.str_(subset.decode())
 
         return np.array(subset, dtype=str)
 
@@ -172,7 +175,7 @@ class AsObjectWrapper(DatasetWrapper[_WT]):
         subset = self._dset[args]
 
         if np.isscalar(subset):
-            return self._otype(subset)  # type: ignore[call-arg]
+            return self._otype(subset)
 
         subset = cast(npt.NDArray[Any], subset)
         return np.array(list(map(self._otype, subset.flat)), dtype=np.object_).reshape(subset.shape)
@@ -228,9 +231,7 @@ class Dataset(PickleableH5Object, h5py.Dataset, Generic[_T]):
     # endregion
 
     # region methods
-    def asstr(  # type: ignore[override]
-        self, encoding: ENCODING | None = None, errors: ERROR_METHOD = "strict"
-    ) -> AsStrWrapper:
+    def asstr(self, encoding: ENCODING | None = None, errors: ERROR_METHOD = "strict") -> AsStrWrapper:  # type: ignore[override]
         """
         Get a wrapper to read string data as Python strings:
 
@@ -238,9 +239,6 @@ class Dataset(PickleableH5Object, h5py.Dataset, Generic[_T]):
         If ``encoding`` is unspecified, it will use the encoding in the HDF5
         datatype (either ascii or utf-8).
         """
-        del encoding
-        del errors
-
         string_info = check_string_dtype(self.dtype)
         if string_info is None:
             raise TypeError("dset.asstr() can only be used on datasets with an HDF5 string datatype")

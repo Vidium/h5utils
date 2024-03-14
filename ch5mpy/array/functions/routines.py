@@ -227,11 +227,9 @@ if _NUMPY_VERSION >= version.parse("1.24"):
         tup: Iterable[H5Array[Any] | npt.NDArray[Any]],
         *,
         dtype: npt.DTypeLike | None = None,
-        casting: str = "same_kind",
+        casting: np._CastingKind = "same_kind",
     ) -> npt.NDArray[Any]:
-        return np.hstack(  # type: ignore[no-any-return, call-overload]
-            [np.array(a) for a in tup], dtype=dtype, casting=casting
-        )
+        return np.hstack([np.array(a) for a in tup], dtype=dtype, casting=casting)
 
 else:
 
@@ -277,7 +275,7 @@ def insert(
     values: npt.ArrayLike,
     axis: int | None = None,
 ) -> H5Array[Any]:
-    """/!\ Happens `in place` !"""
+    r"""/!\ Happens `in place` !"""
     if arr.ndim > 1 and axis is None:
         raise NotImplementedError
 
@@ -322,7 +320,7 @@ def delete(arr: H5Array[Any], obj: int | slice | Sequence[int], axis: int | None
     if axis is None:
         axis = 0
 
-    if not isinstance(obj, (int, np.int_)):
+    if not isinstance(obj, (int, np.integer)):
         raise NotImplementedError
 
     if obj > arr.shape[axis]:

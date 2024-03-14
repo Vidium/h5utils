@@ -221,8 +221,7 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
     def parent(self) -> H5Dict[_T] | None:
         if isinstance(self._file, File):
             return None
-        # TODO: update stubs
-        return H5Dict(self._file.parent)  # type: ignore[attr-defined]
+        return H5Dict(self._file.parent)
 
     # endregion
 

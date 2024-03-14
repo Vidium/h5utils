@@ -139,9 +139,7 @@ class ChunkIterator:
     ) -> Generator[tuple[tuple[FullSlice | SingleIndex, ...], npt.NDArray[Any]], None, None]:
         for index in self._chunk_indices:
             work_subset = map_slice(index, shift_to_zero=True)
-            self._array.read_direct(
-                self._work_array, source_sel=map_slice(index), dest_sel=work_subset, expand_sel=slice(None)
-            )
+            self._array.read_direct(self._work_array, source_sel=map_slice(index), dest_sel=work_subset)
 
             # cast to str if needed
             res = _as_valid_dtype(self._work_array, self._array.dtype)[work_subset]

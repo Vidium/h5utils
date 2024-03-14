@@ -306,7 +306,7 @@ def test_array_subset_3d(array):
 
 def test_array_should_get_one_element(array):
     subarr = array[0, 0]
-    assert isinstance(subarr, np.float_)
+    assert isinstance(subarr, np.floating)
 
 
 def test_array_should_get_array_of_one_element_in_1d(array):
@@ -357,7 +357,7 @@ def test_subset_newaxis_shape(small_array):
     assert subarr.shape == (1,)
 
     subsubarr = subarr[0]
-    assert isinstance(subsubarr, np.float_)
+    assert isinstance(subsubarr, np.floating)
 
 
 def test_subset_multiple_newaxis_repr(small_array):

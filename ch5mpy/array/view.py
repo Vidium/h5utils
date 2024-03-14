@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -13,7 +13,7 @@ from ch5mpy.array.array import as_array
 from ch5mpy.array.io import read_from_dataset, read_one_from_dataset, write_to_dataset
 from ch5mpy.objects import DatasetWrapper
 
-_T = TypeVar("_T", bound=np.generic)
+_T = TypeVar("_T", bound=np.generic, covariant=True)
 
 
 class H5ArrayView(ch5mpy.H5Array[_T]):
@@ -73,7 +73,7 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
             self._selection.out_shape,
             dtype or self.dtype,
         )
-        read_from_dataset(self._dset, self._selection, loading_array, expand_sel=slice(None))
+        read_from_dataset(self._dset, self._selection, loading_array)
 
         return loading_array.reshape(self.shape)
 
@@ -113,9 +113,12 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
         dest: npt.NDArray[_T],
         source_sel: tuple[int | slice, ...],
         dest_sel: tuple[int | slice, ...],
-        expand_sel: slice,
     ) -> None:
-        dataset = self._dset.asstr() if np.issubdtype(self.dtype, str) else self._dset
+        if isinstance(self._dset, Dataset) and np.issubdtype(self.dtype, str):
+            dataset: Dataset[_T] | DatasetWrapper[_T] = cast(DatasetWrapper[_T], self._dset.asstr())
+        else:
+            dataset = self._dset
+
         read_from_dataset(
             dataset,
             ci.Selection(
@@ -123,7 +126,6 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
                 shape=self.shape,
             ).cast_on(self._selection),
             dest[dest_sel],
-            expand_sel,
         )
 
     # endregion
