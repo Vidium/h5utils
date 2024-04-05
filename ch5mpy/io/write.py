@@ -43,7 +43,7 @@ def store_dataset(
         str_dtype = str(dtype)
 
     if np.issubdtype(dtype, np.str_):
-        array = None if array is None else array.astype(object)
+        array = None if array is None else array.astype("O")
         dtype = string_dtype()
 
     if array is not None:

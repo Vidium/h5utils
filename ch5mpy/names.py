@@ -4,6 +4,14 @@ from enum import Enum
 
 
 class H5Mode(str, Enum):
+    """
+    READ (r) : Readonly, file must exist
+    READ_WRITE (r+) : Read/write, file must exist
+    WRITE_TRUNCATE (w) : Create file, truncate if exists
+    WRITE (w-) : Create file, fail if exists
+    READ_WRITE_CREATE (a) : Read/write if exists, create otherwise
+    """
+
     READ = "r"  # Readonly, file must exist
     READ_WRITE = "r+"  # Read/write, file must exist
     WRITE_TRUNCATE = "w"  # Create file, truncate if exists

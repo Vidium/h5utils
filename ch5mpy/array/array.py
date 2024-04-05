@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from numbers import Number
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Collection, Iterator, Literal, SupportsIndex, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Collection, Iterator, Literal, SupportsIndex, TypeVar, cast, overload
 
 import numpy as np
 import numpy.lib.mixins
@@ -337,10 +337,20 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
         """
         self._resize(-amount, axis)
 
-    def astype(self, dtype: npt.DTypeLike, inplace: bool = False) -> H5Array[Any]:
+    @overload
+    def astype(self, dtype: npt.DTypeLike, copy: Literal[True], inplace: bool = ...) -> npt.NDArray[Any]: ...
+    @overload
+    def astype(self, dtype: npt.DTypeLike, copy: Literal[False] = False, inplace: bool = ...) -> H5Array[Any]: ...
+    def astype(
+        self, dtype: npt.DTypeLike, copy: bool = False, inplace: bool = False
+    ) -> npt.NDArray[Any] | H5Array[Any]:
         """
         Cast an H5Array to a specified dtype.
-        This does not perform a copy, it returns a wrapper around the underlying H5 dataset.
+
+        Args:
+            dtype: data-type to which the array is cast.
+            copy: if set to False, astype() does not perform a copy but returns a wrapper around the underlying H5 dataset
+            inplace: perform the type casting and write the result to the hdf5 file.
         """
         if np.issubdtype(dtype, str) and (np.issubdtype(self._dset.dtype, str) or self._dset.dtype == object):
             new_dset = self._dset.asstr()
@@ -361,6 +371,8 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
             else:
                 self._dset = file[name]
 
+        if copy:
+            return np.array(new_dset)
         return H5Array(new_dset)
 
     def maptype(self, otype: type[Any]) -> H5Array[Any]:

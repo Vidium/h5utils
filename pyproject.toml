@@ -11,7 +11,7 @@ h5py = "*"
 numpy = "*"
 tqdm = "*"
 typing-extensions = "^4.9.0"
-packaging = "^24.0"
+packaging = "^21.3"
 h5py-stubs = "^0.1.1"
 
 [tool.poetry.group.dev.dependencies]

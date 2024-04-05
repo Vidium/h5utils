@@ -233,7 +233,7 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
         name: str | None = None,
         mode: H5Mode = H5Mode.READ,
     ) -> H5Dict[Any]:
-        file = File(path, mode=mode) if isinstance(path, (str, Path)) else path
+        file = File(Path(path).expanduser(), mode=mode) if isinstance(path, (str, Path)) else path
 
         if name is not None:
             file = file[name]

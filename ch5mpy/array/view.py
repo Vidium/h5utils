@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, TypeVar, cast
+from typing import Any, Literal, TypeVar, cast, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -87,7 +87,13 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
     # endregion
 
     # region methods
-    def astype(self, dtype: npt.DTypeLike, inplace: bool = False) -> H5ArrayView[Any]:
+    @overload
+    def astype(self, dtype: npt.DTypeLike, copy: Literal[True], inplace: bool = ...) -> npt.NDArray[Any]: ...
+    @overload
+    def astype(self, dtype: npt.DTypeLike, copy: Literal[False] = False, inplace: bool = ...) -> H5ArrayView[Any]: ...
+    def astype(
+        self, dtype: npt.DTypeLike, copy: bool = False, inplace: bool = False
+    ) -> npt.NDArray[Any] | H5ArrayView[Any]:
         """
         Cast an H5Array to a specified dtype.
         This does not perform a copy, it returns a wrapper around the underlying H5 dataset.
@@ -96,9 +102,13 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
             raise TypeError("Cannot cast inplace a view of an H5Array.")
 
         if np.issubdtype(dtype, str) and (np.issubdtype(self._dset.dtype, str) or self._dset.dtype == object):
-            return H5ArrayView(self._dset.asstr(), sel=self._selection)
+            casted_view = H5ArrayView(self._dset.asstr(), sel=self._selection)
 
-        return H5ArrayView(self._dset.astype(dtype), sel=self._selection)
+        casted_view = H5ArrayView(self._dset.astype(dtype), sel=self._selection)
+
+        if copy:
+            return np.array(casted_view)
+        return casted_view
 
     def maptype(self, otype: type[Any]) -> H5ArrayView[Any]:
         """
