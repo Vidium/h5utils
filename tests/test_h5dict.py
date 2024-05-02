@@ -115,6 +115,15 @@ def test_backed_dict_can_replace_dict(backed_dict):
     assert np.array_equal(backed_dict["c"]["e"], np.arange(10, 20))
 
 
+def test_backed_dict_can_union(backed_dict):
+    backed_dict["c"] |= {"d": "new_val", "g": -1}
+
+    assert backed_dict["c"].keys() == {"d", "e", "g"}
+    assert backed_dict["c"]["d"] == "new_val"
+    assert np.array_equal(backed_dict["c"]["e"], np.arange(100))
+    assert backed_dict["c"]["g"] == -1
+
+
 def test_backed_dict_can_delete_regular_value(backed_dict):
     del backed_dict["a"]
 

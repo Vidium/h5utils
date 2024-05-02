@@ -139,7 +139,11 @@ def _diff(a: Any, b: Any) -> bool:
         if a.shape != b.shape:
             return True
 
-    return bool(np.array(a != b).any())
+    try:
+        return bool(np.array(a != b).any())
+
+    except Exception:
+        return False
 
 
 class H5Dict(H5Object, MutableMapping[str, _T]):
@@ -213,6 +217,25 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
         _exc_tb: TracebackType | None,
     ) -> None:
         self.close()
+
+    def __ior__(self, other: object) -> H5Dict[_T]:
+        if not isinstance(other, dict):
+            raise NotImplementedError
+
+        for key, value in other.items():
+            if key in self.keys():
+                target = self[key]
+                if isinstance(value, (dict, H5Dict)):
+                    if isinstance(target, H5Dict):
+                        target |= value
+                        continue
+
+                    else:
+                        del self[key]
+
+            self[key] = value
+
+        return self
 
     # endregion
 
