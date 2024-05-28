@@ -38,7 +38,7 @@ def _get_in_memory(value: Any) -> Any:
 
 def _is_group(obj: Group | Dataset[Any]) -> bool:
     h5_type = obj.attrs.get("__h5_type__", "<UNKNOWN>")
-    return isinstance(obj, Group) and h5_type != "object"
+    return isinstance(obj, Group) and h5_type not in ("object", "list")
 
 
 def _get_group_repr(obj: Group | Dataset[Any]) -> str:

@@ -79,3 +79,9 @@ def test_list_get_negative_index(h5_list):
 def test_can_append_value_to_list(h5_list):
     h5_list.append(-1)
     assert h5_list[5] == -1
+
+
+def test_can_create_deferred_list(h5_dict):
+    h5_dict["z"] = ch.H5List.defer()
+
+    assert isinstance(h5_dict["z"], ch.H5List)

@@ -6,7 +6,7 @@ from ch5mpy import indexing
 from ch5mpy.array import H5Array
 from ch5mpy.attributes import AttributeManager
 from ch5mpy.dict import H5Dict
-from ch5mpy.functions import empty, full, ones, zeros
+from ch5mpy.functions import AnonymousArrayCreationFunc, empty, full, ones, zeros
 from ch5mpy.io import (
     read_object,
     store_dataset,
@@ -44,6 +44,7 @@ __all__ = [
     "zeros",
     "ones",
     "full",
+    "AnonymousArrayCreationFunc",
     "options",
     "set_options",
     "SupportsH5Write",

@@ -35,6 +35,9 @@ def read_object(
 
     if isinstance(data, Group):
         h5_type = data.attrs.get("__h5_type__", "<UNKNOWN>")
+        if h5_type == "list":
+            return ch5mpy.H5List(data)
+
         if not read_object or h5_type != "object":
             return ch5mpy.dict.H5Dict(data)
 

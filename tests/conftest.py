@@ -5,7 +5,7 @@ from typing import Generator
 import numpy as np
 import pytest
 
-from ch5mpy import File, H5Array, H5Mode, write_object
+from ch5mpy import File, H5Array, H5Dict, H5Mode, write_object
 
 
 @pytest.fixture
@@ -14,6 +14,23 @@ def group():
 
     with File(tmp.name, "r+") as h5_file:
         yield h5_file.create_group("test")
+
+
+@pytest.fixture
+def h5_dict() -> Generator[H5Dict, None, None]:
+    data = {
+        "a": 1,
+        "b": [1, 2, 3],
+        "c": {"d": "test", "e": np.arange(100)},
+        "f": np.zeros((10, 10, 10)),
+    }
+
+    with File("backed_dict", H5Mode.WRITE_TRUNCATE) as h5_file:
+        write_object(data, h5_file, "uns")
+
+    yield H5Dict(File("backed_dict", H5Mode.READ_WRITE)["uns"])
+
+    Path("backed_dict").unlink()
 
 
 @pytest.fixture

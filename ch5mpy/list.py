@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, Generic, Iterator, TypeVar, cast
 
 from ch5mpy.dict import H5Dict
+from ch5mpy.functions.types import AnonymousArrayCreationFunc
 from ch5mpy.io import read_object, write_object, write_objects
 from ch5mpy.names import H5Mode
 from ch5mpy.objects import File, Group, H5Object
@@ -19,6 +20,10 @@ def _get_group(file: File | Group, name: str) -> tuple[File | Group, str]:
         return file, lst[0]
 
     return file.require_group(lst[0]), lst[1]
+
+
+def deferred_H5List(name: str, loc: str | Path | File | Group) -> None:
+    H5List.write([], loc, name)
 
 
 class H5List(H5Object, Generic[_T]):
@@ -113,6 +118,10 @@ class H5List(H5Object, Generic[_T]):
             progress=None,
             **dict(map(lambda x: (str(x[0]), x[1]), enumerate(lst))),
         )
+
+    @classmethod
+    def defer(cls) -> AnonymousArrayCreationFunc:
+        return deferred_H5List
 
     # endregion
 
