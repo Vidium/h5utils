@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from itertools import zip_longest
 from pathlib import Path
-from typing import Any, Generic, Iterator, TypeVar, cast
+from typing import Any, Generic, Iterable, Iterator, TypeVar, cast
 
 from ch5mpy.dict import H5Dict
 from ch5mpy.functions.types import AnonymousArrayCreationFunc
@@ -64,6 +65,25 @@ class H5List(H5Object, Generic[_T]):
         self._iter_index += 1
 
         return obj
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Iterable):
+            return False
+
+        for self_i, other_i in zip_longest(self, other):
+            if self_i != other_i:
+                return False
+
+        return True
+
+    def __delitem__(self, key: int) -> None:
+        if key < 0:
+            key = len(self) + key
+
+        del self._file[str(key)]
+
+        for old_key in range(key + 1, len(self) + 1):
+            self._file.move(str(old_key), str(old_key - 1))
 
     # endregion
 
