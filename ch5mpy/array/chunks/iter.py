@@ -39,6 +39,9 @@ def _get_chunk_indices(
     if len(shape) == 0:
         raise ValueError("0D array")
 
+    if sum(shape) == 0:
+        return ()
+
     if np.prod(shape) == 0:
         return (tuple(FullSlice.whole_axis(s) for s in shape),)
 
@@ -129,7 +132,11 @@ class ChunkIterator:
 
         self._chunk_indices = _get_chunk_indices(array.chunk_size, array.shape)
 
-        self._work_array = get_work_array(array.shape, self._chunk_indices[0], dtype=array.dtype)
+        self._work_array = (
+            get_work_array(array.shape, self._chunk_indices[0], dtype=array.dtype)
+            if len(self._chunk_indices)
+            else np.empty(0)
+        )
 
     def __repr__(self) -> str:
         return f"<ChunkIterator over {self._array.shape} H5Array>"
