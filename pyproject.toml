@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ch5mpy"
-version = "0.4.1"
+version = "0.4.2"
 description = "Collection of helper tools for reading or writing to h5 files using the h5py library."
 authors = ["MatteoBouvierVidium <m.bouvier@vidium-solutions.com>"]
 readme = "README.md"

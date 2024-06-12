@@ -367,7 +367,7 @@ def take(
     mode: Literal["raise", "wrap", "clip"] = "raise",
 ) -> npt.NDArray[Any]:
     if out is None:
-        out = np.empty_like(indices)
+        out = np.empty_like(indices, dtype=arr.dtype)
 
     if not out.size:
         return out

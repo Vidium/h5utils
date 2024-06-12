@@ -646,6 +646,12 @@ def test_take(small_large_array) -> None:
     assert np.array_equal(np.take(small_large_array, [[0, 1], [2, 3]]), np.array([[0, 1], [2, 3]]))
 
 
+def test_take_float(small_array) -> None:
+    subset = np.take(small_array, [2, 1])
+    assert np.array_equal(subset, np.array([3.0, 2.0]))
+    assert subset.dtype == np.float64
+
+
 def test_may_not_share_memory(small_array) -> None:
     assert not np.may_share_memory(small_array, np.array([1, 2, 3]))
 
