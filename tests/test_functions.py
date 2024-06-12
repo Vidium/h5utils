@@ -410,6 +410,10 @@ def test_amax(array):
     assert np.array_equal(np.amax(array, axis=1), np.array([9, 19, 29, 39, 49, 59, 69, 79, 89, 99]))
 
 
+def test_max(array):
+    assert np.max(array) == 99
+
+
 def test_hstack(array):
     assert np.hstack((array, ch5mpy.arange_nd((10, 10)))).shape == (10, 20)
 

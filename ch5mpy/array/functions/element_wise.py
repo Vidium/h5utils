@@ -223,7 +223,7 @@ def mean(
     return np.divide(s, n, out, where=where)  # type: ignore[arg-type]
 
 
-@implements(np.amax)
+@implements(np.amax, np.max)
 def amax(
     a: H5Array[Any],
     axis: int | Iterable[Any] | tuple[int] | None = None,
@@ -243,7 +243,7 @@ def amax(
     )
 
 
-@implements(np.amin)
+@implements(np.amin, np.min)
 def amin(
     a: H5Array[Any],
     axis: int | Iterable[Any] | tuple[int] | None = None,
