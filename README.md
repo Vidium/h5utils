@@ -451,8 +451,8 @@ Array manipulation routines
 - [ ] np.moveaxis
 - [ ] np.rollaxis
 - [ ] np.swapaxes
-- [ ] np.ndarray.T
-- [ ] np.transpose
+- [x] np.ndarray.T
+- [x] np.transpose
 - [ ] np.atleast_1d
 - [ ] np.atleast_2d
 - [ ] np.atleast_3d

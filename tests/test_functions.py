@@ -674,3 +674,13 @@ def test_diff_with_prepend_and_append(small_array) -> None:
 
 def test_ndim(small_array):
     assert np.ndim(small_array) == 1
+
+
+def test_transpose_2d(array):
+    assert np.array_equal(np.transpose(array), np.transpose(np.arange(100).reshape((10, 10))))
+
+
+def test_transpose_3d(small_large_array):
+    assert np.array_equal(
+        np.transpose(small_large_array, (1, 2, 0)), np.transpose(np.arange(3 * 4 * 5).reshape((3, 4, 5)), (1, 2, 0))
+    )

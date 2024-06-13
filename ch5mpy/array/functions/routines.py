@@ -407,3 +407,14 @@ def may_share_memory(a: H5Array[Any] | npt.NDArray[Any], b: H5Array[Any] | npt.N
         return True
 
     return False
+
+
+@implements(np.transpose)
+def transpose(a: H5Array[Any], axes: tuple[int, ...] | list[int] | None = None) -> H5Array[Any]:
+    if a.ndim < 2:
+        return a
+    if axes is None:
+        axes = list(reversed(range(a.ndim)))
+    reshapers = [(slice(None),) + (None,) * i for i in reversed(axes)]
+    indexers = tuple(np.arange(i)[r] for i, r in zip(a.shape, reshapers))
+    return a[indexers]

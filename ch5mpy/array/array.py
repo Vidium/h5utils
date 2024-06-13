@@ -305,6 +305,10 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     def flat(self) -> np.flatiter[npt.NDArray[_T]]:
         return np.array(self).flat
 
+    @property
+    def T(self) -> H5Array[_T]:
+        return cast(H5Array[_T], np.transpose(self))
+
     # endregion
 
     # region methods
