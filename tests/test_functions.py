@@ -479,6 +479,11 @@ def test_insert_3D(small_large_array):
     )
 
 
+def test_insert_multiple(small_array):
+    np.insert(small_array, [1, 3, 2], [-1, -2, -3])
+    assert np.array_equal(small_array, [1, -1, 2, -3, 3, -2, 4, 5])
+
+
 def test_delete_1D(small_array):
     np.delete(small_array, 2)
     assert np.array_equal(small_array, [1, 2, 4, 5])
@@ -684,3 +689,9 @@ def test_transpose_3d(small_large_array):
     assert np.array_equal(
         np.transpose(small_large_array, (1, 2, 0)), np.transpose(np.arange(3 * 4 * 5).reshape((3, 4, 5)), (1, 2, 0))
     )
+
+
+def test_append(small_array):
+    res = np.append(small_array, [-1, -2, -3])
+    assert np.array_equal(res, [1, 2, 3, 4, 5, -1, -2, -3])
+    assert np.array_equal(small_array, [1, 2, 3, 4, 5])

@@ -282,32 +282,38 @@ def insert(
     if axis is None:
         axis = 0
 
-    if not isinstance(obj, int):
+    if isinstance(obj, slice):
         raise NotImplementedError
 
-    if obj > arr.shape[axis]:
-        raise IndexError(f"Index {obj} is out of bounds for axis {axis} with size {arr.shape[axis]}.")
+    indexer = np.atleast_1d(obj)
 
-    elif obj < 0:
-        obj = obj + arr.shape[axis]
+    out_of_bounds = indexer > arr.shape[axis]
+    if np.any(out_of_bounds):
+        raise IndexError(
+            f"Index {tuple(indexer[out_of_bounds])} is out of bounds for axis {axis} with size {arr.shape[axis]}."
+        )
 
-    # resize the array to insert an extra column at the end
+    indexer[indexer < 0] += arr.shape[axis]
+
+    # resize the array to insert extra columns at the end
     # matrix | 0 1 2 3 4 |
     #   ==>  | 0 1 2 3 4 . |
-    arr.expand(1, axis=axis)
+    arr.expand(len(indexer), axis=axis)
 
     prefix = (slice(None),) * axis
-    if obj < (arr.shape[axis] - 1):
-        # transfer data one row to the right, starting from the column after `obj` and insert values at `obj`
-        # matrix | 0 1 2 3 4 . | with `obj` = 2
-        #   ==>  | 0 1 . 2 3 4 |
-        index_dest = prefix + (slice(obj + 1, None),)
-        index_source = prefix + (slice(obj, -1),)
-        arr[index_dest] = arr[index_source]
+    indexer_sort_indices = np.argsort(indexer)[::-1]
+    for index, value in zip(indexer[indexer_sort_indices], np.atleast_1d(values)[indexer_sort_indices]):
+        if index < (arr.shape[axis] - 1):
+            # transfer data one row to the right, starting from the column after `obj` and insert values at `obj`
+            # matrix | 0 1 2 3 4 . | with `obj` = 2
+            #   ==>  | 0 1 . 2 3 4 |
+            index_dest = prefix + (slice(index + 1, None),)
+            index_source = prefix + (slice(index, -1),)
+            arr[index_dest] = arr[index_source]
 
-    # matrix | 0 1 . 2 3 4 |
-    #   ==>  | 0 1 v 2 3 4 |
-    arr[prefix + (obj,)] = values
+            # matrix | 0 1 . 2 3 4 |
+            #   ==>  | 0 1 v 2 3 4 |
+            arr[prefix + (index,)] = value
 
     return arr
 
@@ -418,3 +424,9 @@ def transpose(a: H5Array[Any], axes: tuple[int, ...] | list[int] | None = None) 
     reshapers = [(slice(None),) + (None,) * i for i in reversed(axes)]
     indexers = tuple(np.arange(i)[r] for i, r in zip(a.shape, reshapers))
     return a[indexers]
+
+
+@implements(np.append)
+def append(arr: H5Array[Any], values: npt.ArrayLike, axis: int | None = None) -> npt.NDArray[Any]:
+    # FIXME:  implement concatenation of views of H5Arrays to return an H5Array
+    return np.append(np.asarray(arr), np.asarray(values), axis)
