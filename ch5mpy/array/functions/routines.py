@@ -286,6 +286,7 @@ def insert(
         raise NotImplementedError
 
     indexer = np.atleast_1d(obj)
+    values = np.atleast_1d(values)
 
     out_of_bounds = indexer > arr.shape[axis]
     if np.any(out_of_bounds):
@@ -295,6 +296,12 @@ def insert(
 
     indexer[indexer < 0] += arr.shape[axis]
 
+    if len(indexer) == 1:
+        values = np.broadcast_to(values, (len(indexer), len(np.atleast_1d(values))))
+
+    elif indexer.shape != values.shape:
+        raise ValueError(f"Cannot set {indexer.shape} values from {values.shape} data.")
+
     # resize the array to insert extra columns at the end
     # matrix | 0 1 2 3 4 |
     #   ==>  | 0 1 2 3 4 . |
@@ -302,7 +309,10 @@ def insert(
 
     prefix = (slice(None),) * axis
     indexer_sort_indices = np.argsort(indexer)[::-1]
-    for index, value in zip(indexer[indexer_sort_indices], np.atleast_1d(values)[indexer_sort_indices]):
+    for index, value in zip(
+        indexer[indexer_sort_indices],
+        values[indexer_sort_indices],
+    ):
         if index < (arr.shape[axis] - 1):
             # transfer data one row to the right, starting from the column after `obj` and insert values at `obj`
             # matrix | 0 1 2 3 4 . | with `obj` = 2
@@ -311,9 +321,9 @@ def insert(
             index_source = prefix + (slice(index, -1),)
             arr[index_dest] = arr[index_source]
 
-            # matrix | 0 1 . 2 3 4 |
-            #   ==>  | 0 1 v 2 3 4 |
-            arr[prefix + (index,)] = value
+        # matrix | 0 1 . 2 3 4 |
+        #   ==>  | 0 1 v 2 3 4 |
+        arr[prefix + (index,)] = value
 
     return arr
 
