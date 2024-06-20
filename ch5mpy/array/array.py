@@ -344,7 +344,12 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     @overload
     def astype(self, dtype: npt.DTypeLike, copy: Literal[True], inplace: bool = ...) -> npt.NDArray[Any]: ...
     @overload
-    def astype(self, dtype: npt.DTypeLike, copy: Literal[False] = False, inplace: bool = ...) -> H5Array[Any]: ...
+    def astype(self, dtype: npt.DTypeLike, copy: Literal[False], inplace: bool = ...) -> H5Array[Any]: ...
+    @overload
+    def astype(
+        self, dtype: npt.DTypeLike, copy: bool = False, inplace: bool = False
+    ) -> npt.NDArray[Any] | H5Array[Any]: ...
+
     def astype(
         self, dtype: npt.DTypeLike, copy: bool = False, inplace: bool = False
     ) -> npt.NDArray[Any] | H5Array[Any]:

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, KeysView, MutableMapping
-from functools import partial
 from itertools import islice
 from pathlib import Path
 from types import TracebackType
@@ -174,7 +173,7 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
     def __setitem__(
         self,
         key: str,
-        value: dict[str, Any] | H5Dict[Any] | partial[H5Array[Any]] | SupportsH5ReadWrite,
+        value: Any,
     ) -> None:
         value_is_empty_dict = isinstance(value, dict) and value == {}
 
