@@ -1,17 +1,28 @@
 stages:
-  - test
-  - quality
+    - linting
+    - test
 
-before_script:
-  - python3.10 --version
-  - poetry install --with dev
+setup-job:
+    stage: .pre
+    script:
+        - poetry config virtualenvs.in-project true
+        - poetry config experimental.system-git-client true
+        - poetry lock
+        - poetry install --with dev
+
+mypy-job:
+    stage: linting
+    script: poetry run mypy --strict ch5mpy
+
+ruff-job:
+    stage: linting
+    script: poetry run ruff check ch5mpy
+
+vulture-job:
+    stage: linting
+    script: poetry run vulture ch5mpy vulture_whitelist.py
+
 
 test-job:
-  stage: test
-  script:
-    - poetry run pytest
-
-quality-job:
-  stage: quality
-  script:
-    - poetry run mypy --strict ch5mpy
+    stage: test
+    script: poetry run pytest tests
