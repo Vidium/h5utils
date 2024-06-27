@@ -419,8 +419,10 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     def mean(self, axis: int | tuple[int, ...] | None = None) -> Any | npt.NDArray[Any]:
         return np.mean(self, axis=axis)
 
-    def sum(self, axis: int | tuple[int, ...] | None = None) -> _T | npt.NDArray[_T]:
-        return np.sum(self, axis=axis)  # type: ignore[no-any-return]
+    def sum(
+        self, axis: int | tuple[int, ...] | None = None, out: npt.NDArray[Any] | None = None
+    ) -> _T | npt.NDArray[_T]:
+        return np.sum(self, axis=axis, out=out)
 
     def ravel(self, order: Literal["C", "F", "A", "K"] = "C") -> npt.NDArray[_T]:
         return np.ravel(self, order=order)
