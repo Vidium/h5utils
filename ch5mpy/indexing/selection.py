@@ -129,12 +129,10 @@ class Selection:
         return f"Selection{self._indices}\n" f"         {self.in_shape} --> {self.out_shape}"
 
     @overload
-    def __getitem__(self, item: int) -> Indexer:
-        ...
+    def __getitem__(self, item: int) -> Indexer: ...
 
     @overload
-    def __getitem__(self, item: slice | Iterable[int]) -> Selection:
-        ...
+    def __getitem__(self, item: slice | Iterable[int]) -> Selection: ...
 
     def __getitem__(self, item: int | slice | Iterable[int]) -> Indexer | Selection:
         if isinstance(item, int):
@@ -428,6 +426,7 @@ class Selection:
                             inverse,
                             self._get_loading_sel(),
                         )
+                        already_sorted = True
 
                 elif list_.squeeze().ndim == 1:
                     extra_before = len(tuple(takewhile(lambda x: x == 1, list_.shape[:-1])))

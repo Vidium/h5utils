@@ -109,7 +109,8 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
         if np.issubdtype(dtype, str) and (np.issubdtype(self._dset.dtype, str) or self._dset.dtype == object):
             casted_view = H5ArrayView(self._dset.asstr(), sel=self._selection)
 
-        casted_view = H5ArrayView(self._dset.astype(dtype), sel=self._selection)
+        else:
+            casted_view = H5ArrayView(self._dset.astype(dtype), sel=self._selection)
 
         if copy:
             return np.array(casted_view)
