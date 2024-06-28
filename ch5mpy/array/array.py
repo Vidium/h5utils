@@ -447,4 +447,7 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
         return as_python_scalar(cast(np.number[Any], self.__getitem__(args)))
 
+    def tolist(self) -> list[Any]:
+        return cast(list[Any], self.copy().tolist())
+
     # endregion
