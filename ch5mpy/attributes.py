@@ -65,6 +65,9 @@ class AttributeManager:
     def __len__(self) -> int:
         return len(self._attrs.keys())
 
+    def __contains__(self, name: str) -> bool:
+        return name in self._attrs.keys()
+
     # endregion
 
     # region attributes
