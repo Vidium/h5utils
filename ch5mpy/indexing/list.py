@@ -21,7 +21,7 @@ class ListIndex(Indexer):
 
         self._elements[self._elements < 0] += max
 
-        if self._elements.min() < 0 or self._elements.max() >= max:
+        if len(self._elements) and (self._elements.min() < 0 or self._elements.max() >= max):
             raise IndexError(f"Selection {self._elements} is out of bounds for axis with size {max}.")
 
     def __repr__(self) -> str:

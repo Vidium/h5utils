@@ -27,6 +27,9 @@ class Vector:
         array = self._index.as_array(flattened=True)
         array[array < 0] += self._index.max
 
+        if not len(array):
+            return None
+
         if len(array) == 1:
             return FullSlice.one(array[0], max=self._index.max)
 

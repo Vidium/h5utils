@@ -155,6 +155,11 @@ def test_should_subset_from_2_boolean_arrays(array):
     assert np.array_equal(subset, np.array([0, 22]))
 
 
+def test_should_subset_from_empty_selection(small_array):
+    subset = small_array[small_array > 10]
+    assert len(subset) == 0
+
+
 def test_should_set_value_in_array(array):
     array[5, 7] = -1
     assert array[5, 7] == -1
