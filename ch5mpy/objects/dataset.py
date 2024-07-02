@@ -279,13 +279,23 @@ class Dataset(PickleableH5Object, h5py.Dataset, Generic[_T]):
             # ensure 'C' memory layout
             source = source.copy()
 
-        if dest_sel is not None and not any(sel_len(sel) for sel in dest_sel):
+        if is_empty_selection(dest_sel):
             # empty selection : skip write operation
             return
 
         super().write_direct(source, source_sel=source_sel, dest_sel=dest_sel)
 
     # endregion
+
+
+def is_empty_selection(sel: tuple[int | slice | Collection[int] | None, ...] | None) -> bool:
+    if sel is None:
+        return False
+
+    if isinstance(sel, tuple) and len(sel) == 0:
+        return False
+
+    return not any(sel_len(s) for s in sel)
 
 
 def sel_len(sel: int | slice | Collection[int] | None) -> int:
