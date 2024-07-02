@@ -160,6 +160,11 @@ def test_should_subset_from_empty_selection(small_array):
     assert len(subset) == 0
 
 
+def test_should_set_in_empty_selection(small_array):
+    small_array[small_array > 10] = -1
+    assert np.array_equal(small_array, [1, 2, 3, 4, 5])
+
+
 def test_should_set_value_in_array(array):
     array[5, 7] = -1
     assert array[5, 7] == -1
