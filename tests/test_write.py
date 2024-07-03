@@ -51,7 +51,7 @@ def test_should_write_array(group, array, expected):
 
 
 def test_should_write_dict_of_arrays(group):
-    write_dataset({"some_a": [1, 2, 3], "some_b": ["a", "b", "c"]}, group, "some_dict")
+    write_object({"some_a": [1, 2, 3], "some_b": ["a", "b", "c"]}, group, "some_dict")
 
     assert np.all(group["some_dict"]["some_a"][()] == [1, 2, 3])
     assert np.all(group["some_dict"]["some_b"][()] == [b"a", b"b", b"c"])

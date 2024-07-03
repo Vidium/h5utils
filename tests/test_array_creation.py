@@ -4,7 +4,7 @@ import ch5mpy as ch
 
 
 def test_ones(group):
-    arr = ch.ones(5, "test", group)
+    arr = ch.ones(5, group, "test")
 
     assert isinstance(arr, ch.H5Array)
     assert arr.shape == (5,)
@@ -29,7 +29,7 @@ def test_ones_set_in_H5Dict_nested(group):
 
 def test_rand(group):
     np.random.seed(42)
-    arr = ch.random.rand(2, 3, name="test", loc=group)
+    arr = ch.random.rand(2, 3, loc=group, name="test")
 
     assert isinstance(arr, ch.H5Array)
     assert np.array_equal(

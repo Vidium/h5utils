@@ -13,6 +13,7 @@ tqdm = "*"
 typing-extensions = "^4.9.0"
 packaging = "^21.3"
 h5py-stubs = "^0.1.1"
+scipy = "^1.14.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = '*'
@@ -35,3 +36,7 @@ paths = ["ch5mpy", "vulture_whitelist.py"]
 
 [tool.mypy]
 strict = true
+
+[[tool.mypy.overrides]]
+module = ["scipy.sparse"]
+ignore_missing_imports = true

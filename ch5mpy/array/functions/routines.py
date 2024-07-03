@@ -440,3 +440,15 @@ def transpose(a: H5Array[Any], axes: tuple[int, ...] | list[int] | None = None) 
 def append(arr: H5Array[Any], values: npt.ArrayLike, axis: int | None = None) -> npt.NDArray[Any]:
     # FIXME:  implement concatenation of views of H5Arrays to return an H5Array
     return np.append(np.asarray(arr), np.asarray(values), axis)
+
+
+@implements(np.split)
+def split(
+    arr: H5Array[Any], indices_or_sections: int | npt.NDArray[np.integer[Any]], axis: int = 0
+) -> list[H5Array[Any]]:
+    indices_or_sections = np.atleast_1d(indices_or_sections)
+
+    return [
+        arr[(slice(None),) * axis + (slice(i, j),)]
+        for i, j in zip(np.r_[0, indices_or_sections], np.r_[indices_or_sections, len(arr)])
+    ]

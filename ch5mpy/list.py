@@ -4,6 +4,7 @@ from itertools import zip_longest
 from pathlib import Path
 from typing import Any, Generic, Iterable, Iterator, TypeVar, cast
 
+from ch5mpy.array import H5Array
 from ch5mpy.dict import H5Dict
 from ch5mpy.functions.types import AnonymousArrayCreationFunc
 from ch5mpy.io import read_object, write_object, write_objects
@@ -11,7 +12,7 @@ from ch5mpy.names import H5Mode
 from ch5mpy.objects import File, Group, H5Object
 from ch5mpy.types import SupportsH5ReadWrite
 
-_T = TypeVar("_T", bound=SupportsH5ReadWrite)
+_T = TypeVar("_T", bound=SupportsH5ReadWrite | H5Array[Any])
 
 
 def _get_group(file: File | Group, name: str) -> tuple[File | Group, str]:
@@ -106,7 +107,7 @@ class H5List(H5Object, Generic[_T]):
         return H5List(src)
 
     @classmethod
-    def write(cls, lst: list[SupportsH5ReadWrite], path: str | Path | File | Group, name: str = "") -> None:
+    def write(cls, lst: list[Any], path: str | Path | File | Group, name: str) -> H5List[Any]:
         """
         Write a list to a .h5 file as a H5List.
 
@@ -138,6 +139,8 @@ class H5List(H5Object, Generic[_T]):
             progress=None,
             **dict(map(lambda x: (str(x[0]), x[1]), enumerate(lst))),
         )
+
+        return H5List(dest)
 
     @classmethod
     def defer(cls) -> AnonymousArrayCreationFunc:

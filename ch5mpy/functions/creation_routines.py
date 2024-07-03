@@ -22,8 +22,8 @@ class ArrayCreationFunc:
         self,
         shape: int | tuple[int, ...],
         fill_value: Any,
-        name: str,
         loc: str | Path | ch5mpy.File | ch5mpy.Group,
+        name: str,
         *,
         dtype: npt.DTypeLike = np.float64,
         chunks: bool | tuple[int, ...] = True,
@@ -62,15 +62,15 @@ class ArrayCreationFuncWithFill(ArrayCreationFunc):
     def __call__(  # type: ignore[override]
         self,
         shape: int | tuple[int, ...],
-        name: str,
         loc: str | Path | ch5mpy.File | ch5mpy.Group,
+        name: str,
         *,
         dtype: npt.DTypeLike = np.float64,
         chunks: bool | tuple[int, ...] = True,
         maxshape: int | tuple[int | None, ...] | None = None,
     ) -> ch5mpy.H5Array[Any]:
         return super().__call__(
-            name=name, loc=loc, shape=shape, fill_value=self._fill_value, dtype=dtype, chunks=chunks, maxshape=maxshape
+            loc=loc, name=name, shape=shape, fill_value=self._fill_value, dtype=dtype, chunks=chunks, maxshape=maxshape
         )
 
     # endregion

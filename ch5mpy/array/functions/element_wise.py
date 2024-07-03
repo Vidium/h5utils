@@ -303,6 +303,14 @@ def any_(
     )
 
 
+@implements(np.cumsum)
+def cumsum(
+    a: H5Array[Any], axis: int | None = None, dtype: npt.DTypeLike = None, out: npt.NDArray[Any] | None = None
+) -> npt.NDArray[Any]:
+    # TODO: find better implementation to avoid whole array copy
+    return np.cumsum(a.copy(), axis=axis, dtype=dtype, out=out)
+
+
 @implements(np.diff)
 def diff(
     a: H5Array[Any],

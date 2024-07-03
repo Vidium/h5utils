@@ -17,7 +17,7 @@ from ch5mpy.types import SupportsH5ReadWrite
 
 from . import io
 
-_T = TypeVar("_T", bound=SupportsH5ReadWrite)
+_T = TypeVar("_T", bound=SupportsH5ReadWrite | H5Array[Any])
 
 _NO_OBJECT = object()
 
@@ -149,7 +149,10 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
     """Class for managing dictionaries backed on h5 files."""
 
     # region magic methods
-    def __init__(self, file: File | Group, annotation: str | None = None):
+    def __init__(self, file: File | Group | H5Dict[Any], annotation: str | None = None):
+        if isinstance(file, H5Dict):
+            file = file.file
+
         super().__init__(file)
         self.annotation = annotation
 

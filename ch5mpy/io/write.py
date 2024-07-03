@@ -9,6 +9,7 @@ import numpy.typing as npt
 from h5py import string_dtype
 from tqdm.auto import tqdm
 
+import ch5mpy
 import ch5mpy.dict
 from ch5mpy.functions import AnonymousArrayCreationFunc
 from ch5mpy.objects import Dataset, File, Group
@@ -95,15 +96,10 @@ def write_dataset(
     *,
     chunks: bool | tuple[int, ...] = True,
     maxshape: tuple[int, ...] | None = None,
-) -> None:
+) -> ch5mpy.H5Array[Any]:
     """Write an array-like object to a H5 dataset."""
     if isinstance(loc, ch5mpy.dict.H5Dict):
         loc = loc.file
-
-    if isinstance(obj, Mapping):
-        group = loc.create_group(name, track_order=True)
-        write_datasets(group, **obj)
-        return
 
     # cast to np.array if needed (to get shape and dtype)
     array = np.array(obj) if not _has_dataset_attributes(obj) else obj
@@ -119,17 +115,17 @@ def write_dataset(
     if name in loc.keys():
         if loc[name] is array:
             # this exact dataset is already stored > do nothing
-            return
+            return ch5mpy.H5Array(loc[name])
 
         if loc[name].shape == array.shape and loc[name].dtype == array.dtype:
             # a similar array already exists > simply copy the data
             loc[name][()] = array
-            return
+            return ch5mpy.H5Array(loc[name])
 
         # a different array was stored, delete it before storing the new array
         del loc[name]
 
-    store_dataset(array, loc, name, chunks=chunks, maxshape=maxshape)
+    return ch5mpy.H5Array(store_dataset(array, loc, name, chunks=chunks, maxshape=maxshape))
 
 
 def write_datasets(
@@ -153,7 +149,7 @@ def write_object(
     maxshape: tuple[int, ...] | None = None,
     overwrite: bool = False,
     progress: tqdm[Any] | None = None,
-) -> None:
+) -> Any:
     """Write any object to a H5 file."""
     if isinstance(loc, ch5mpy.dict.H5Dict):
         loc = loc.file
@@ -190,6 +186,8 @@ def write_object(
     if progress is not None:
         progress.update()
 
+    return loc[name]
+
 
 def write_objects(
     loc: Group | File | ch5mpy.dict.H5Dict[Any],
@@ -198,7 +196,7 @@ def write_objects(
     maxshape: tuple[int, ...] | None = None,
     overwrite: bool = False,
     progress: tqdm[Any] | None = None,
-    **kwargs: SupportsH5Write,
+    **kwargs: SupportsH5Write | H5Array[Any],
 ) -> None:
     """Write multiple objects of any type to a H5 file."""
     for name, obj in kwargs.items():

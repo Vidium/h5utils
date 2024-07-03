@@ -215,6 +215,9 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     def __hash__(self) -> int:
         return hash(np.array(self._dset).data.tobytes())
 
+    def __index__(self) -> int:
+        raise NotImplementedError
+
     # endregion
 
     # region interface
@@ -313,6 +316,9 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
     # region methods
     def _resize(self, amount: int, axis: int | tuple[int, ...] | None = None) -> None:
+        if amount == 0:
+            return
+
         if axis is None:
             axis = 0
 
@@ -330,7 +336,6 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
             TypeError: if the H5Array does not wrap a chunked Dataset.
         """
         self._resize(amount, axis)
-        self[0]
 
     def contract(self, amount: int, axis: int | tuple[int, ...] | None = None) -> None:
         """
@@ -406,6 +411,16 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     ) -> None:
         dset = self._dset.asstr() if np.issubdtype(self.dtype, str) else self._dset
         dset.read_direct(dest, source_sel=source_sel, dest_sel=dest_sel)
+
+    def overwrite(self, values: npt.NDArray[_T]) -> None:
+        if not self.ndim == 1:
+            raise NotImplementedError
+
+        if not self.ndim == values.ndim:
+            raise ValueError(f"Cannot overwrite {self.ndim}D H5Array with {values.ndim}D values")
+
+        self.expand(len(values) - len(self))
+        self[:] = values
 
     def copy(self) -> npt.NDArray[_T]:
         return np.copy(self)

@@ -21,13 +21,13 @@ class ArrayCreationFuncRandom(ArrayCreationFunc):
     def __call__(  # type: ignore[override]
         self,
         *dims: int,
-        name: str,
         loc: str | Path | ch5mpy.File | ch5mpy.Group,
+        name: str,
         dtype: npt.DTypeLike = np.float64,
         chunks: bool | tuple[int, ...] = True,
         maxshape: int | tuple[int | None, ...] | None = None,
     ) -> ch5mpy.H5Array[Any]:
-        arr = super().__call__(dims, None, name, loc, dtype=dtype, chunks=chunks, maxshape=maxshape)
+        arr = super().__call__(dims, None, loc, name, dtype=dtype, chunks=chunks, maxshape=maxshape)
 
         for index, chunk in arr.iter_chunks():
             chunk = self._random_func(*chunk.shape)

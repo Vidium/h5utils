@@ -312,7 +312,7 @@ Mathematical functions
 - [ ] np.nanprod
 - [ ] np.nansum
 - [ ] np.cumprod
-- [ ] np.cumsum
+- [x] np.cumsum
 - [ ] np.nancumprod
 - [ ] np.nancumsum
 - [x] np.diff
@@ -477,7 +477,7 @@ Array manipulation routines
 - [ ] np.dstack
 - [ ] np.column_stack
 - [ ] np.row_stack
-- [ ] np.split
+- [x] np.split
 - [ ] np.array_split
 - [ ] np.dsplit
 - [ ] np.hsplit
@@ -513,7 +513,7 @@ Sorting, searching, and counting
 - [ ] np.nonzero
 - [ ] np.flatnonzero
 - [ ] np.where
-- [ ] np.searchsorted
+- [x] np.searchsorted
 - [ ] np.extract
 - [ ] np.count_nonzero
 

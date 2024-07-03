@@ -722,3 +722,8 @@ def test_append(small_array):
     res = np.append(small_array, [-1, -2, -3])
     assert np.array_equal(res, [1, 2, 3, 4, 5, -1, -2, -3])
     assert np.array_equal(small_array, [1, 2, 3, 4, 5])
+
+
+def test_split(small_array):
+    splits = np.split(small_array, [1, 3, 5])
+    assert all(np.array_equal(split, ref) for split, ref in zip(splits, ([1], [2, 3], [4, 5], [])))
