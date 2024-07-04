@@ -8,9 +8,10 @@ from scipy.sparse import coo_array
 
 from ch5mpy import Group, H5Array, H5Dict, H5List
 from ch5mpy.sparse._typing import INT_FLOAT
+from ch5mpy.sparse.base import H5_sparse_array
 
 
-class H5_coo_array(coo_array):  # type: ignore[misc]
+class H5_coo_array(H5_sparse_array, coo_array):  # type: ignore[misc]
     """A sparse matrix in COOrdinate format created from hdf5 objects."""
 
     file: H5Dict[Any]
@@ -32,9 +33,14 @@ class H5_coo_array(coo_array):  # type: ignore[misc]
         self,
         file: Group | H5Dict[Any],
     ):
-        self.file = H5Dict(file)
+        super().__init__(file)
+
         self.coords = self.file["coords"]
         self.data = self.file["data"]
+
+    def __h5_write__(self, values: H5Dict[Any]) -> None:
+        values["data"] = self.data
+        values["coords"] = self.coords
 
     # endregion
 
@@ -45,18 +51,7 @@ class H5_coo_array(coo_array):  # type: ignore[misc]
 
     # endregion
 
-    # region attributes
-    @property
-    def _shape(self) -> tuple[int, int]:
-        return cast(tuple[int, int], self.file.attributes["_shape"])
-
-    # endregion
-
     # region class methods
-    @classmethod
-    def read(cls, file: Group | H5Dict[Any]) -> H5_coo_array:
-        return H5_coo_array(file)
-
     @classmethod
     def write(cls, file: Group | H5Dict[Any], matrix: coo_array) -> H5_coo_array:
         file = H5Dict(file)

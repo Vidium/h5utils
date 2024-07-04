@@ -11,9 +11,10 @@ from ch5mpy import Group
 from ch5mpy.array import H5Array
 from ch5mpy.dict import H5Dict
 from ch5mpy.sparse._typing import INT_FLOAT
+from ch5mpy.sparse.base import H5_sparse_array
 
 
-class H5_csr_array(csr_array):  # type: ignore[misc]
+class H5_csr_array(H5_sparse_array, csr_array):  # type: ignore[misc]
     """Compressed Sparse Row matrix created from hdf5 objects."""
 
     file: H5Dict[Any]
@@ -36,14 +37,11 @@ class H5_csr_array(csr_array):  # type: ignore[misc]
         self,
         file: Group | H5Dict[Any],
     ):
-        self.file = H5Dict(file)
+        super().__init__(file)
+
         self.data = self.file["data"]
         self.indices = self.file["indices"]
         self.indptr = self.file["indptr"]
-
-    @classmethod
-    def __h5_read__(cls, values: H5Dict[Any]) -> H5_csr_array:
-        return H5_csr_array(values)
 
     def __h5_write__(self, values: H5Dict[Any]) -> None:
         values["data"] = self.data
@@ -54,26 +52,7 @@ class H5_csr_array(csr_array):  # type: ignore[misc]
 
     # endregion
 
-    # region attributes
-    @property
-    def _shape(self) -> tuple[int, int]:
-        return tuple(self.file.attributes["_shape"])
-
-    @property
-    def shape(self) -> tuple[int, int]:
-        return self._shape
-
-    @shape.setter
-    def shape(self, value: tuple[int, int]) -> None:
-        self.file.attributes.set(_shape=value)
-
-    # endregion
-
     # region class methods
-    @classmethod
-    def read(cls, file: Group | H5Dict[Any]) -> H5_csr_array:
-        return H5_csr_array(file)
-
     @classmethod
     def write(cls, file: Group | H5Dict[Any], matrix: csr_array) -> H5_csr_array:
         file = H5Dict(file)
