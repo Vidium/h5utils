@@ -107,7 +107,8 @@ class AsStrWrapper(DatasetWrapper[np.str_]):
         return np.array(subset, dtype=str)
 
     def __repr__(self) -> str:
-        return f'<HDF5 AsStrWrapper "{self._dset.name[1:]}": shape {self._dset.shape}">'
+        dset_name = "anonymous" if self._dset.name is None else self._dset.name[1:]
+        return f'<HDF5 AsStrWrapper "{dset_name}": shape {self._dset.shape}">'
 
     # endregion
 
