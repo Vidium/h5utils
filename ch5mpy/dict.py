@@ -285,6 +285,10 @@ class H5Dict(H5Object, MutableMapping[str, _T]):
         return io.read_object(res, error=_OPTIONS["error_mode"])
 
     def rename(self, name: str, new_name: str) -> None:
+        if new_name.startswith(name):
+            self._file.move(name, "__h5_TMP__")
+            name = "__h5_TMP__"
+
         self._file.move(name, new_name)
 
     def copy(self) -> dict[str, Any]:
