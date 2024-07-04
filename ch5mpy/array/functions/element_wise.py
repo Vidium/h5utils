@@ -340,3 +340,13 @@ def diff(
     output_array[len(prepend) + len(a) - 1 :] = np.diff(np.r_[a[-1], append])
 
     return output_array
+
+
+@implements(np.ediff1d)
+def ediff1d(
+    ary: H5Array[Any], to_end: npt.ArrayLike | None = None, to_begin: npt.ArrayLike | None = None
+) -> npt.NDArray[Any]:
+    if ary.ndim > 1:
+        return np.diff(ary.flatten(), prepend=to_begin or NoValue, append=to_end or NoValue)
+
+    return np.diff(ary, prepend=to_begin or NoValue, append=to_end or NoValue)
