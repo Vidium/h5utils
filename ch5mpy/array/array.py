@@ -20,7 +20,11 @@ import numpy.typing as npt
 from numpy._typing import _ArrayLikeInt_co
 
 import ch5mpy.io
-from ch5mpy._typing import NP_FUNC, SELECTOR
+from ch5mpy._typing import (
+    NP_FUNC,
+    ONE_AXIS_SELECTOR,
+    SELECTOR,
+)
 from ch5mpy.array import repr
 from ch5mpy.array.chunks.iter import ChunkIterator, PairedChunkIterator
 from ch5mpy.array.functions import HANDLED_FUNCTIONS
@@ -99,7 +103,13 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     def __str__(self) -> str:
         return repr.print_dataset(self, sep="")
 
-    def __getitem__(self, index: SELECTOR | tuple[SELECTOR, ...]) -> _T | H5Array[_T] | H5ArrayView[_T]:
+    @overload
+    def __getitem__(self, index: tuple[()]) -> H5Array[_T]: ...  # type: ignore
+    @overload
+    def __getitem__(self, index: tuple[ONE_AXIS_SELECTOR, ONE_AXIS_SELECTOR, ONE_AXIS_SELECTOR]) -> _T: ...  # type: ignore
+    @overload
+    def __getitem__(self, index: SELECTOR | tuple[SELECTOR, ...]) -> H5ArrayView[_T]: ...
+    def __getitem__(self, index: tuple[()] | SELECTOR | tuple[SELECTOR, ...]) -> _T | H5Array[_T] | H5ArrayView[_T]:  # pyright: ignore[reportInconsistentOverload]
         from ch5mpy.array.view import H5ArrayView
 
         selection = Selection.from_selector(index, self._dset.shape)
@@ -474,5 +484,11 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
     def tolist(self) -> list[Any]:
         return cast(list[Any], self.copy().tolist())
+
+    def view(self, dtype: npt.DTypeLike | None = None) -> H5ArrayView[_T]:
+        if dtype is None:
+            return self[:]
+
+        return self.astype(dtype, copy=False)[:]
 
     # endregion

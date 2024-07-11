@@ -8,7 +8,7 @@ import numpy.typing as npt
 import ch5mpy
 import ch5mpy.indexing as ci
 from ch5mpy import Dataset
-from ch5mpy._typing import NP_FUNC, SELECTOR
+from ch5mpy._typing import NP_FUNC, ONE_AXIS_SELECTOR, SELECTOR
 from ch5mpy.array.array import as_array
 from ch5mpy.array.io import read_from_dataset, read_one_from_dataset, write_to_dataset
 from ch5mpy.objects import DatasetWrapper
@@ -24,7 +24,15 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
         super().__init__(dset)
         self._selection = sel
 
-    def __getitem__(self, index: SELECTOR | tuple[SELECTOR, ...]) -> _T | ch5mpy.H5Array[_T]:
+    @overload
+    def __getitem__(self, index: tuple[()]) -> ch5mpy.H5Array[_T]: ...  # type: ignore
+    @overload
+    def __getitem__(self, index: tuple[ONE_AXIS_SELECTOR, ONE_AXIS_SELECTOR, ONE_AXIS_SELECTOR]) -> _T: ...  # type: ignore
+    @overload
+    def __getitem__(self, index: SELECTOR | tuple[SELECTOR, ...]) -> H5ArrayView[_T]: ...
+    def __getitem__(  # pyright: ignore[reportInconsistentOverload]
+        self, index: tuple[()] | SELECTOR | tuple[SELECTOR, ...]
+    ) -> _T | ch5mpy.H5Array[_T] | H5ArrayView[_T]:  # pyright: ignore[reportInconsistentOverload]
         selection = ci.Selection.from_selector(index, self.shape)
 
         if selection.is_empty:
