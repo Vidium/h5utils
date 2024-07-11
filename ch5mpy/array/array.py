@@ -2,7 +2,17 @@ from __future__ import annotations
 
 from numbers import Number
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Collection, Iterator, Literal, SupportsIndex, TypeVar, cast, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Collection,
+    Iterator,
+    Literal,
+    SupportsIndex,
+    TypeVar,
+    cast,
+    overload,
+)
 
 import numpy as np
 import numpy.lib.mixins

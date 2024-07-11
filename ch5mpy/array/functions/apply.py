@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import Enum, auto
 from functools import partial
 from numbers import Number
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any, Callable, Iterable, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -24,6 +24,24 @@ class ApplyOperation(Enum):
     imul = auto()
     iand = auto()
     ior = auto()
+
+
+def ensure_h5array_first(
+    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+) -> tuple[
+    H5Array[Any],
+    npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
+    Callable[[npt.NDArray[Any] | H5Array[Any], npt.NDArray[Any] | H5Array[Any]], npt.NDArray[Any] | H5Array[Any]],
+    Callable[[npt.NDArray[Any] | H5Array[Any], npt.NDArray[Any] | H5Array[Any]], npt.NDArray[Any] | H5Array[Any]],
+]:
+    """One of x1, x2 must be an H5Array. Returns x1, x2 (maybe swapped such that the first returned array is guaranteed
+    to be an H5Array).
+    Also return getter functions swapping arrays back in the order they were passed to this function if needed."""
+    if not isinstance(x1, ch5mpy.H5Array):
+        return cast(ch5mpy.H5Array[Any], x2), x1, lambda _, x2: x2, lambda x1, _: x1
+
+    return x1, x2, lambda x1, _: x1, lambda _, x2: x2
 
 
 class MaskWhere:
@@ -319,7 +337,7 @@ num_to_str_ufunc: dict[NP_FUNC, NP_FUNC] = {
 
 def apply_2(
     func: NP_FUNC,
-    a: H5Array[Any],
+    a: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
     b: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
     *,
     out: H5Array[Any] | npt.NDArray[Any] | None,
@@ -327,22 +345,24 @@ def apply_2(
     dtype: npt.DTypeLike | None,
     where: npt.NDArray[np.bool_] | Iterable[bool] | int | bool,
 ) -> Any:
-    # if a is a str H5Array (got here because the operators ==, +, *, ... were used), pass to str_apply_2()
-    if np.issubdtype(a.dtype, str):
+    h5, maybe_not_h5, get_a, get_b = ensure_h5array_first(a, b)
+
+    # if h5array is a str H5Array (got here because the operators ==, +, *, ... were used), pass to str_apply_2()
+    if np.issubdtype(h5.dtype, str):
         assert out is None and where is True
-        return str_apply_2(num_to_str_ufunc[func], a, b)
+        return str_apply_2(num_to_str_ufunc[func], a, b)  # type: ignore[arg-type]
 
     # operation on regular H5Arrays
-    if not isinstance(b, (np.ndarray, ch5mpy.H5Array)):
-        b = np.array(b)
+    if not isinstance(maybe_not_h5, (np.ndarray, ch5mpy.H5Array)):
+        maybe_not_h5 = np.array(maybe_not_h5)
 
-    output_array = _get_output_array_2(out, a.shape, b.shape, dtype, default)
+    output_array = _get_output_array_2(out, h5.shape, maybe_not_h5.shape, dtype, default)
 
     if where is not False:
-        where_compute = MaskWhere(where, a.shape)
+        where_compute = MaskWhere(where, get_a(h5, maybe_not_h5).shape)
         where_output = MaskWhere(where, output_array.shape)
 
-        for index, chunk_x1, chunk_x2 in iter_chunks_2(a, b):
+        for index, chunk_x1, chunk_x2 in iter_chunks_2(get_a(h5, maybe_not_h5), get_b(h5, maybe_not_h5)):
             where_to_compute, chunk_selection, where_to_output = _get_indices(
                 index, (), where_compute, where_output, output_array.ndim
             )

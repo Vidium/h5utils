@@ -10,8 +10,8 @@ from packaging import version
 
 import ch5mpy
 from ch5mpy._typing import NP_FUNC
+from ch5mpy.array.functions.apply import ensure_h5array_first
 from ch5mpy.array.functions.implement import implements
-from ch5mpy.array.functions.two_arrays import ensure_h5array_first
 
 if TYPE_CHECKING:
     from ch5mpy import H5Array
@@ -414,12 +414,12 @@ def copyto(
 
 @implements(np.may_share_memory)
 def may_share_memory(a: H5Array[Any] | npt.NDArray[Any], b: H5Array[Any] | npt.NDArray[Any]) -> bool:
-    a_, b_ = ensure_h5array_first(a, b)
+    h5, maybe_not_h5, *_ = ensure_h5array_first(a, b)
 
-    if not isinstance(b_, ch5mpy.H5Array):
+    if not isinstance(maybe_not_h5, ch5mpy.H5Array):
         return False
 
-    if a_._dset is b_._dset:
+    if h5._dset is maybe_not_h5._dset:
         return True
 
     return False

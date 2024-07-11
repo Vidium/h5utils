@@ -113,6 +113,13 @@ def test_should_add_inplace_to_view_2(array):
 #     large_array += 2
 
 
+def test_should_subtract(small_array):
+    sub1 = small_array[[1, 2]]
+    sub2 = small_array[[0, 1]]
+    res = sub1 - sub2
+    assert np.array_equal(res, [1, 1])
+
+
 def test_should_get_single_element(array):
     assert array[1, 2] == 12
 

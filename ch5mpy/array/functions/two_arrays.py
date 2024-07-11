@@ -7,25 +7,11 @@ import numpy as np
 import numpy.typing as npt
 
 import ch5mpy
-from ch5mpy.array.functions.apply import apply_2, str_apply_2
+from ch5mpy.array.functions.apply import apply_2, ensure_h5array_first, str_apply_2
 from ch5mpy.array.functions.implement import implements
 
 if TYPE_CHECKING:
     from ch5mpy import H5Array
-
-
-def _cast_H5Array(obj: Any) -> H5Array[Any]:
-    return obj  # type: ignore[no-any-return]
-
-
-def ensure_h5array_first(
-    x1: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-    x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
-) -> tuple[H5Array[Any], npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any]]:
-    if not isinstance(x1, ch5mpy.H5Array):
-        return _cast_H5Array(x2), x1
-
-    return _cast_H5Array(x1), x2
 
 
 @implements(np.array_equal)
@@ -34,7 +20,7 @@ def array_equal(
     x2: npt.NDArray[Any] | Iterable[Any] | Number | H5Array[Any],
     equal_nan: bool = False,
 ) -> bool:
-    x1, x2 = ensure_h5array_first(x1, x2)
+    x1, x2, *_ = ensure_h5array_first(x1, x2)
 
     # case 0D
     if isinstance(x2, Number):
@@ -50,7 +36,7 @@ def array_equal(
     if x1.shape != x2.shape:
         return False
 
-    for index, chunk_x1, chunk_x2 in x1.iter_chunks_with(x2):
+    for _, chunk_x1, chunk_x2 in x1.iter_chunks_with(x2):
         if not np.array_equal(chunk_x1, chunk_x2):
             return False
 
@@ -70,7 +56,8 @@ def greater(
 
     return apply_2(
         np.greater,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -96,7 +83,8 @@ def greater_equal(
 
     return apply_2(
         np.greater_equal,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -122,7 +110,8 @@ def less(
 
     return apply_2(
         np.less,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -148,7 +137,8 @@ def less_equal(
 
     return apply_2(
         np.less_equal,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -174,7 +164,8 @@ def equal(
 
     return apply_2(
         np.equal,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -200,7 +191,8 @@ def not_equal(
 
     return apply_2(
         np.not_equal,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -223,7 +215,8 @@ def add(
 ) -> Any:
     return apply_2(
         np.add,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -246,7 +239,8 @@ def multiply(
 ) -> Any:
     return apply_2(
         np.multiply,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -269,7 +263,8 @@ def divide(
 ) -> Any:
     return apply_2(
         np.divide,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -287,7 +282,8 @@ def power(
 ) -> Any:
     return apply_2(
         np.power,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -305,7 +301,8 @@ def subtract(
 ) -> Any:
     return apply_2(
         np.subtract,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -323,7 +320,8 @@ def true_divide(
 ) -> Any:
     return apply_2(
         np.true_divide,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -341,7 +339,8 @@ def floor_divide(
 ) -> Any:
     return apply_2(
         np.floor_divide,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -359,7 +358,8 @@ def float_power(
 ) -> Any:
     return apply_2(
         np.float_power,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -377,7 +377,8 @@ def fmod(
 ) -> Any:
     return apply_2(
         np.fmod,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -395,7 +396,8 @@ def mod(
 ) -> Any:
     return apply_2(
         np.mod,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -418,7 +420,8 @@ def maximum(
 ) -> Any:
     return apply_2(
         np.maximum,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -436,7 +439,8 @@ def fmax(
 ) -> Any:
     return apply_2(
         np.fmax,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -454,7 +458,8 @@ def minimum(
 ) -> Any:
     return apply_2(
         np.minimum,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -472,7 +477,8 @@ def fmin(
 ) -> Any:
     return apply_2(
         np.fmin,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -493,7 +499,8 @@ def logical_and(
 
     return apply_2(
         np.logical_and,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -514,7 +521,8 @@ def logical_or(
 
     return apply_2(
         np.logical_or,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -535,7 +543,8 @@ def logical_not(
 
     return apply_2(
         np.logical_not,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
@@ -556,7 +565,8 @@ def logical_xor(
 
     return apply_2(
         np.logical_xor,
-        *ensure_h5array_first(x1, x2),
+        x1,
+        x2,
         out=out,
         dtype=dtype,
         where=where,
