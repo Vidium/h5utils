@@ -10,6 +10,7 @@ import ch5mpy.indexing as ci
 from ch5mpy import Dataset
 from ch5mpy._typing import NP_FUNC, ONE_AXIS_SELECTOR, SELECTOR
 from ch5mpy.array.array import as_array
+from ch5mpy.array.flags import FlagDict
 from ch5mpy.array.io import read_from_dataset, read_one_from_dataset, write_to_dataset
 from ch5mpy.objects import DatasetWrapper
 
@@ -20,9 +21,10 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
     """A view on a H5Array."""
 
     # region magic methods
-    def __init__(self, dset: Dataset[_T] | DatasetWrapper[_T], sel: ci.Selection):
+    def __init__(self, dset: Dataset[_T] | DatasetWrapper[_T], sel: ci.Selection, flags: FlagDict):
         super().__init__(dset)
         self._selection = sel
+        self.flags = flags
 
     @overload
     def __getitem__(self, index: tuple[()]) -> ch5mpy.H5Array[_T]: ...  # type: ignore
@@ -36,7 +38,7 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
         selection = ci.Selection.from_selector(index, self.shape)
 
         if selection.is_empty:
-            return H5ArrayView(dset=self._dset, sel=self._selection)
+            return H5ArrayView(dset=self._dset, sel=self._selection, flags=self.flags)
 
         selection = selection.cast_on(self._selection)
 
@@ -46,7 +48,7 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
         if selection.out_shape == ():
             return read_one_from_dataset(self._dset, selection, self.dtype)
 
-        return H5ArrayView(dset=self._dset, sel=selection)
+        return H5ArrayView(dset=self._dset, sel=selection, flags=self.flags)
 
     def __setitem__(self, index: SELECTOR | tuple[SELECTOR, ...], value: Any) -> None:
         selection = ci.Selection.from_selector(index, self.shape)
@@ -115,10 +117,10 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
             raise TypeError("Cannot cast inplace a view of an H5Array.")
 
         if np.issubdtype(dtype, str) and (np.issubdtype(self._dset.dtype, str) or self._dset.dtype == object):
-            casted_view = H5ArrayView(self._dset.asstr(), sel=self._selection)
+            casted_view = H5ArrayView(self._dset.asstr(), sel=self._selection, flags=self.flags)
 
         else:
-            casted_view = H5ArrayView(self._dset.astype(dtype), sel=self._selection)
+            casted_view = H5ArrayView(self._dset.astype(dtype), sel=self._selection, flags=self.flags)
 
         if copy:
             return np.array(casted_view)
@@ -130,7 +132,7 @@ class H5ArrayView(ch5mpy.H5Array[_T]):
         This extends H5Array.astype() to any type <T>, where it is required that an object <T> can be constructed as
         T(v) for any value <v> in the dataset.
         """
-        return H5ArrayView(self._dset.maptype(otype), sel=self._selection)
+        return H5ArrayView(self._dset.maptype(otype), sel=self._selection, flags=self.flags)
 
     def read_direct(
         self,

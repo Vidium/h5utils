@@ -27,6 +27,7 @@ from ch5mpy._typing import (
 )
 from ch5mpy.array import repr
 from ch5mpy.array.chunks.iter import ChunkIterator, PairedChunkIterator
+from ch5mpy.array.flags import FlagDict
 from ch5mpy.array.functions import HANDLED_FUNCTIONS
 from ch5mpy.array.io import read_one_from_dataset, write_to_dataset
 from ch5mpy.indexing import Selection, map_slice
@@ -77,7 +78,7 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     __class__ = np.ndarray  # type: ignore[assignment]
 
     # region magic methods
-    def __init__(self, dset: Dataset[_T] | DatasetWrapper[_T] | H5Array[_T]):
+    def __init__(self, dset: Dataset[_T] | DatasetWrapper[_T] | H5Array[_T], flags: FlagDict | None = None):
         if isinstance(dset, H5Array):
             self._dset: Dataset[_T] | DatasetWrapper[_T] = dset.dset
             super().__init__(dset.dset.file)
@@ -91,6 +92,8 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
         else:
             self._dset = dset
+
+        self.flags = flags if isinstance(flags, FlagDict) else FlagDict(self._dset)
 
         super().__init__(self._dset.file)
 
@@ -115,15 +118,18 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
         selection = Selection.from_selector(index, self._dset.shape)
 
         if selection.is_empty:
-            return H5Array(dset=self._dset)
+            return H5Array(dset=self._dset, flags=self.flags)
 
         elif selection.out_shape == ():
             return read_one_from_dataset(self._dset, selection, self.dtype)
 
         else:
-            return H5ArrayView(dset=self._dset, sel=selection)
+            return H5ArrayView(dset=self._dset, sel=selection, flags=self.flags)
 
     def __setitem__(self, index: SELECTOR | tuple[SELECTOR, ...], value: Any) -> None:
+        if not self.flags.writeable:
+            raise ValueError("assignment destination is read-only")
+
         selection = Selection.from_selector(index, self.shape)
         write_to_dataset(self._dset, as_array(value, self.dtype), selection)
 
@@ -142,6 +148,9 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
         return False
 
     def _inplace(self, func: NP_FUNC, value: Any) -> H5Array[_T]:
+        if not self.flags.writeable:
+            raise ValueError("assignment destination is read-only")
+
         if np.issubdtype(self.dtype, str):
             raise TypeError("Cannot perform inplace operation on str H5Array.")
 
@@ -236,7 +245,7 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
         return hash(np.array(self._dset).data.tobytes())
 
     def __index__(self) -> int:
-        raise NotImplementedError
+        return int(self)
 
     # endregion
 
@@ -336,6 +345,9 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
 
     # region methods
     def _resize(self, amount: int, axis: int | tuple[int, ...] | None = None) -> None:
+        if not self.flags.writeable:
+            raise ValueError("assignment destination is read-only")
+
         if amount == 0:
             return
 
@@ -433,6 +445,9 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
         dset.read_direct(dest, source_sel=source_sel, dest_sel=dest_sel)
 
     def overwrite(self, values: npt.NDArray[_T]) -> None:
+        if not self.flags.writeable:
+            raise ValueError("assignment destination is read-only")
+
         if not self.ndim == 1:
             raise NotImplementedError
 

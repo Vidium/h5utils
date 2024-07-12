@@ -26,8 +26,12 @@ class AttributeManager:
     """Manage attributes of a File, Group or Dataset."""
 
     # region magic methods
-    def __init__(self, attrs: H5Attrs) -> None:
-        self._attrs = attrs
+    def __init__(self, attrs: H5Attrs | AttributeManager) -> None:
+        if isinstance(attrs, AttributeManager):
+            self._attrs: H5Attrs = attrs._attrs
+
+        else:
+            self._attrs = attrs
 
     def __repr__(self) -> str:
         return f"AttributeManager{{{_SPACER.join([e[0] + ': ' + str(e[1]) for e in self.as_dict().items()])}}}"
