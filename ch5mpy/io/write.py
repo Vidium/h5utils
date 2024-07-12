@@ -98,6 +98,8 @@ def write_dataset(
     maxshape: tuple[int, ...] | None = None,
 ) -> ch5mpy.H5Array[Any]:
     """Write an array-like object to a H5 dataset."""
+    name = name or "/"
+
     if isinstance(loc, ch5mpy.dict.H5Dict):
         loc = loc.file
 
@@ -151,6 +153,8 @@ def write_object(
     progress: tqdm[Any] | None = None,
 ) -> Any:
     """Write any object to a H5 file."""
+    name = name or "/"
+
     if isinstance(loc, ch5mpy.dict.H5Dict):
         loc = loc.file
 
@@ -170,18 +174,15 @@ def write_object(
     elif is_sequence(obj):
         write_dataset(obj, loc, name, chunks=chunks, maxshape=maxshape)
 
+    elif isinstance(obj, (Number, str)):
+        if name in loc and overwrite:
+            del loc[name]
+
+        loc[name] = obj
+
     else:
-        name = name or "/"
-
-        if isinstance(obj, (Number, str)):
-            if name in loc and overwrite:
-                del loc[name]
-
-            loc[name] = obj
-
-        else:
-            loc[name] = np.void(pickle.dumps(obj, protocol=pickle.HIGHEST_PROTOCOL))
-            loc[name].attrs["__h5_type__"] = "pickle"
+        loc[name] = np.void(pickle.dumps(obj, protocol=pickle.HIGHEST_PROTOCOL))
+        loc[name].attrs["__h5_type__"] = "pickle"
 
     if progress is not None:
         progress.update()
