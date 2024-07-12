@@ -10,7 +10,6 @@ from h5py import string_dtype
 from tqdm.auto import tqdm
 
 import ch5mpy
-import ch5mpy.dict
 from ch5mpy.functions import AnonymousArrayCreationFunc
 from ch5mpy.objects import Dataset, File, Group
 from ch5mpy.types import SupportsH5Write
@@ -91,7 +90,7 @@ def _has_dataset_attributes(obj: Any) -> bool:
 
 def write_dataset(
     obj: Any,
-    loc: Group | File | ch5mpy.dict.H5Dict[Any],
+    loc: Group | File | ch5mpy.H5Dict[Any],
     name: str,
     *,
     chunks: bool | tuple[int, ...] = True,
@@ -100,7 +99,7 @@ def write_dataset(
     """Write an array-like object to a H5 dataset."""
     name = name or "/"
 
-    if isinstance(loc, ch5mpy.dict.H5Dict):
+    if isinstance(loc, ch5mpy.H5Dict):
         loc = loc.file
 
     # cast to np.array if needed (to get shape and dtype)
@@ -131,7 +130,7 @@ def write_dataset(
 
 
 def write_datasets(
-    loc: Group | File | ch5mpy.dict.H5Dict[Any],
+    loc: Group | File | ch5mpy.H5Dict[Any],
     *,
     chunks: bool | tuple[int, ...] = True,
     maxshape: tuple[int, ...] | None = None,
@@ -144,18 +143,18 @@ def write_datasets(
 
 def write_object(
     obj: Any,
-    loc: Group | File | ch5mpy.dict.H5Dict[Any],
+    loc: Group | File | ch5mpy.H5Dict[Any],
     name: str,
     *,
     chunks: bool | tuple[int, ...] = True,
     maxshape: tuple[int, ...] | None = None,
     overwrite: bool = False,
     progress: tqdm[Any] | None = None,
-) -> Any:
+) -> ch5mpy.H5Dict[Any]:
     """Write any object to a H5 file."""
     name = name or "/"
 
-    if isinstance(loc, ch5mpy.dict.H5Dict):
+    if isinstance(loc, ch5mpy.H5Dict):
         loc = loc.file
 
     if isinstance(obj, AnonymousArrayCreationFunc):
@@ -163,7 +162,7 @@ def write_object(
 
     elif isinstance(obj, SupportsH5Write):
         group = loc.create_group(name, overwrite=overwrite, track_order=True) if name else loc
-        obj.__h5_write__(ch5mpy.dict.H5Dict(group))
+        obj.__h5_write__(ch5mpy.H5Dict(group))
         group.attrs["__h5_type__"] = "object"
         group.attrs["__h5_class__"] = np.void(pickle.dumps(type(obj), protocol=pickle.HIGHEST_PROTOCOL))
 
@@ -187,11 +186,11 @@ def write_object(
     if progress is not None:
         progress.update()
 
-    return loc[name]
+    return ch5mpy.H5Dict(loc) @ name
 
 
 def write_objects(
-    loc: Group | File | ch5mpy.dict.H5Dict[Any],
+    loc: Group | File | ch5mpy.H5Dict[Any],
     *,
     chunks: bool | tuple[int, ...] = True,
     maxshape: tuple[int, ...] | None = None,
