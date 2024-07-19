@@ -34,6 +34,7 @@ from ch5mpy.indexing import Selection, map_slice
 from ch5mpy.names import H5Mode
 from ch5mpy.objects import Dataset, DatasetWrapper, File, Group, H5Object
 from ch5mpy.options import _OPTIONS
+from ch5mpy.utils import NAN_PACKED
 
 if TYPE_CHECKING:
     from ch5mpy.array.view import H5ArrayView
@@ -252,6 +253,10 @@ class H5Array(H5Object, Collection[_T], numpy.lib.mixins.NDArrayOperatorsMixin):
     # region interface
     def __array__(self, dtype: npt.DTypeLike | None = None) -> npt.NDArray[Any]:
         array = np.array(self._dset)
+
+        is_nan = np.where(array == NAN_PACKED)
+        if is_nan[0].size:
+            array[np.where(array == NAN_PACKED)] = np.nan
 
         if dtype is None:
             return array

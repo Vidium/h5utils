@@ -7,6 +7,7 @@ from numpy import typing as npt
 
 from ch5mpy.indexing.selection import Selection
 from ch5mpy.objects import Dataset, DatasetWrapper
+from ch5mpy.utils import NAN_PACKED
 
 _DT = TypeVar("_DT", bound=np.generic)
 
@@ -42,6 +43,15 @@ def read_from_dataset(
 
     if indexers.final_reordering is not None:
         loading_array[:] = loading_array[indexers.final_reordering]
+
+    if loading_array.ndim == 0:
+        if loading_array == NAN_PACKED:
+            loading_array[()] = np.nan
+
+    else:
+        is_nan = np.where(loading_array == NAN_PACKED)
+        if is_nan[0].size:
+            loading_array[is_nan] = np.nan
 
 
 def read_one_from_dataset(

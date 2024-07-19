@@ -78,6 +78,11 @@ def _get_sorting_indices(i: Any) -> npt.NDArray[np.int_] | slice:
 
 
 def _as_indexers(indices: tuple[SELECTOR, ...], shape: tuple[int, ...]) -> Generator[Indexer, None, None]:
+    if len([i for i in indices if i is not None]) > len(shape):
+        raise IndexError(
+            f"too many indices for H5Array, array is {len(shape)}-dimensional, but {len(indices)} were indexed"
+        )
+
     shape_it = iter(shape)
 
     for index in indices:

@@ -13,6 +13,7 @@ import ch5mpy
 from ch5mpy._typing import SELECTOR
 from ch5mpy.attributes import AttributeManager
 from ch5mpy.objects.pickle import PickleableH5Object
+from ch5mpy.utils import NAN_PACKED
 
 _T = TypeVar("_T", bound=np.generic)
 _WT = TypeVar("_WT", bound=np.generic, covariant=True)
@@ -102,8 +103,11 @@ class AsStrWrapper(DatasetWrapper[np.str_]):
         subset = self._dset[args]
 
         if isinstance(subset, bytes):
+            if subset == NAN_PACKED:
+                return np.str_("nan")
             return np.str_(subset.decode())
 
+        subset[np.where(subset == NAN_PACKED)] = b"nan"
         return np.array(subset, dtype=str)
 
     def __repr__(self) -> str:
@@ -284,7 +288,7 @@ class Dataset(PickleableH5Object, h5py.Dataset, Generic[_T]):
             # empty selection : skip write operation
             return
 
-        super().write_direct(source, source_sel=source_sel, dest_sel=dest_sel)
+        super().write_direct(handle_nan(source, self.dtype), source_sel=source_sel, dest_sel=dest_sel)
 
     # endregion
 
@@ -304,3 +308,21 @@ def sel_len(sel: int | slice | Collection[int] | None) -> int:
         return 1
 
     return len(sel)
+
+
+def handle_nan(source: npt.NDArray[Any], dest_dtype: np.dtype[Any]) -> npt.NDArray[Any]:
+    if np.issubdtype(dest_dtype, np.integer):
+        if source.dtype.kind in "fc" and np.any(np.isnan(source)):
+            raise ValueError("cannot convert float NaN to integer")
+
+    if np.issubdtype(dest_dtype, np.object_):
+        if source.ndim == 0:
+            if source[()] is np.nan:
+                return np.array(NAN_PACKED, dtype=object)
+
+        else:
+            is_nan = np.array([e is np.nan for e in source.ravel()], dtype=bool).reshape(source.shape)
+            source[is_nan] = NAN_PACKED
+            return source
+
+    return source

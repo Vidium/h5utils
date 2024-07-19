@@ -513,3 +513,16 @@ def test_can_hash(small_array: ch5mpy.H5Array) -> None:
     small_array[0] = -1
     hash2 = hash(small_array)
     assert hash1 != hash2
+
+
+def test_can_set_nan_in_str_array(str_array: ch5mpy.H5Array) -> None:
+    object_array = str_array.astype(object)
+    object_array[[0, 2]] = np.nan
+    assert str_array[0] == "nan"
+    assert object_array[0] is np.nan
+
+    ref_array = np.array([np.nan, b"bc", np.nan, b"efg", b"h"], dtype=object)
+    assert np.all(
+        (object_array == ref_array)
+        | (np.array([e is np.nan for e in object_array]) & np.array([e is np.nan for e in ref_array]))
+    )
