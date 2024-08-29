@@ -153,14 +153,14 @@ def write_object(
     if isinstance(loc, ch5mpy.H5Dict):
         loc = loc.file
 
-    if isinstance(obj, AnonymousArrayCreationFunc):
-        obj(name=name, loc=loc)
-
-    elif isinstance(obj, SupportsH5Write):
+    if isinstance(obj, SupportsH5Write):
         group = loc.create_group(name, overwrite=overwrite, track_order=True) if name else loc
         obj.__h5_write__(ch5mpy.H5Dict(group))
         group.attrs["__h5_type__"] = "object"
         group.attrs["__h5_class__"] = np.void(pickle.dumps(type(obj), protocol=pickle.HIGHEST_PROTOCOL))
+
+    elif isinstance(obj, AnonymousArrayCreationFunc):
+        obj(name=name, loc=loc)
 
     elif isinstance(obj, Mapping):
         group = loc.create_group(name, overwrite=overwrite, track_order=True) if name else loc
