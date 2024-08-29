@@ -87,6 +87,13 @@ def test_can_create_deferred_list(h5_dict):
     assert isinstance(h5_dict["z"], ch.H5List)
 
 
+def test_can_create_deferred_list_with_values(h5_dict):
+    h5_dict["zz"] = ch.H5List.defer([1, 2, 3])
+
+    assert isinstance(h5_dict["zz"], ch.H5List)
+    assert h5_dict["zz"] == [1, 2, 3]
+
+
 def test_can_delete_last_item(h5_list):
     del h5_list[-1]
     assert h5_list == [1.0, 2, C([1, 2, 3]), "4."]

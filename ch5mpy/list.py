@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from itertools import zip_longest
 from pathlib import Path
-from typing import Any, Generic, Iterable, Iterator, TypeVar, cast
+from typing import Any, Collection, Generic, Iterable, Iterator, TypeVar, cast
 
 from ch5mpy.array import H5Array
 from ch5mpy.dict import H5Dict
@@ -24,8 +24,11 @@ def _get_group(file: File | Group, name: str) -> tuple[File | Group, str]:
     return file.require_group(lst[0]), lst[1]
 
 
-def deferred_H5List(name: str, loc: str | Path | File | Group) -> None:
-    H5List.write([], loc, name)
+def deferred_H5List(values: Collection[Any]) -> AnonymousArrayCreationFunc:
+    def inner(name: str, loc: str | Path | File | Group) -> None:
+        H5List.write(list(values), loc, name)
+
+    return inner
 
 
 class H5List(H5Object, Generic[_T]):
@@ -143,8 +146,8 @@ class H5List(H5Object, Generic[_T]):
         return H5List(dest)
 
     @classmethod
-    def defer(cls) -> AnonymousArrayCreationFunc:
-        return deferred_H5List
+    def defer(cls, values: Collection[Any] = ()) -> AnonymousArrayCreationFunc:
+        return deferred_H5List(values)
 
     # endregion
 
