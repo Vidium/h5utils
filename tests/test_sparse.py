@@ -58,3 +58,8 @@ def test_csr_can_set_many_values(h5_csr: H5_csr_array):
     assert np.array_equal(
         h5_csr.todense(), np.array([[0, 1, 0, 5], [0, 0, 2, 0], [3, 0, 0, 4], [0, 0, 0, 0], [6, 0, 0, 0]])
     )
+
+
+def test_can_subset(h5_csr: H5_csr_array):
+    sub = h5_csr[[[0], [1]], [0, 1]]
+    assert np.array_equal(sub.todense(), [[0, 1], [0, 0]])

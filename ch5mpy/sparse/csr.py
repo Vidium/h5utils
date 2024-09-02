@@ -5,7 +5,7 @@ from typing import Any, cast, overload
 
 import numpy as np
 import numpy.typing as npt
-from scipy.sparse import csr_array
+from scipy.sparse import csr_array, sparray
 
 from ch5mpy import Group
 from ch5mpy.array import H5Array
@@ -54,7 +54,9 @@ class H5_csr_array(H5_sparse_array, csr_array):  # type: ignore[misc]
 
     # region class methods
     @classmethod
-    def write(cls, file: Group | H5Dict[Any], matrix: csr_array) -> H5_csr_array:
+    def write(cls, file: Group | H5Dict[Any], matrix: sparray) -> H5_csr_array:
+        assert isinstance(matrix, csr_array), "Can only write csr arrays."
+
         file = H5Dict(file)
 
         file["data"] = matrix.data
@@ -71,7 +73,7 @@ class H5_csr_array(H5_sparse_array, csr_array):  # type: ignore[misc]
 
     # endregion
 
-    # region methods
+    # region method
     def _insert_many(
         self, i: npt.NDArray[np.integer[Any]], j: npt.NDArray[np.integer[Any]], x: npt.NDArray[INT_FLOAT]
     ) -> None:
@@ -82,38 +84,42 @@ class H5_csr_array(H5_sparse_array, csr_array):  # type: ignore[misc]
         Inserts each major group (e.g. all entries per row) at a time.
         Maintains has_sorted_indices property.
         """
-        if self.has_sorted_indices:
-            # convert i and j indices to a single ij array of complex values so that when we sort ij, i is used as
-            # primary key and j as secondary
-            sorted_indices = np.argsort(i + 1j * j)
-            i = i[sorted_indices]
-            j = j[sorted_indices]
-            x = x[sorted_indices]
+        if not self.has_sorted_indices:
+            raise NotImplementedError
 
-            ui, ui_idx = np.unique(i, return_index=True)
+        # convert i and j indices to a single ij array of complex values so that when we sort ij, i is used as
+        # primary key and j as secondary
+        sorted_indices = np.argsort(i + 1j * j)
+        i = i[sorted_indices]
+        j = j[sorted_indices]
+        x = x[sorted_indices]
 
-            split_indices = np.split(self.indices, cast(H5Array[np.int64], self.indptr[1:-1]))
-            split_j = np.split(j, ui_idx[1:])
+        ui, ui_idx = np.unique(i, return_index=True)
 
-            indptr_diff = np.zeros(max(ui[-1] + 1, len(self.indptr) - 1), dtype=np.int64)
-            indptr_diff[: len(self.indptr) - 1] = np.diff(self.indptr)
-            n_items_before_line = np.r_[0, np.cumsum(indptr_diff)]
+        split_indices = np.split(self.indices, cast(H5Array[np.int64], self.indptr[1:-1]))
+        split_j = np.split(j, ui_idx[1:])
 
-            def searchsorted(ix: int, jx: npt.NDArray[np.int64]) -> npt.NDArray[np.int64]:
-                indices = np.searchsorted(split_indices[ix], jx) if ix < len(split_indices) else np.arange(len(jx))
-                return cast(npt.NDArray[np.int64], indices + n_items_before_line[ix])
+        indptr_diff = np.zeros(max(ui[-1] + 1, len(self.indptr) - 1), dtype=np.int64)
+        indptr_diff[: len(self.indptr) - 1] = np.diff(self.indptr)
+        n_items_before_line = np.r_[0, np.cumsum(indptr_diff)]
 
-            insert_indices = np.concatenate([searchsorted(ix, jx) for ix, jx in zip(ui, split_j)])
+        def searchsorted(ix: int, jx: npt.NDArray[np.integer[Any]]) -> npt.NDArray[np.int64]:
+            indices = np.searchsorted(split_indices[ix], jx) if ix < len(split_indices) else np.arange(len(jx))
+            return cast(npt.NDArray[np.int64], indices + n_items_before_line[ix])
 
-            np.insert(self.data, insert_indices, x)
-            np.insert(self.indices, insert_indices, j)
+        insert_indices = np.concatenate([searchsorted(ix, jx) for ix, jx in zip(ui, split_j)])
 
-            indptr_diff[ui] += [len(s) for s in split_j]
-            self.indptr.overwrite(np.cumsum(np.r_[0, indptr_diff]))
+        np.insert(self.data, insert_indices, x)
+        np.insert(self.indices, insert_indices, j)
 
-            self.shape = (max(self.shape[0], len(self.indptr) - 1)), max(self.shape[1], np.max(self.indices))
+        indptr_diff[ui] += [len(s) for s in split_j]
+        indptr = np.cumsum(np.r_[0, indptr_diff])
+        if isinstance(self.indptr, H5Array):
+            self.indptr.overwrite(indptr)
 
         else:
-            raise NotImplementedError
+            self.indptr = indptr
+
+        self.shape = (max(self.shape[0], len(self.indptr) - 1)), max(self.shape[1], np.max(self.indices))
 
     # endregion
